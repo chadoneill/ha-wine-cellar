@@ -179,23 +179,27 @@ export class CabinetGrid extends LitElement {
         background:
           /* specular highlight, offset up and left as if lit from the front */
           radial-gradient(
-            circle at 33% 26%,
-            rgba(255, 255, 255, 0.34) 0%,
-            rgba(255, 255, 255, 0.07) 18%,
-            transparent 38%
+            circle at 32% 25%,
+            rgba(255, 255, 255, 0.50) 0%,
+            rgba(255, 255, 255, 0.13) 15%,
+            transparent 33%
           ),
           /* a bright arc along the far rim, where glass catches the light */
           radial-gradient(
-            circle at 68% 76%,
-            rgba(255, 255, 255, 0.13) 0%,
-            transparent 30%
+            circle at 70% 78%,
+            rgba(255, 255, 255, 0.20) 0%,
+            transparent 26%
           ),
-          /* the glass itself */
+          /* The glass itself. Bottle glass is DARK GREEN whatever is inside it,
+             so the base is green and the wine type is only a hint through it --
+             tint it by the liquid colour and a sparkling turns into a pale
+             olive puck, which is not what a rack looks like. Type is carried
+             at full strength by the capsule instead. */
           radial-gradient(
-            circle at 50% 44%,
-            color-mix(in srgb, var(--wine, #722f37) 46%, #2a2f26) 0%,
-            color-mix(in srgb, var(--wine, #722f37) 32%, #1b1f18) 58%,
-            color-mix(in srgb, var(--wine, #722f37) 16%, #0a0c0b) 100%
+            circle at 50% 43%,
+            color-mix(in srgb, var(--wine, #722f37) 26%, #232b1f) 0%,
+            color-mix(in srgb, var(--wine, #722f37) 17%, #151a12) 60%,
+            color-mix(in srgb, var(--wine, #722f37) 8%, #060806) 100%
           );
         box-shadow:
           0 3px 7px rgba(0, 0, 0, 0.62),
@@ -282,10 +286,10 @@ export class CabinetGrid extends LitElement {
         right: -1%;
         bottom: -1%;
         transform: none;
-        width: 29%;
-        height: 29%;
-        font-size: clamp(6px, 12cqi, 10px);
-        opacity: 0.92;
+        width: 26%;
+        height: 26%;
+        font-size: clamp(5px, 11cqi, 9px);
+        opacity: 0.82;
         border-width: 1px;
         border-color: rgba(0, 0, 0, 0.35);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
