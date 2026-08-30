@@ -2,6 +2,14 @@ import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Cabinet, Wine, StorageRow, WINE_TYPE_COLORS, WineType } from "../models";
 import { sharedStyles } from "../styles";
+import {
+  bottleDims,
+  layoutRow,
+  nestOverBase,
+  stackCapacity,
+  stackOverlapPct,
+} from "../geometry";
+import type { RowLayout } from "../geometry";
 
 @customElement("cabinet-grid")
 export class CabinetGrid extends LitElement {
@@ -99,6 +107,43 @@ export class CabinetGrid extends LitElement {
         min-width: 0;
         z-index: 1;
         container-type: inline-size;
+      }
+
+      /* ---- to-scale rows -------------------------------------------------
+         Used only when the cabinet has a measured internal width. The row
+         becomes a positioning context and each cell is placed at its real
+         width, so a row holding more millimetres of glass than it has of shelf
+         runs past the edge and is seen doing it -- the rack clips it rather
+         than rescaling it away. */
+      .row.to-scale {
+        display: block;
+        gap: 0;
+      }
+      .row.to-scale .cell {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        flex: none;
+        aspect-ratio: auto;
+      }
+      /* An empty position has zero width in the layout; the ring is drawn at a
+         fixed reference diameter so it is never fatter than the wine. */
+      .row.to-scale .cell.empty {
+        border-radius: 50%;
+      }
+      .row.stack-row {
+        z-index: 2;
+      }
+      .scale-readout {
+        font-size: 10px;
+        opacity: 0.55;
+        text-align: right;
+        padding: 0 2px 2px;
+      }
+      .scale-readout.over {
+        color: #ff8a65;
+        opacity: 1;
+        font-weight: 600;
       }
 
       .cell.empty {
@@ -507,10 +552,46 @@ export class CabinetGrid extends LitElement {
     `,
   ];
 
-  private _getWinesAt(row: number, col: number): Wine[] {
+  private _getWinesAt(row: number, col: number, layer: "base" | "stack" = "base"): Wine[] {
     return this.wines.filter(
       (w) =>
-        w.cabinet_id === this.cabinet.id && w.row === row && w.col === col
+        w.cabinet_id === this.cabinet.id &&
+        w.row === row &&
+        w.col === col &&
+        /* A wine with no layer is in the base row, which is where every bottle
+           created before stacking existed. */
+        (w.layer || "base") === layer
+    );
+  }
+
+  /* ------------------------------------------------ physical geometry ---- */
+
+  /* The measured internal width of the cabinet, or null when it was never
+     entered. Null means every rack below renders exactly as it always has. */
+  private _scaleWidthMm(): number | null {
+    const mm = this.cabinet.internal_width_mm;
+    return typeof mm === "number" && mm > 0 ? mm : null;
+  }
+
+  private _isStacked(row: number): boolean {
+    return (this.cabinet.stacked_rows || []).includes(row);
+  }
+
+  /* Lay one row out across the cabinet's real internal width, each bottle at
+     its own base width. */
+  private _rowLayout(row: number, layer: "base" | "stack", count: number, span: number): RowLayout<Wine> {
+    return layoutRow<Wine>(
+      count,
+      span,
+      (col) => {
+        const wines = this._getWinesAt(row, col, layer);
+        /* The front bottle is the one that decides how wide the position is:
+           depth goes back into the rack, not across it. */
+        return wines.length
+          ? wines.sort((a, b) => (a.depth || 0) - (b.depth || 0))[0]!
+          : null;
+      },
+      (wine) => bottleDims(wine).base_width_mm
     );
   }
 
@@ -813,6 +894,53 @@ export class CabinetGrid extends LitElement {
     `;
   }
 
+  /* A row drawn to the cabinet's real internal width.
+   *
+   * Used only when `internal_width_mm` is set. Every number here comes out of
+   * geometry.ts -- this method does no arithmetic of its own, which is what
+   * stops a rendering tweak quietly re-breaking either of the two rules the
+   * drawing depends on. */
+  private _renderScaleRow(row: number, cols: number, span: number) {
+    const base = this._rowLayout(row, "base", cols, span);
+    const stacked = this._isStacked(row);
+    const stackCount = stackCapacity(cols);
+    const stack = stacked && stackCount > 0
+      ? nestOverBase(this._rowLayout(row, "stack", stackCount, span), base)
+      : null;
+
+    /* The row's HEIGHT comes from the same scale as its widths, so a reference
+       ring is a true circle at any viewport width and a bottle drawn to its
+       real base width is not distorted by the container. */
+    const refPct = Math.max(1, base.items[0]?.emptyRefPct ?? 20);
+    const aspect = (100 / refPct).toFixed(4);
+
+    const place = (item: { widthPct: number; leftPct: number; centrePct: number; emptyRefPct: number; occupant: Wine | null }) =>
+      item.occupant
+        ? `width:${item.widthPct.toFixed(3)}%;left:${item.leftPct.toFixed(3)}%;`
+        : `width:${item.emptyRefPct.toFixed(3)}%;left:${(item.centrePct - item.emptyRefPct / 2).toFixed(3)}%;`;
+
+    return html`
+      ${stack
+        ? html`
+            <div
+              class="row to-scale stack-row"
+              style="aspect-ratio:${aspect};margin-bottom:-${stackOverlapPct(base).toFixed(2)}%"
+            >
+              ${stack.items.map((item) => this._renderCell(row, item.index, "stack", place(item)))}
+            </div>
+          `
+        : nothing}
+      <div class="row to-scale" style="aspect-ratio:${aspect}">
+        ${base.items.map((item) => this._renderCell(row, item.index, "base", place(item)))}
+      </div>
+      <div class="scale-readout ${base.overflow ? "over" : ""}">
+        ${base.overflow
+          ? `${base.occupied_mm} mm in a ${base.span_mm} mm row — over by ${base.overflow_mm} mm`
+          : `${base.occupied_mm} of ${base.span_mm} mm · ${base.free_mm} mm free`}
+      </div>
+    `;
+  }
+
   private _renderGridRow(row: number, cols: number) {
     const cabinetDepth = (this.cabinet as any).depth || 1;
     return html`
@@ -890,9 +1018,14 @@ export class CabinetGrid extends LitElement {
     `;
   }
 
-  private _renderCell(row: number, col: number) {
+  private _renderCell(
+    row: number,
+    col: number,
+    layer: "base" | "stack" = "base",
+    posStyle = ""
+  ) {
     const cabinetDepth = (this.cabinet as any).depth || 1;
-    const wines = this._getWinesAt(row, col);
+    const wines = this._getWinesAt(row, col, layer);
     const wineCount = wines.length;
     const frontWine = wines.length > 0
       ? wines.sort((a, b) => (a.depth || 0) - (b.depth || 0))[0]
@@ -904,12 +1037,13 @@ export class CabinetGrid extends LitElement {
     const dispClass = disp === "D" ? "drink" : disp === "H" ? "hold" : disp === "P" ? "past" : "";
     const ratingDisplay = frontWine?.rating ? frontWine.rating.toFixed(1) : "";
     const ringColor = frontWine ? this._brightenColor(bgColor) : "";
-    const cellKey = `${row}-${col}`;
+    const cellKey = layer === "stack" ? `${row}-${col}-stack` : `${row}-${col}`;
     const isDragOver = this._dragOverCell === cellKey;
+    const fillStyle = frontWine ? `background: ${bgColor}; --bottle-type-color: ${ringColor};` : "";
     return html`
       <div
         class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""}"
-        style=${frontWine ? `background: ${bgColor}; --bottle-type-color: ${ringColor}` : ""}
+        style=${`${fillStyle}${posStyle}` || nothing}
         draggable=${frontWine ? "true" : "false"}
         @click=${() => this._onCellClick(row, col, frontWine, wineCount, cabinetDepth, wines)}
         @touchstart=${frontWine ? () => this._onTouchStart(frontWine) : nothing}
@@ -974,6 +1108,9 @@ export class CabinetGrid extends LitElement {
   render() {
     const { rows, cols } = this.cabinet;
     const storageRows = this._getStorageRowSet();
+    /* null unless the cabinet has a measured internal width, in which case
+       every grid row below is drawn to scale instead of as equal cells. */
+    const scaleWidth = this._scaleWidthMm();
     const hasGridRows = Array.from({ length: rows }, (_, row) => row).some((row) => !storageRows.has(row));
 
     return html`
@@ -987,7 +1124,9 @@ export class CabinetGrid extends LitElement {
           ${Array.from({ length: rows }, (_, row) =>
               storageRows.has(row)
                 ? this._renderStorageZone(row)
-                : this._renderGridRow(row, cols)
+                : scaleWidth
+                  ? this._renderScaleRow(row, cols, scaleWidth)
+                  : this._renderGridRow(row, cols)
             )
           }
         </div>

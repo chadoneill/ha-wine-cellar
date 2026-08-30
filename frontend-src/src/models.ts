@@ -1,3 +1,5 @@
+import type { BottleShape } from "./geometry";
+
 export interface TastingNotes {
   aroma: string;
   taste: string;
@@ -42,7 +44,27 @@ export interface Wine {
   vivino_updated_at: string | null;
   ai_updated_at: string | null;
   vivino_id: number | null;
+
+  /* --- physical geometry (optional; absent on everything created before it) ---
+     A wine with no shape or format is a nominal Bordeaux 750, which is what
+     every existing bottle silently was anyway. `base_width_mm` and `length_mm`
+     are for a bottle someone actually put a caliper across; they beat the
+     shape table when set. */
+  shape?: BottleShape | null;
+  format_ml?: number | null;
+  base_width_mm?: number | null;
+  length_mm?: number | null;
+
+  /* Which layer of a stacked row this sits in. Absent means the base row, so
+     every existing bottle stays exactly where it is.
+
+     NOT the same axis as `depth`: depth is front-to-back into the rack, this
+     is a second course of bottles nested in the valleys ON TOP of the first.
+     A cabinet can have both. */
+  layer?: BottleLayer | null;
 }
+
+export type BottleLayer = "base" | "stack";
 
 export type StorageRowType = "bulk" | "box";
 
@@ -72,6 +94,18 @@ export interface Cabinet {
   bottom_zone_name: string;
   storage_rows: StorageRow[];
   order: number;
+
+  /* --- physical geometry (optional) ---
+     The measured internal width of the cabinet. Setting it switches the grid
+     from equal cells to a drawing at true scale: every bottle at its real base
+     width, so a magnum visibly crowds its neighbours and an over-full row
+     visibly overflows. Leave it unset and the rack renders exactly as it
+     always has. */
+  internal_width_mm?: number | null;
+
+  /* Row indices that carry a second course of bottles nested in the valleys
+     above them. A stack row holds one fewer bottle than the row beneath it. */
+  stacked_rows?: number[] | null;
 }
 
 export interface CellarStats {

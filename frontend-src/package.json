@@ -6,7 +6,9 @@
   "description": "Cork Dork Lovelace card for Home Assistant",
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c -w"
+    "dev": "rollup -c -w",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
@@ -15,7 +17,8 @@
     "rollup": "^4.9.6",
     "rollup-plugin-serve": "^2.0.3",
     "tslib": "^2.6.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.11"
   },
   "dependencies": {
     "lit": "^3.1.2"

@@ -719,6 +719,180 @@ function getWineLocation(wine, cabinets) {
     return { text: cabinet.name, cabinet, zone: "", storageRow: null };
 }
 
+/* Physical bottle geometry: what a bottle actually measures, and how a row of
+   them actually packs.
+ *
+ * Everything here is opt-in. A cabinet with no `internal_width_mm` renders
+ * exactly as it always has -- a uniform grid of equal cells -- and nothing in
+ * this file runs. Set the cabinet's real internal width and the same row is
+ * laid out to scale instead, each bottle at its true base width.
+ *
+ * Two rules make a scale drawing honest, and both are easy to get wrong:
+ *
+ *   1. AN EMPTY POSITION CONTRIBUTES ZERO WIDTH. Model it at the nominal pitch
+ *      and it becomes the fattest object in the row -- 86 mm against a
+ *      Bordeaux's 76 -- so a sparse cabinet draws its empty slots larger than
+ *      its wine. The empty ring is drawn at a fixed reference diameter on the
+ *      leftover pitch instead.
+ *
+ *   2. AN OVER-CAPACITY ROW MUST VISIBLY OVERFLOW. Normalising it back to the
+ *      shelf width makes five Champagnes in a 430 mm shelf render identically
+ *      to an empty shelf, which is the one case the drawing exists to shout
+ *      about. The scale is therefore always 100/span, never
+ *      100/max(span, wanted).
+ */
+const BOTTLE_SHAPES = [
+    "bordeaux",
+    "bordeaux_heavy",
+    "burgundy",
+    "champagne",
+    "flute",
+    "port",
+];
+/* `bordeaux_heavy` exists because premium heavy glass -- Grange, Hill of
+   Grace, Unico, Sassicaia, most serious Barossa Shiraz -- runs 82-88 mm, not
+   the nominal 76. The arithmetic is the whole point: five of them is
+   5 x 85 = 425 mm in a 430 mm row, full with a millimetre a side, where five
+   nominal Bordeaux compute to 380 mm and 50 mm of slack. That is precisely
+   the case a scale drawing exists to reveal.
+ *
+ * `port` is 305 mm, not the 265 often quoted -- 265 is a 500 ml fortified, not
+ * a 750 ml port, and the difference matters on a shelf where clearance is
+ * tight. */
+const SHAPES = {
+    bordeaux: { name: "Bordeaux", base_width_mm: 76, length_mm: 305 },
+    bordeaux_heavy: { name: "Bordeaux, heavy", base_width_mm: 85, length_mm: 320 },
+    burgundy: { name: "Burgundy", base_width_mm: 84, length_mm: 300 },
+    champagne: { name: "Champagne", base_width_mm: 90, length_mm: 315 },
+    flute: { name: "Alsace flute", base_width_mm: 72, length_mm: 345 },
+    port: { name: "Port / fortified", base_width_mm: 78, length_mm: 305 },
+};
+const BOTTLE_FORMATS = [375, 500, 750, 1500, 3000];
+/* Format multiplies both dimensions, by DIFFERENT amounts. A Bordeaux magnum
+   therefore computes to 102 mm wide and 378 mm long -- transposing the two is
+   the easy mistake and produces a bottle too narrow and too tall. */
+const FORMATS = {
+    375: { name: "375 ml (half)", short: "HALF", width: 0.82, length: 0.82 },
+    500: { name: "500 ml", short: "500", width: 0.88, length: 0.87 },
+    750: { name: "750 ml", short: null, width: 1.0, length: 1.0 },
+    1500: { name: "1.5 L (magnum)", short: "MAG", width: 1.34, length: 1.24 },
+    3000: { name: "3 L (double magnum)", short: "DBL", width: 1.6, length: 1.45 },
+};
+const DEFAULT_SHAPE = "bordeaux";
+const DEFAULT_FORMAT = 750;
+/* The drawn diameter of an empty ring, in millimetres of the row's own scale.
+   A fixed reference, deliberately NOT part of any width sum. */
+const EMPTY_REFERENCE_MM = SHAPES.bordeaux.base_width_mm; // 76
+/* Two tangent circles whose centres are one radius apart overlap vertically by
+   this fraction of a diameter. 1 - sqrt(3)/2 = 0.13397... */
+const STACK_OVERLAP_FRACTION = 1 - Math.sqrt(3) / 2;
+function normaliseShape(value) {
+    return BOTTLE_SHAPES.includes(value)
+        ? value
+        : DEFAULT_SHAPE;
+}
+function normaliseFormat(value) {
+    const n = typeof value === "string" ? parseInt(value, 10) : value;
+    return BOTTLE_FORMATS.includes(n) ? n : DEFAULT_FORMAT;
+}
+function nominalDims(shape, format) {
+    const s = SHAPES[shape] ?? SHAPES[DEFAULT_SHAPE];
+    const f = FORMATS[format] ?? FORMATS[DEFAULT_FORMAT];
+    return {
+        base_width_mm: Math.round(s.base_width_mm * f.width),
+        length_mm: Math.round(s.length_mm * f.length),
+    };
+}
+/* What a bottle measures. A value actually taken off the bottle with a caliper
+   always beats the table. */
+function bottleDims(bottle) {
+    const shape = normaliseShape(bottle.shape);
+    const format = normaliseFormat(bottle.format_ml);
+    const nominal = nominalDims(shape, format);
+    const measuredWidth = typeof bottle.base_width_mm === "number" && bottle.base_width_mm > 0;
+    const measuredLength = typeof bottle.length_mm === "number" && bottle.length_mm > 0;
+    return {
+        base_width_mm: measuredWidth ? bottle.base_width_mm : nominal.base_width_mm,
+        length_mm: measuredLength ? bottle.length_mm : nominal.length_mm,
+        measured: measuredWidth || measuredLength,
+        shape: SHAPES[shape],
+    };
+}
+/* Lay out one row of `count` positions across `span_mm` of real shelf.
+ *
+ * Air is spread evenly across the count + 1 boundaries: before the first
+ * position, between each pair, and after the last. An empty position then sits
+ * between two gaps and reads as visibly more air than a gap, and an all-empty
+ * row still lays its rings out evenly across the span. */
+function layoutRow(count, span_mm, occupantAt, widthOf) {
+    const span = span_mm > 0 ? span_mm : 1;
+    const scale = 100 / span;
+    const found = [];
+    for (let index = 0; index < count; index++) {
+        const occupant = occupantAt(index);
+        /* An empty position contributes ZERO. This line is rule 1. */
+        found.push({ index, occupant, mm: occupant ? widthOf(occupant) : 0 });
+    }
+    const occupied = found.reduce((m, i) => m + i.mm, 0);
+    const free = span - occupied;
+    const gapMm = count > 0 ? Math.max(0, free) / (count + 1) : 0;
+    const gapPct = gapMm * scale;
+    const items = [];
+    let x = 0;
+    for (const f of found) {
+        x += gapPct;
+        const widthPct = f.mm * scale;
+        items.push({
+            index: f.index,
+            occupant: f.occupant,
+            mm: f.mm,
+            widthPct,
+            leftPct: x,
+            centrePct: x + widthPct / 2,
+            emptyRefPct: EMPTY_REFERENCE_MM * scale,
+        });
+        x += widthPct;
+    }
+    return {
+        span_mm: span,
+        occupied_mm: occupied,
+        free_mm: free,
+        /* Rule 2: the scale is the row's own, so too much wine runs past 100%. */
+        overflow: occupied > span,
+        overflow_mm: Math.max(0, occupied - span),
+        scale,
+        gapPct,
+        items,
+    };
+}
+/* A stacked bottle sits at the TRUE valley -- the midpoint between the actual
+   centres of the two beneath -- so a stack resting on mismatched widths sits
+   off-centre, as it would in the cabinet. */
+function nestOverBase(stack, base) {
+    const items = stack.items.map((item, k) => {
+        const left = base.items[k];
+        const right = base.items[k + 1];
+        if (!left || !right)
+            return item;
+        const valley = (left.centrePct + right.centrePct) / 2;
+        return { ...item, centrePct: valley, leftPct: valley - item.widthPct / 2 };
+    });
+    return { ...stack, items };
+}
+/* How far the stack row overlaps the base row, as a percentage of the row's
+   span. Uses the mean width of the wine actually beneath, falling back to the
+   reference when the base row is empty -- an empty shelf still has to draw its
+   stack row somewhere. */
+function stackOverlapPct(base) {
+    const beneath = base.items.filter((i) => i.mm > 0);
+    const meanMm = beneath.length
+        ? beneath.reduce((m, i) => m + i.mm, 0) / beneath.length
+        : EMPTY_REFERENCE_MM;
+    return STACK_OVERLAP_FRACTION * meanMm * base.scale;
+}
+/* A stack row holds one fewer bottle than the row it nests into. */
+const stackCapacity = (baseCount) => Math.max(0, baseCount - 1);
+
 let CabinetGrid = class CabinetGrid extends i {
     constructor() {
         super(...arguments);
@@ -727,8 +901,35 @@ let CabinetGrid = class CabinetGrid extends i {
         // --- Long press (mobile move) ---
         this._longPressTimer = null;
     }
-    _getWinesAt(row, col) {
-        return this.wines.filter((w) => w.cabinet_id === this.cabinet.id && w.row === row && w.col === col);
+    _getWinesAt(row, col, layer = "base") {
+        return this.wines.filter((w) => w.cabinet_id === this.cabinet.id &&
+            w.row === row &&
+            w.col === col &&
+            /* A wine with no layer is in the base row, which is where every bottle
+               created before stacking existed. */
+            (w.layer || "base") === layer);
+    }
+    /* ------------------------------------------------ physical geometry ---- */
+    /* The measured internal width of the cabinet, or null when it was never
+       entered. Null means every rack below renders exactly as it always has. */
+    _scaleWidthMm() {
+        const mm = this.cabinet.internal_width_mm;
+        return typeof mm === "number" && mm > 0 ? mm : null;
+    }
+    _isStacked(row) {
+        return (this.cabinet.stacked_rows || []).includes(row);
+    }
+    /* Lay one row out across the cabinet's real internal width, each bottle at
+       its own base width. */
+    _rowLayout(row, layer, count, span) {
+        return layoutRow(count, span, (col) => {
+            const wines = this._getWinesAt(row, col, layer);
+            /* The front bottle is the one that decides how wide the position is:
+               depth goes back into the rack, not across it. */
+            return wines.length
+                ? wines.sort((a, b) => (a.depth || 0) - (b.depth || 0))[0]
+                : null;
+        }, (wine) => bottleDims(wine).base_width_mm);
     }
     _getStorageRowSet() {
         const rows = this.cabinet.storage_rows;
@@ -998,6 +1199,48 @@ let CabinetGrid = class CabinetGrid extends i {
       </div>
     `;
     }
+    /* A row drawn to the cabinet's real internal width.
+     *
+     * Used only when `internal_width_mm` is set. Every number here comes out of
+     * geometry.ts -- this method does no arithmetic of its own, which is what
+     * stops a rendering tweak quietly re-breaking either of the two rules the
+     * drawing depends on. */
+    _renderScaleRow(row, cols, span) {
+        const base = this._rowLayout(row, "base", cols, span);
+        const stacked = this._isStacked(row);
+        const stackCount = stackCapacity(cols);
+        const stack = stacked && stackCount > 0
+            ? nestOverBase(this._rowLayout(row, "stack", stackCount, span), base)
+            : null;
+        /* The row's HEIGHT comes from the same scale as its widths, so a reference
+           ring is a true circle at any viewport width and a bottle drawn to its
+           real base width is not distorted by the container. */
+        const refPct = Math.max(1, base.items[0]?.emptyRefPct ?? 20);
+        const aspect = (100 / refPct).toFixed(4);
+        const place = (item) => item.occupant
+            ? `width:${item.widthPct.toFixed(3)}%;left:${item.leftPct.toFixed(3)}%;`
+            : `width:${item.emptyRefPct.toFixed(3)}%;left:${(item.centrePct - item.emptyRefPct / 2).toFixed(3)}%;`;
+        return b `
+      ${stack
+            ? b `
+            <div
+              class="row to-scale stack-row"
+              style="aspect-ratio:${aspect};margin-bottom:-${stackOverlapPct(base).toFixed(2)}%"
+            >
+              ${stack.items.map((item) => this._renderCell(row, item.index, "stack", place(item)))}
+            </div>
+          `
+            : A}
+      <div class="row to-scale" style="aspect-ratio:${aspect}">
+        ${base.items.map((item) => this._renderCell(row, item.index, "base", place(item)))}
+      </div>
+      <div class="scale-readout ${base.overflow ? "over" : ""}">
+        ${base.overflow
+            ? `${base.occupied_mm} mm in a ${base.span_mm} mm row — over by ${base.overflow_mm} mm`
+            : `${base.occupied_mm} of ${base.span_mm} mm · ${base.free_mm} mm free`}
+      </div>
+    `;
+    }
     _renderGridRow(row, cols) {
         const cabinetDepth = this.cabinet.depth || 1;
         return b `
@@ -1072,9 +1315,9 @@ let CabinetGrid = class CabinetGrid extends i {
       </div>
     `;
     }
-    _renderCell(row, col) {
+    _renderCell(row, col, layer = "base", posStyle = "") {
         const cabinetDepth = this.cabinet.depth || 1;
-        const wines = this._getWinesAt(row, col);
+        const wines = this._getWinesAt(row, col, layer);
         const wineCount = wines.length;
         const frontWine = wines.length > 0
             ? wines.sort((a, b) => (a.depth || 0) - (b.depth || 0))[0]
@@ -1086,12 +1329,13 @@ let CabinetGrid = class CabinetGrid extends i {
         const dispClass = disp === "D" ? "drink" : disp === "H" ? "hold" : disp === "P" ? "past" : "";
         const ratingDisplay = frontWine?.rating ? frontWine.rating.toFixed(1) : "";
         const ringColor = frontWine ? this._brightenColor(bgColor) : "";
-        const cellKey = `${row}-${col}`;
+        const cellKey = layer === "stack" ? `${row}-${col}-stack` : `${row}-${col}`;
         const isDragOver = this._dragOverCell === cellKey;
+        const fillStyle = frontWine ? `background: ${bgColor}; --bottle-type-color: ${ringColor};` : "";
         return b `
       <div
         class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""}"
-        style=${frontWine ? `background: ${bgColor}; --bottle-type-color: ${ringColor}` : ""}
+        style=${`${fillStyle}${posStyle}` || A}
         draggable=${frontWine ? "true" : "false"}
         @click=${() => this._onCellClick(row, col, frontWine, wineCount, cabinetDepth, wines)}
         @touchstart=${frontWine ? () => this._onTouchStart(frontWine) : A}
@@ -1150,6 +1394,9 @@ let CabinetGrid = class CabinetGrid extends i {
     render() {
         const { rows, cols } = this.cabinet;
         const storageRows = this._getStorageRowSet();
+        /* null unless the cabinet has a measured internal width, in which case
+           every grid row below is drawn to scale instead of as equal cells. */
+        const scaleWidth = this._scaleWidthMm();
         const hasGridRows = Array.from({ length: rows }, (_, row) => row).some((row) => !storageRows.has(row));
         return b `
       <div class="cabinet">
@@ -1161,7 +1408,9 @@ let CabinetGrid = class CabinetGrid extends i {
         <div class="grid-inner">
           ${Array.from({ length: rows }, (_, row) => storageRows.has(row)
             ? this._renderStorageZone(row)
-            : this._renderGridRow(row, cols))}
+            : scaleWidth
+                ? this._renderScaleRow(row, cols, scaleWidth)
+                : this._renderGridRow(row, cols))}
         </div>
         ${this.cabinet.has_bottom_zone
             ? b `
@@ -1285,6 +1534,43 @@ CabinetGrid.styles = [
         min-width: 0;
         z-index: 1;
         container-type: inline-size;
+      }
+
+      /* ---- to-scale rows -------------------------------------------------
+         Used only when the cabinet has a measured internal width. The row
+         becomes a positioning context and each cell is placed at its real
+         width, so a row holding more millimetres of glass than it has of shelf
+         runs past the edge and is seen doing it -- the rack clips it rather
+         than rescaling it away. */
+      .row.to-scale {
+        display: block;
+        gap: 0;
+      }
+      .row.to-scale .cell {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        flex: none;
+        aspect-ratio: auto;
+      }
+      /* An empty position has zero width in the layout; the ring is drawn at a
+         fixed reference diameter so it is never fatter than the wine. */
+      .row.to-scale .cell.empty {
+        border-radius: 50%;
+      }
+      .row.stack-row {
+        z-index: 2;
+      }
+      .scale-readout {
+        font-size: 10px;
+        opacity: 0.55;
+        text-align: right;
+        padding: 0 2px 2px;
+      }
+      .scale-readout.over {
+        color: #ff8a65;
+        opacity: 1;
+        font-weight: 600;
       }
 
       .cell.empty {
