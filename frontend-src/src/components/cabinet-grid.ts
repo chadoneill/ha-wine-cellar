@@ -268,7 +268,7 @@ export class CabinetGrid extends LitElement {
          its normal condition. Small, thin, and low contrast. */
       .row.to-scale .cell.empty {
         background: none;
-        border: 1px solid rgba(214, 197, 176, 0.13);
+        border: 1px solid rgba(214, 197, 176, 0.26);
         box-shadow: none;
       }
       .row.to-scale .cell.empty:hover {
@@ -290,9 +290,13 @@ export class CabinetGrid extends LitElement {
           inset 0 0 0 1px rgba(255, 255, 255, 0.18),
           inset 0 -3px 6px rgba(0, 0, 0, 0.35);
       }
+      /* A free spot in the second course. Dotted rather than faded: at 0.55
+         opacity over an already-faint border these were invisible, so the
+         upper row looked as though it had nowhere to put anything. */
       .row.to-scale .cell.stacked.empty {
         border-style: dotted;
-        opacity: 0.55;
+        border-color: rgba(214, 197, 176, 0.30);
+        opacity: 1;
       }
 
       .row.to-scale .cell.drag-over {
