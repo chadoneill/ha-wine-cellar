@@ -1,4 +1,4 @@
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, css, svg, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Cabinet, Wine, StorageRow, WINE_TYPE_COLORS, WineType } from "../models";
 import { sharedStyles } from "../styles";
@@ -149,6 +149,20 @@ export class CabinetGrid extends LitElement {
         );
       }
 
+      /* Room under an ORDINARY row for the neck to hang into. A percentage
+         margin resolves against the GRID's width, and a cell is a col-th of
+         that, so dividing by the column count gives 36% of a cell -- exactly
+         the overhang. Letterboxing the glyph into the cell instead was tried
+         and drew the wine smaller than the empty slots around it.
+
+         Scoped away from .to-scale deliberately: there the row's height IS the
+         shelf gap in millimetres, and padding it out would silently draw a
+         155 mm gap as something else. A to-scale neck hangs into the air over
+         the shelf below, which is where there is room for it. */
+      .row:not(.to-scale) {
+        margin-bottom: calc(2px + 36% / var(--wc-cols, 6));
+      }
+
       .row.to-scale {
         display: block;
         gap: 0;
@@ -199,16 +213,6 @@ export class CabinetGrid extends LitElement {
         z-index: 1;
       }
 
-      /* ---- a bottle, seen from above -------------------------------------
-         Looking down at a rack you see dark glass and a capsule, not a disc of
-         wine-coloured plastic. So the body is glass -- deeply darkened, only
-         faintly tinted by what is in it -- and the CAPSULE at the centre
-         carries the wine type at full strength. That keeps type instantly
-         readable while letting the thing that actually matters here, the
-         bottle's diameter, be what the eye measures. */
-      
-      /* the capsule over the cork: the wine type, at full strength, small */
-      
       /* ---- an empty position ---------------------------------------------
          Recessed and quiet. It contributes nothing to the row's width and must
          never read as louder than the wine. */
@@ -320,81 +324,54 @@ export class CabinetGrid extends LitElement {
          apps, and the flat disc version read as a counter rather than wine.
          Dark glass, faintly tinted by what is in it, with the type carried at
          full strength by the capsule at the centre. */
+      /* The cell is now only a BOX -- the true footprint. Everything visible is
+         drawn by the SVG in _bottleGlyph, which is the only way to get the
+         shoulder curve that makes the thing read as a bottle rather than a
+         marble. */
       .cell.filled {
-        /* A rim in the wine's own colour. The glass body alone is nearly black
-           at 42px -- especially under a dark label photograph -- and a filled
-           slot stopped reading as different from an empty one. The rim is what
-           carries "there is a bottle here" at small sizes; the glass and the
-           capsule carry it at large ones. */
-        border: 1.5px solid var(--bottle-type-color, rgba(255, 255, 255, 0.35));
+        background: none;
+        border: none;
+        box-shadow: none;
         overflow: visible;
-        background:
-          radial-gradient(
-            circle at 32% 25%,
-            rgba(255, 255, 255, 0.50) 0%,
-            rgba(255, 255, 255, 0.13) 15%,
-            transparent 33%
-          ),
-          radial-gradient(
-            circle at 70% 78%,
-            rgba(255, 255, 255, 0.20) 0%,
-            transparent 26%
-          ),
-          radial-gradient(
-            circle at 50% 43%,
-            color-mix(in srgb, var(--wine, #722f37) 34%, #232a1e) 0%,
-            color-mix(in srgb, var(--wine, #722f37) 22%, #141810) 58%,
-            color-mix(in srgb, var(--wine, #722f37) 10%, #050706) 100%
-          );
-        box-shadow:
-          0 3px 7px rgba(0, 0, 0, 0.62),
-          inset 0 1px 1px rgba(255, 255, 255, 0.14),
-          inset 0 -5px 9px rgba(0, 0, 0, 0.5);
       }
 
-      /* the capsule over the cork */
-      .cell.filled::after {
-        content: "";
+      .bottle-glyph {
         position: absolute;
-        inset: 34%;
-        border-radius: 50%;
-        background:
-          radial-gradient(
-            circle at 36% 28%,
-            rgba(255, 255, 255, 0.45) 0%,
-            rgba(255, 255, 255, 0.12) 30%,
-            transparent 60%
-          ),
-          radial-gradient(
-            circle at 50% 50%,
-            color-mix(in srgb, var(--wine, #722f37) 80%, #fff) 0%,
-            var(--wine, #722f37) 48%,
-            color-mix(in srgb, var(--wine, #722f37) 78%, #000) 100%
-          );
-        box-shadow:
-          inset 0 0 0 1px rgba(0, 0, 0, 0.30),
-          0 1px 2px rgba(0, 0, 0, 0.5);
+        left: 0;
+        top: 0;
+        width: 100%;
+        /* 100% is the footprint the body fills; the extra 36% is the neck,
+           hanging forward past the shelf edge where it physically is. */
+        height: 136%;
+        overflow: visible;
         pointer-events: none;
+        filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
       }
-      /* a label photograph replaces the capsule rather than sitting under it */
-      .cell.filled:has(.wine-thumb)::after {
-        display: none;
+
+      /* The neck crosses the shelf rail, so it has to be painted over it --
+         the rail is z-index 3. A neck sliced off at the rail loses the
+         capsule, which is what carries the wine type. */
+      .row.to-scale .cell.filled {
+        z-index: 4;
       }
 
 
+      /* A label photograph sits INSIDE the bottle's body, not across the whole
+         cell -- at full bleed it covered the shoulder and the silhouette went
+         back to being a disc. */
       .cell .wine-thumb {
         position: absolute;
-        width: 100%;
-        height: 100%;
+        inset: 16%;
+        width: auto;
+        height: auto;
         object-fit: cover;
         border-radius: 50%;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
       }
 
       .cell.filled:hover {
         transform: scale(1.15);
         z-index: 10;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5),
-          0 0 16px rgba(50, 100, 255, 0.3);
       }
 
       .cell .bottle-label {
@@ -424,13 +401,18 @@ export class CabinetGrid extends LitElement {
         position: absolute;
         top: auto;
         left: auto;
-        right: -2%;
-        bottom: -2%;
+        /* Top corner, not bottom: the neck now hangs off the bottom of the
+           cell and a pip down there sat on top of it. Smaller too -- against a
+           drawn bottle rather than a plain disc it was the loudest thing in
+           the rack, and it is an annotation. */
+        right: -3%;
+        top: -3%;
+        bottom: auto;
         transform: none;
-        width: 34%;
-        height: 34%;
+        width: 27%;
+        height: 27%;
         border-radius: 50%;
-        font-size: clamp(6px, 15cqi, 11px);
+        font-size: clamp(6px, 13cqi, 10px);
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -441,7 +423,7 @@ export class CabinetGrid extends LitElement {
         line-height: 1;
         border: 1px solid rgba(0, 0, 0, 0.35);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-        opacity: 0.92;
+        opacity: 0.88;
       }
 
       .cell .disposition.drink,
@@ -1247,6 +1229,7 @@ export class CabinetGrid extends LitElement {
             >
               ${frontWine
                 ? html`
+                    ${this._bottleGlyph(cellKey)}
                     ${frontWine.image_url ? html`<img class="wine-thumb" src="${frontWine.image_url}" alt="" />` : nothing}
                     <span class="bottle-label">${frontWine.vintage || "NV"}</span>
                     ${dispClass ? html`<span class="disposition ${dispClass}">${disp}</span>` : nothing}
@@ -1283,6 +1266,66 @@ export class CabinetGrid extends LitElement {
         })}
       </div>
     `;
+  }
+
+  /* A bottle, drawn as a bottle.
+   *
+   * A circle with an offset highlight is, definitionally, a marble -- no
+   * amount of shading fixes it, because what identifies a bottle is its
+   * SILHOUETTE: straight body sides that step in at the shoulder to a longer,
+   * narrower neck. (A domed top reads as a mushroom; a flat one as a jar.
+   * Both were tried.)
+   *
+   * The constraint that shapes everything here: the cell's box IS the
+   * bottle's true footprint -- base width across, and the same real
+   * millimetres tall, which is what draws the shelf gap to scale. So the BODY
+   * has to stay inside the box. The neck and capsule hang BELOW it instead,
+   * out over the front rail -- which is where they physically are, since
+   * bottles lie necks to the front. The silhouette comes back and no vertical
+   * shelf budget is spent on it.
+   *
+   * viewBox units are therefore percentages of the base width: 100 across,
+   * 100 down for the cell box, and 36 more of neck hanging past it.
+   *
+   * `uid` only exists because each cell needs its own gradients -- they
+   * resolve `--wine` from the cell they sit in, so they cannot be shared. */
+  private _bottleGlyph(uid: string) {
+    /* Straight sides have to DOMINATE. With a deep top arc and an early
+       shoulder the straight run is only a third of the body and the whole
+       thing reads as a lampshade; the arc is therefore shallow (a bottle's
+       base, seen at this angle, is a shallow ellipse) and the shoulder is a
+       short concave transition right at the end. */
+    const body =
+      "M 1 62 L 1 26 A 49 25 0 0 1 99 26 L 99 62" +
+      " C 99 77 70 79 67 86 L 33 86 C 30 79 1 77 1 62 Z";
+    const w = "var(--wine, #722f37)";
+    return svg`
+      <svg class="bottle-glyph" viewBox="0 0 100 136"
+           preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+        <defs>
+          <linearGradient id="wcb-${uid}" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w} 9%, #04060a)" />
+            <stop offset="15%" style="stop-color: color-mix(in srgb, ${w} 26%, #171d14)" />
+            <stop offset="29%" style="stop-color: rgba(255, 255, 255, 0.28)" />
+            <stop offset="41%" style="stop-color: color-mix(in srgb, ${w} 30%, #1c2318)" />
+            <stop offset="76%" style="stop-color: color-mix(in srgb, ${w} 17%, #0d1109)" />
+            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w} 7%, #04060a)" />
+          </linearGradient>
+          <linearGradient id="wcc-${uid}" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w} 52%, #000)" />
+            <stop offset="28%" style="stop-color: color-mix(in srgb, ${w} 90%, #fff)" />
+            <stop offset="60%" style="stop-color: ${w}" />
+            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w} 45%, #000)" />
+          </linearGradient>
+        </defs>
+        <rect x="33" y="84" width="34" height="21" fill="url(#wcb-${uid})" />
+        <rect x="33" y="103" width="34" height="27" fill="url(#wcc-${uid})" />
+        <rect x="30.9" y="130" width="38.2" height="6" rx="2.4" fill="url(#wcc-${uid})" />
+        <ellipse cx="50" cy="133" rx="10.2" ry="1.5" fill="rgba(0, 0, 0, 0.45)" />
+        <path d="${body}" fill="url(#wcb-${uid})"
+              style="stroke: ${w}" stroke-opacity="0.55" stroke-width="1.5" />
+        <ellipse cx="50" cy="26" rx="47.5" ry="14" fill="rgba(255, 255, 255, 0.06)" />
+      </svg>`;
   }
 
   private _renderCell(
@@ -1331,6 +1374,7 @@ export class CabinetGrid extends LitElement {
       >
         ${frontWine
           ? html`
+              ${this._bottleGlyph(cellKey)}
               ${frontWine.image_url ? html`<img class="wine-thumb" src="${frontWine.image_url}" alt="" />` : nothing}
               <span class="bottle-label">${frontWine.vintage || "NV"}</span>
               ${dispClass ? html`<span class="disposition ${dispClass}">${disp}</span>` : nothing}
@@ -1391,7 +1435,8 @@ export class CabinetGrid extends LitElement {
           @click=${hasGridRows ? () => this._onRackClick() : nothing}
           title=${hasGridRows ? "Tap to view and reorder this rack" : ""}
         >${this.cabinet.name}</div>
-        <div class="grid-inner ${scaleWidth ? "to-scale" : ""}">
+        <div class="grid-inner ${scaleWidth ? "to-scale" : ""}"
+             style="--wc-cols: ${cols}">
           ${Array.from({ length: rows }, (_, row) =>
               storageRows.has(row)
                 ? this._renderStorageZone(row)

@@ -45,7 +45,7 @@ const t$2=globalThis,e$2=t$2.ShadowRoot&&(void 0===t$2.ShadyCSS||t$2.ShadyCSS.na
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const t$1=globalThis,i$1=t=>t,s$1=t$1.trustedTypes,e=s$1?s$1.createPolicy("lit-html",{createHTML:t=>t}):void 0,h="$lit$",o$2=`lit$${Math.random().toFixed(9).slice(2)}$`,n$1="?"+o$2,r$2=`<${n$1}>`,l=document,c=()=>l.createComment(""),a=t=>null===t||"object"!=typeof t&&"function"!=typeof t,u=Array.isArray,d=t=>u(t)||"function"==typeof t?.[Symbol.iterator],f="[ \t\n\f\r]",v=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,_=/-->/g,m=/>/g,p=RegExp(`>|${f}(?:([^\\s"'>=/]+)(${f}*=${f}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),g=/'/g,$=/"/g,y=/^(?:script|style|textarea|title)$/i,x=t=>(i,...s)=>({_$litType$:t,strings:i,values:s}),b=x(1),E=Symbol.for("lit-noChange"),A=Symbol.for("lit-nothing"),C=new WeakMap,P=l.createTreeWalker(l,129);function V(t,i){if(!u(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==e?e.createHTML(i):i}const N=(t,i)=>{const s=t.length-1,e=[];let n,l=2===i?"<svg>":3===i?"<math>":"",c=v;for(let i=0;i<s;i++){const s=t[i];let a,u,d=-1,f=0;for(;f<s.length&&(c.lastIndex=f,u=c.exec(s),null!==u);)f=c.lastIndex,c===v?"!--"===u[1]?c=_:void 0!==u[1]?c=m:void 0!==u[2]?(y.test(u[2])&&(n=RegExp("</"+u[2],"g")),c=p):void 0!==u[3]&&(c=p):c===p?">"===u[0]?(c=n??v,d=-1):void 0===u[1]?d=-2:(d=c.lastIndex-u[2].length,a=u[1],c=void 0===u[3]?p:'"'===u[3]?$:g):c===$||c===g?c=p:c===_||c===m?c=v:(c=p,n=void 0);const x=c===p&&t[i+1].startsWith("/>")?" ":"";l+=c===v?s+r$2:d>=0?(e.push(a),s.slice(0,d)+h+s.slice(d)+o$2+x):s+o$2+(-2===d?i:x);}return [V(t,l+(t[s]||"<?>")+(2===i?"</svg>":3===i?"</math>":"")),e]};class S{constructor({strings:t,_$litType$:i},e){let r;this.parts=[];let l=0,a=0;const u=t.length-1,d=this.parts,[f,v]=N(t,i);if(this.el=S.createElement(f,e),P.currentNode=this.el.content,2===i||3===i){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes);}for(;null!==(r=P.nextNode())&&d.length<u;){if(1===r.nodeType){if(r.hasAttributes())for(const t of r.getAttributeNames())if(t.endsWith(h)){const i=v[a++],s=r.getAttribute(t).split(o$2),e=/([.?@])?(.*)/.exec(i);d.push({type:1,index:l,name:e[2],strings:s,ctor:"."===e[1]?I:"?"===e[1]?L:"@"===e[1]?z:H}),r.removeAttribute(t);}else t.startsWith(o$2)&&(d.push({type:6,index:l}),r.removeAttribute(t));if(y.test(r.tagName)){const t=r.textContent.split(o$2),i=t.length-1;if(i>0){r.textContent=s$1?s$1.emptyScript:"";for(let s=0;s<i;s++)r.append(t[s],c()),P.nextNode(),d.push({type:2,index:++l});r.append(t[i],c());}}}else if(8===r.nodeType)if(r.data===n$1)d.push({type:2,index:l});else {let t=-1;for(;-1!==(t=r.data.indexOf(o$2,t+1));)d.push({type:7,index:l}),t+=o$2.length-1;}l++;}}static createElement(t,i){const s=l.createElement("template");return s.innerHTML=t,s}}function M(t,i,s=t,e){if(i===E)return i;let h=void 0!==e?s._$Co?.[e]:s._$Cl;const o=a(i)?void 0:i._$litDirective$;return h?.constructor!==o&&(h?._$AO?.(false),void 0===o?h=void 0:(h=new o(t),h._$AT(t,s,e)),void 0!==e?(s._$Co??=[])[e]=h:s._$Cl=h),void 0!==h&&(i=M(t,h._$AS(t,i.values),h,e)),i}class R{constructor(t,i){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=i;}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:i},parts:s}=this._$AD,e=(t?.creationScope??l).importNode(i,true);P.currentNode=e;let h=P.nextNode(),o=0,n=0,r=s[0];for(;void 0!==r;){if(o===r.index){let i;2===r.type?i=new k(h,h.nextSibling,this,t):1===r.type?i=new r.ctor(h,r.name,r.strings,this,t):6===r.type&&(i=new Z(h,this,t)),this._$AV.push(i),r=s[++n];}o!==r?.index&&(h=P.nextNode(),o++);}return P.currentNode=l,e}p(t){let i=0;for(const s of this._$AV) void 0!==s&&(void 0!==s.strings?(s._$AI(t,s,i),i+=s.strings.length-2):s._$AI(t[i])),i++;}}class k{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,i,s,e){this.type=2,this._$AH=A,this._$AN=void 0,this._$AA=t,this._$AB=i,this._$AM=s,this.options=e,this._$Cv=e?.isConnected??true;}get parentNode(){let t=this._$AA.parentNode;const i=this._$AM;return void 0!==i&&11===t?.nodeType&&(t=i.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,i=this){t=M(this,t,i),a(t)?t===A||null==t||""===t?(this._$AH!==A&&this._$AR(),this._$AH=A):t!==this._$AH&&t!==E&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):d(t)?this.k(t):this._(t);}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t));}_(t){this._$AH!==A&&a(this._$AH)?this._$AA.nextSibling.data=t:this.T(l.createTextNode(t)),this._$AH=t;}$(t){const{values:i,_$litType$:s}=t,e="number"==typeof s?this._$AC(t):(void 0===s.el&&(s.el=S.createElement(V(s.h,s.h[0]),this.options)),s);if(this._$AH?._$AD===e)this._$AH.p(i);else {const t=new R(e,this),s=t.u(this.options);t.p(i),this.T(s),this._$AH=t;}}_$AC(t){let i=C.get(t.strings);return void 0===i&&C.set(t.strings,i=new S(t)),i}k(t){u(this._$AH)||(this._$AH=[],this._$AR());const i=this._$AH;let s,e=0;for(const h of t)e===i.length?i.push(s=new k(this.O(c()),this.O(c()),this,this.options)):s=i[e],s._$AI(h),e++;e<i.length&&(this._$AR(s&&s._$AB.nextSibling,e),i.length=e);}_$AR(t=this._$AA.nextSibling,s){for(this._$AP?.(false,true,s);t!==this._$AB;){const s=i$1(t).nextSibling;i$1(t).remove(),t=s;}}setConnected(t){ void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t));}}class H{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,i,s,e,h){this.type=1,this._$AH=A,this._$AN=void 0,this.element=t,this.name=i,this._$AM=e,this.options=h,s.length>2||""!==s[0]||""!==s[1]?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=A;}_$AI(t,i=this,s,e){const h=this.strings;let o=false;if(void 0===h)t=M(this,t,i,0),o=!a(t)||t!==this._$AH&&t!==E,o&&(this._$AH=t);else {const e=t;let n,r;for(t=h[0],n=0;n<h.length-1;n++)r=M(this,e[s+n],i,n),r===E&&(r=this._$AH[n]),o||=!a(r)||r!==this._$AH[n],r===A?t=A:t!==A&&(t+=(r??"")+h[n+1]),this._$AH[n]=r;}o&&!e&&this.j(t);}j(t){t===A?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"");}}class I extends H{constructor(){super(...arguments),this.type=3;}j(t){this.element[this.name]=t===A?void 0:t;}}class L extends H{constructor(){super(...arguments),this.type=4;}j(t){this.element.toggleAttribute(this.name,!!t&&t!==A);}}class z extends H{constructor(t,i,s,e,h){super(t,i,s,e,h),this.type=5;}_$AI(t,i=this){if((t=M(this,t,i,0)??A)===E)return;const s=this._$AH,e=t===A&&s!==A||t.capture!==s.capture||t.once!==s.once||t.passive!==s.passive,h=t!==A&&(s===A||e);e&&this.element.removeEventListener(this.name,this,s),h&&this.element.addEventListener(this.name,this,t),this._$AH=t;}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t);}}class Z{constructor(t,i,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=i,this.options=s;}get _$AU(){return this._$AM._$AU}_$AI(t){M(this,t);}}const B=t$1.litHtmlPolyfillSupport;B?.(S,k),(t$1.litHtmlVersions??=[]).push("3.3.2");const D=(t,i,s)=>{const e=s?.renderBefore??i;let h=e._$litPart$;if(void 0===h){const t=s?.renderBefore??null;e._$litPart$=h=new k(i.insertBefore(c(),t),t,void 0,s??{});}return h._$AI(t),h};
+const t$1=globalThis,i$1=t=>t,s$1=t$1.trustedTypes,e=s$1?s$1.createPolicy("lit-html",{createHTML:t=>t}):void 0,h="$lit$",o$2=`lit$${Math.random().toFixed(9).slice(2)}$`,n$1="?"+o$2,r$2=`<${n$1}>`,l=document,c=()=>l.createComment(""),a=t=>null===t||"object"!=typeof t&&"function"!=typeof t,u=Array.isArray,d=t=>u(t)||"function"==typeof t?.[Symbol.iterator],f="[ \t\n\f\r]",v=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,_=/-->/g,m=/>/g,p=RegExp(`>|${f}(?:([^\\s"'>=/]+)(${f}*=${f}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),g=/'/g,$=/"/g,y=/^(?:script|style|textarea|title)$/i,x=t=>(i,...s)=>({_$litType$:t,strings:i,values:s}),b=x(1),w=x(2),E=Symbol.for("lit-noChange"),A=Symbol.for("lit-nothing"),C=new WeakMap,P=l.createTreeWalker(l,129);function V(t,i){if(!u(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==e?e.createHTML(i):i}const N=(t,i)=>{const s=t.length-1,e=[];let n,l=2===i?"<svg>":3===i?"<math>":"",c=v;for(let i=0;i<s;i++){const s=t[i];let a,u,d=-1,f=0;for(;f<s.length&&(c.lastIndex=f,u=c.exec(s),null!==u);)f=c.lastIndex,c===v?"!--"===u[1]?c=_:void 0!==u[1]?c=m:void 0!==u[2]?(y.test(u[2])&&(n=RegExp("</"+u[2],"g")),c=p):void 0!==u[3]&&(c=p):c===p?">"===u[0]?(c=n??v,d=-1):void 0===u[1]?d=-2:(d=c.lastIndex-u[2].length,a=u[1],c=void 0===u[3]?p:'"'===u[3]?$:g):c===$||c===g?c=p:c===_||c===m?c=v:(c=p,n=void 0);const x=c===p&&t[i+1].startsWith("/>")?" ":"";l+=c===v?s+r$2:d>=0?(e.push(a),s.slice(0,d)+h+s.slice(d)+o$2+x):s+o$2+(-2===d?i:x);}return [V(t,l+(t[s]||"<?>")+(2===i?"</svg>":3===i?"</math>":"")),e]};class S{constructor({strings:t,_$litType$:i},e){let r;this.parts=[];let l=0,a=0;const u=t.length-1,d=this.parts,[f,v]=N(t,i);if(this.el=S.createElement(f,e),P.currentNode=this.el.content,2===i||3===i){const t=this.el.content.firstChild;t.replaceWith(...t.childNodes);}for(;null!==(r=P.nextNode())&&d.length<u;){if(1===r.nodeType){if(r.hasAttributes())for(const t of r.getAttributeNames())if(t.endsWith(h)){const i=v[a++],s=r.getAttribute(t).split(o$2),e=/([.?@])?(.*)/.exec(i);d.push({type:1,index:l,name:e[2],strings:s,ctor:"."===e[1]?I:"?"===e[1]?L:"@"===e[1]?z:H}),r.removeAttribute(t);}else t.startsWith(o$2)&&(d.push({type:6,index:l}),r.removeAttribute(t));if(y.test(r.tagName)){const t=r.textContent.split(o$2),i=t.length-1;if(i>0){r.textContent=s$1?s$1.emptyScript:"";for(let s=0;s<i;s++)r.append(t[s],c()),P.nextNode(),d.push({type:2,index:++l});r.append(t[i],c());}}}else if(8===r.nodeType)if(r.data===n$1)d.push({type:2,index:l});else {let t=-1;for(;-1!==(t=r.data.indexOf(o$2,t+1));)d.push({type:7,index:l}),t+=o$2.length-1;}l++;}}static createElement(t,i){const s=l.createElement("template");return s.innerHTML=t,s}}function M(t,i,s=t,e){if(i===E)return i;let h=void 0!==e?s._$Co?.[e]:s._$Cl;const o=a(i)?void 0:i._$litDirective$;return h?.constructor!==o&&(h?._$AO?.(false),void 0===o?h=void 0:(h=new o(t),h._$AT(t,s,e)),void 0!==e?(s._$Co??=[])[e]=h:s._$Cl=h),void 0!==h&&(i=M(t,h._$AS(t,i.values),h,e)),i}class R{constructor(t,i){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=i;}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){const{el:{content:i},parts:s}=this._$AD,e=(t?.creationScope??l).importNode(i,true);P.currentNode=e;let h=P.nextNode(),o=0,n=0,r=s[0];for(;void 0!==r;){if(o===r.index){let i;2===r.type?i=new k(h,h.nextSibling,this,t):1===r.type?i=new r.ctor(h,r.name,r.strings,this,t):6===r.type&&(i=new Z(h,this,t)),this._$AV.push(i),r=s[++n];}o!==r?.index&&(h=P.nextNode(),o++);}return P.currentNode=l,e}p(t){let i=0;for(const s of this._$AV) void 0!==s&&(void 0!==s.strings?(s._$AI(t,s,i),i+=s.strings.length-2):s._$AI(t[i])),i++;}}class k{get _$AU(){return this._$AM?._$AU??this._$Cv}constructor(t,i,s,e){this.type=2,this._$AH=A,this._$AN=void 0,this._$AA=t,this._$AB=i,this._$AM=s,this.options=e,this._$Cv=e?.isConnected??true;}get parentNode(){let t=this._$AA.parentNode;const i=this._$AM;return void 0!==i&&11===t?.nodeType&&(t=i.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,i=this){t=M(this,t,i),a(t)?t===A||null==t||""===t?(this._$AH!==A&&this._$AR(),this._$AH=A):t!==this._$AH&&t!==E&&this._(t):void 0!==t._$litType$?this.$(t):void 0!==t.nodeType?this.T(t):d(t)?this.k(t):this._(t);}O(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}T(t){this._$AH!==t&&(this._$AR(),this._$AH=this.O(t));}_(t){this._$AH!==A&&a(this._$AH)?this._$AA.nextSibling.data=t:this.T(l.createTextNode(t)),this._$AH=t;}$(t){const{values:i,_$litType$:s}=t,e="number"==typeof s?this._$AC(t):(void 0===s.el&&(s.el=S.createElement(V(s.h,s.h[0]),this.options)),s);if(this._$AH?._$AD===e)this._$AH.p(i);else {const t=new R(e,this),s=t.u(this.options);t.p(i),this.T(s),this._$AH=t;}}_$AC(t){let i=C.get(t.strings);return void 0===i&&C.set(t.strings,i=new S(t)),i}k(t){u(this._$AH)||(this._$AH=[],this._$AR());const i=this._$AH;let s,e=0;for(const h of t)e===i.length?i.push(s=new k(this.O(c()),this.O(c()),this,this.options)):s=i[e],s._$AI(h),e++;e<i.length&&(this._$AR(s&&s._$AB.nextSibling,e),i.length=e);}_$AR(t=this._$AA.nextSibling,s){for(this._$AP?.(false,true,s);t!==this._$AB;){const s=i$1(t).nextSibling;i$1(t).remove(),t=s;}}setConnected(t){ void 0===this._$AM&&(this._$Cv=t,this._$AP?.(t));}}class H{get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}constructor(t,i,s,e,h){this.type=1,this._$AH=A,this._$AN=void 0,this.element=t,this.name=i,this._$AM=e,this.options=h,s.length>2||""!==s[0]||""!==s[1]?(this._$AH=Array(s.length-1).fill(new String),this.strings=s):this._$AH=A;}_$AI(t,i=this,s,e){const h=this.strings;let o=false;if(void 0===h)t=M(this,t,i,0),o=!a(t)||t!==this._$AH&&t!==E,o&&(this._$AH=t);else {const e=t;let n,r;for(t=h[0],n=0;n<h.length-1;n++)r=M(this,e[s+n],i,n),r===E&&(r=this._$AH[n]),o||=!a(r)||r!==this._$AH[n],r===A?t=A:t!==A&&(t+=(r??"")+h[n+1]),this._$AH[n]=r;}o&&!e&&this.j(t);}j(t){t===A?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,t??"");}}class I extends H{constructor(){super(...arguments),this.type=3;}j(t){this.element[this.name]=t===A?void 0:t;}}class L extends H{constructor(){super(...arguments),this.type=4;}j(t){this.element.toggleAttribute(this.name,!!t&&t!==A);}}class z extends H{constructor(t,i,s,e,h){super(t,i,s,e,h),this.type=5;}_$AI(t,i=this){if((t=M(this,t,i,0)??A)===E)return;const s=this._$AH,e=t===A&&s!==A||t.capture!==s.capture||t.once!==s.once||t.passive!==s.passive,h=t!==A&&(s===A||e);e&&this.element.removeEventListener(this.name,this,s),h&&this.element.addEventListener(this.name,this,t),this._$AH=t;}handleEvent(t){"function"==typeof this._$AH?this._$AH.call(this.options?.host??this.element,t):this._$AH.handleEvent(t);}}class Z{constructor(t,i,s){this.element=t,this.type=6,this._$AN=void 0,this._$AM=i,this.options=s;}get _$AU(){return this._$AM._$AU}_$AI(t){M(this,t);}}const B=t$1.litHtmlPolyfillSupport;B?.(S,k),(t$1.litHtmlVersions??=[]).push("3.3.2");const D=(t,i,s)=>{const e=s?.renderBefore??i;let h=e._$litPart$;if(void 0===h){const t=s?.renderBefore??null;e._$litPart$=h=new k(i.insertBefore(c(),t),t,void 0,s??{});}return h._$AI(t),h};
 
 /**
  * @license
@@ -1413,6 +1413,7 @@ let CabinetGrid = class CabinetGrid extends i {
             >
               ${frontWine
                 ? b `
+                    ${this._bottleGlyph(cellKey)}
                     ${frontWine.image_url ? b `<img class="wine-thumb" src="${frontWine.image_url}" alt="" />` : A}
                     <span class="bottle-label">${frontWine.vintage || "NV"}</span>
                     ${dispClass ? b `<span class="disposition ${dispClass}">${disp}</span>` : A}
@@ -1447,6 +1448,64 @@ let CabinetGrid = class CabinetGrid extends i {
         })}
       </div>
     `;
+    }
+    /* A bottle, drawn as a bottle.
+     *
+     * A circle with an offset highlight is, definitionally, a marble -- no
+     * amount of shading fixes it, because what identifies a bottle is its
+     * SILHOUETTE: straight body sides that step in at the shoulder to a longer,
+     * narrower neck. (A domed top reads as a mushroom; a flat one as a jar.
+     * Both were tried.)
+     *
+     * The constraint that shapes everything here: the cell's box IS the
+     * bottle's true footprint -- base width across, and the same real
+     * millimetres tall, which is what draws the shelf gap to scale. So the BODY
+     * has to stay inside the box. The neck and capsule hang BELOW it instead,
+     * out over the front rail -- which is where they physically are, since
+     * bottles lie necks to the front. The silhouette comes back and no vertical
+     * shelf budget is spent on it.
+     *
+     * viewBox units are therefore percentages of the base width: 100 across,
+     * 100 down for the cell box, and 36 more of neck hanging past it.
+     *
+     * `uid` only exists because each cell needs its own gradients -- they
+     * resolve `--wine` from the cell they sit in, so they cannot be shared. */
+    _bottleGlyph(uid) {
+        /* Straight sides have to DOMINATE. With a deep top arc and an early
+           shoulder the straight run is only a third of the body and the whole
+           thing reads as a lampshade; the arc is therefore shallow (a bottle's
+           base, seen at this angle, is a shallow ellipse) and the shoulder is a
+           short concave transition right at the end. */
+        const body = "M 1 62 L 1 26 A 49 25 0 0 1 99 26 L 99 62" +
+            " C 99 77 70 79 67 86 L 33 86 C 30 79 1 77 1 62 Z";
+        const w$1 = "var(--wine, #722f37)";
+        return w `
+      <svg class="bottle-glyph" viewBox="0 0 100 136"
+           preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+        <defs>
+          <linearGradient id="wcb-${uid}" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w$1} 9%, #04060a)" />
+            <stop offset="15%" style="stop-color: color-mix(in srgb, ${w$1} 26%, #171d14)" />
+            <stop offset="29%" style="stop-color: rgba(255, 255, 255, 0.28)" />
+            <stop offset="41%" style="stop-color: color-mix(in srgb, ${w$1} 30%, #1c2318)" />
+            <stop offset="76%" style="stop-color: color-mix(in srgb, ${w$1} 17%, #0d1109)" />
+            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w$1} 7%, #04060a)" />
+          </linearGradient>
+          <linearGradient id="wcc-${uid}" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w$1} 52%, #000)" />
+            <stop offset="28%" style="stop-color: color-mix(in srgb, ${w$1} 90%, #fff)" />
+            <stop offset="60%" style="stop-color: ${w$1}" />
+            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w$1} 45%, #000)" />
+          </linearGradient>
+        </defs>
+        <rect x="33" y="84" width="34" height="21" fill="url(#wcb-${uid})" />
+        <rect x="33" y="103" width="34" height="27" fill="url(#wcc-${uid})" />
+        <rect x="30.9" y="130" width="38.2" height="6" rx="2.4" fill="url(#wcc-${uid})" />
+        <ellipse cx="50" cy="133" rx="10.2" ry="1.5" fill="rgba(0, 0, 0, 0.45)" />
+        <path d="${body}" fill="url(#wcb-${uid})"
+              style="stroke: ${w$1}" stroke-opacity="0.55" stroke-width="1.5" />
+        <ellipse cx="50" cy="26" rx="47.5" ry="14" fill="rgba(255, 255, 255, 0.06)" />
+      </svg>`;
     }
     _renderCell(row, col, layer = "base", posStyle = "") {
         const cabinetDepth = this.cabinet.depth || 1;
@@ -1489,6 +1548,7 @@ let CabinetGrid = class CabinetGrid extends i {
       >
         ${frontWine
             ? b `
+              ${this._bottleGlyph(cellKey)}
               ${frontWine.image_url ? b `<img class="wine-thumb" src="${frontWine.image_url}" alt="" />` : A}
               <span class="bottle-label">${frontWine.vintage || "NV"}</span>
               ${dispClass ? b `<span class="disposition ${dispClass}">${disp}</span>` : A}
@@ -1542,7 +1602,8 @@ let CabinetGrid = class CabinetGrid extends i {
           @click=${hasGridRows ? () => this._onRackClick() : A}
           title=${hasGridRows ? "Tap to view and reorder this rack" : ""}
         >${this.cabinet.name}</div>
-        <div class="grid-inner ${scaleWidth ? "to-scale" : ""}">
+        <div class="grid-inner ${scaleWidth ? "to-scale" : ""}"
+             style="--wc-cols: ${cols}">
           ${Array.from({ length: rows }, (_, row) => storageRows.has(row)
             ? this._renderStorageZone(row)
             : scaleWidth
@@ -1712,6 +1773,20 @@ CabinetGrid.styles = [
         );
       }
 
+      /* Room under an ORDINARY row for the neck to hang into. A percentage
+         margin resolves against the GRID's width, and a cell is a col-th of
+         that, so dividing by the column count gives 36% of a cell -- exactly
+         the overhang. Letterboxing the glyph into the cell instead was tried
+         and drew the wine smaller than the empty slots around it.
+
+         Scoped away from .to-scale deliberately: there the row's height IS the
+         shelf gap in millimetres, and padding it out would silently draw a
+         155 mm gap as something else. A to-scale neck hangs into the air over
+         the shelf below, which is where there is room for it. */
+      .row:not(.to-scale) {
+        margin-bottom: calc(2px + 36% / var(--wc-cols, 6));
+      }
+
       .row.to-scale {
         display: block;
         gap: 0;
@@ -1762,16 +1837,6 @@ CabinetGrid.styles = [
         z-index: 1;
       }
 
-      /* ---- a bottle, seen from above -------------------------------------
-         Looking down at a rack you see dark glass and a capsule, not a disc of
-         wine-coloured plastic. So the body is glass -- deeply darkened, only
-         faintly tinted by what is in it -- and the CAPSULE at the centre
-         carries the wine type at full strength. That keeps type instantly
-         readable while letting the thing that actually matters here, the
-         bottle's diameter, be what the eye measures. */
-      
-      /* the capsule over the cork: the wine type, at full strength, small */
-      
       /* ---- an empty position ---------------------------------------------
          Recessed and quiet. It contributes nothing to the row's width and must
          never read as louder than the wine. */
@@ -1883,81 +1948,54 @@ CabinetGrid.styles = [
          apps, and the flat disc version read as a counter rather than wine.
          Dark glass, faintly tinted by what is in it, with the type carried at
          full strength by the capsule at the centre. */
+      /* The cell is now only a BOX -- the true footprint. Everything visible is
+         drawn by the SVG in _bottleGlyph, which is the only way to get the
+         shoulder curve that makes the thing read as a bottle rather than a
+         marble. */
       .cell.filled {
-        /* A rim in the wine's own colour. The glass body alone is nearly black
-           at 42px -- especially under a dark label photograph -- and a filled
-           slot stopped reading as different from an empty one. The rim is what
-           carries "there is a bottle here" at small sizes; the glass and the
-           capsule carry it at large ones. */
-        border: 1.5px solid var(--bottle-type-color, rgba(255, 255, 255, 0.35));
+        background: none;
+        border: none;
+        box-shadow: none;
         overflow: visible;
-        background:
-          radial-gradient(
-            circle at 32% 25%,
-            rgba(255, 255, 255, 0.50) 0%,
-            rgba(255, 255, 255, 0.13) 15%,
-            transparent 33%
-          ),
-          radial-gradient(
-            circle at 70% 78%,
-            rgba(255, 255, 255, 0.20) 0%,
-            transparent 26%
-          ),
-          radial-gradient(
-            circle at 50% 43%,
-            color-mix(in srgb, var(--wine, #722f37) 34%, #232a1e) 0%,
-            color-mix(in srgb, var(--wine, #722f37) 22%, #141810) 58%,
-            color-mix(in srgb, var(--wine, #722f37) 10%, #050706) 100%
-          );
-        box-shadow:
-          0 3px 7px rgba(0, 0, 0, 0.62),
-          inset 0 1px 1px rgba(255, 255, 255, 0.14),
-          inset 0 -5px 9px rgba(0, 0, 0, 0.5);
       }
 
-      /* the capsule over the cork */
-      .cell.filled::after {
-        content: "";
+      .bottle-glyph {
         position: absolute;
-        inset: 34%;
-        border-radius: 50%;
-        background:
-          radial-gradient(
-            circle at 36% 28%,
-            rgba(255, 255, 255, 0.45) 0%,
-            rgba(255, 255, 255, 0.12) 30%,
-            transparent 60%
-          ),
-          radial-gradient(
-            circle at 50% 50%,
-            color-mix(in srgb, var(--wine, #722f37) 80%, #fff) 0%,
-            var(--wine, #722f37) 48%,
-            color-mix(in srgb, var(--wine, #722f37) 78%, #000) 100%
-          );
-        box-shadow:
-          inset 0 0 0 1px rgba(0, 0, 0, 0.30),
-          0 1px 2px rgba(0, 0, 0, 0.5);
+        left: 0;
+        top: 0;
+        width: 100%;
+        /* 100% is the footprint the body fills; the extra 36% is the neck,
+           hanging forward past the shelf edge where it physically is. */
+        height: 136%;
+        overflow: visible;
         pointer-events: none;
+        filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
       }
-      /* a label photograph replaces the capsule rather than sitting under it */
-      .cell.filled:has(.wine-thumb)::after {
-        display: none;
+
+      /* The neck crosses the shelf rail, so it has to be painted over it --
+         the rail is z-index 3. A neck sliced off at the rail loses the
+         capsule, which is what carries the wine type. */
+      .row.to-scale .cell.filled {
+        z-index: 4;
       }
 
 
+      /* A label photograph sits INSIDE the bottle's body, not across the whole
+         cell -- at full bleed it covered the shoulder and the silhouette went
+         back to being a disc. */
       .cell .wine-thumb {
         position: absolute;
-        width: 100%;
-        height: 100%;
+        inset: 16%;
+        width: auto;
+        height: auto;
         object-fit: cover;
         border-radius: 50%;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
       }
 
       .cell.filled:hover {
         transform: scale(1.15);
         z-index: 10;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5),
-          0 0 16px rgba(50, 100, 255, 0.3);
       }
 
       .cell .bottle-label {
@@ -1987,13 +2025,18 @@ CabinetGrid.styles = [
         position: absolute;
         top: auto;
         left: auto;
-        right: -2%;
-        bottom: -2%;
+        /* Top corner, not bottom: the neck now hangs off the bottom of the
+           cell and a pip down there sat on top of it. Smaller too -- against a
+           drawn bottle rather than a plain disc it was the loudest thing in
+           the rack, and it is an annotation. */
+        right: -3%;
+        top: -3%;
+        bottom: auto;
         transform: none;
-        width: 34%;
-        height: 34%;
+        width: 27%;
+        height: 27%;
         border-radius: 50%;
-        font-size: clamp(6px, 15cqi, 11px);
+        font-size: clamp(6px, 13cqi, 10px);
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -2004,7 +2047,7 @@ CabinetGrid.styles = [
         line-height: 1;
         border: 1px solid rgba(0, 0, 0, 0.35);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-        opacity: 0.92;
+        opacity: 0.88;
       }
 
       .cell .disposition.drink,

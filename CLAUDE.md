@@ -77,6 +77,42 @@ course needs about 138 mm, so it fits — but it will not fit over a magnum.
 This is a drawing, not a CAD model. It is never going to be exactly right and
 does not need to be.
 
+### A bottle is drawn as a bottle, and the footprint is sacred
+
+`_bottleGlyph` in `cabinet-grid.ts` draws an SVG bottle in steep perspective.
+It replaced a circle with an offset specular highlight, which is definitionally
+a marble -- no amount of shading fixes that, because what identifies a bottle
+is its **silhouette**: straight body sides stepping in at the shoulder to a
+longer, narrower neck. A domed far end reads as a mushroom and a flat one as a
+jar; both were built and rejected.
+
+The rule that shapes the drawing: **the cell's box is the bottle's true
+footprint** -- base width across, and the same real millimetres tall, which is
+what draws the 155 mm shelf gap to scale. So the BODY must stay inside the box.
+The neck and capsule hang *below* it, out over the front rail -- which is where
+they physically are, since bottles lie necks to the front. The silhouette comes
+back and no vertical shelf budget is spent on it.
+
+Consequences worth not undoing:
+
+- The glyph viewBox is `0 0 100 136`: 100 across is the base width, 100 down is
+  the footprint, and the extra 36 is neck. Its CSS height is therefore `136%`.
+  Change one without the other and the bottle stops being to scale.
+- `.row:not(.to-scale)` carries `margin-bottom: calc(2px + 36% / var(--wc-cols))`
+  so an ordinary rack has room for the neck. It is scoped away from `.to-scale`
+  **on purpose**: there the row's height *is* the shelf gap, and padding it out
+  silently draws 155 mm as something else. Letterboxing the glyph into the cell
+  was the other option and it drew the wine smaller than the empty slots.
+- Filled to-scale cells sit at `z-index: 4` so the neck paints over the shelf
+  rail (`z-index: 3`) rather than being sliced off at it -- the capsule is what
+  carries the wine type.
+- A label photograph is inset into the body rather than filling the cell. At
+  full bleed it covers the shoulder and the silhouette is a disc again.
+
+To check it: every `.cell.filled` box must measure square and equal to the
+bottle's base width, and every to-scale row must measure `shelf_height_mm` at
+the row's own `internal_width_mm` scale.
+
 ### Stacking is a different axis from depth
 
 Upstream's `depth` is front-to-back into the rack (1–6 bottles, slide-out
