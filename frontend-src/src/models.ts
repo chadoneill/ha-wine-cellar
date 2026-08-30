@@ -106,6 +106,15 @@ export interface Cabinet {
   /* Row indices that carry a second course of bottles nested in the valleys
      above them. A stack row holds one fewer bottle than the row beneath it. */
   stacked_rows?: number[] | null;
+
+  /* The clear vertical gap between one shelf and the next. In a cabinet whose
+     shelves do not move this is a fixed, real constraint, and it is what a
+     bottle's DIAMETER has to clear -- not its length, which runs back into the
+     depth. Set it and the drawing uses the same millimetres-per-pixel
+     vertically as it does horizontally, so a bottle too fat for the gap is
+     seen not fitting. Leave it unset and rows size themselves to their
+     contents as before. */
+  shelf_height_mm?: number | null;
 }
 
 export interface CellarStats {

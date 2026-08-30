@@ -3,11 +3,12 @@ import { customElement, property, state } from "lit/decorators.js";
 import { Cabinet, Wine, StorageRow, WINE_TYPE_COLORS, WineType } from "../models";
 import { sharedStyles } from "../styles";
 import {
+  EMPTY_REFERENCE_MM,
+  STACK_OVERLAP_FRACTION,
   bottleDims,
   layoutRow,
   nestOverBase,
   stackCapacity,
-  stackOverlapPct,
 } from "../geometry";
 import type { RowLayout } from "../geometry";
 
@@ -143,11 +144,14 @@ export class CabinetGrid extends LitElement {
         display: block;
         gap: 0;
         position: relative;
+        /* a bottle too fat for the shelf gap rises past it, and is seen doing
+           so rather than being silently shrunk to fit */
+        overflow: visible;
       }
 
       /* The shelf the bottles rest on: a thin oak edge with a lit top arris
          and a shadow falling away beneath it. */
-      .row.to-scale.base-row::after {
+      .row.to-scale.shelf-space::after {
         content: "";
         position: absolute;
         left: -6px;
@@ -263,18 +267,20 @@ export class CabinetGrid extends LitElement {
       /* ---- the stack row --------------------------------------------------
          Nested in the valleys on top, so it needs to read as ABOVE: a deeper
          shadow, and it paints over the base row. */
-      .row.to-scale.stack-row {
+      /* The second course sits above and in front, so it paints over the
+         first and casts a deeper shadow onto it. */
+      .row.to-scale .cell.stacked {
         z-index: 2;
       }
-      .row.to-scale.stack-row .cell.filled {
+      .row.to-scale .cell.stacked.filled {
         box-shadow:
-          0 5px 11px rgba(0, 0, 0, 0.62),
+          0 6px 12px rgba(0, 0, 0, 0.66),
           inset 0 0 0 1px rgba(255, 255, 255, 0.18),
           inset 0 -3px 6px rgba(0, 0, 0, 0.35);
       }
-      .row.to-scale.stack-row .cell.empty {
+      .row.to-scale .cell.stacked.empty {
         border-style: dotted;
-        opacity: 0.5;
+        opacity: 0.55;
       }
 
       .row.to-scale .cell.drag-over {
@@ -774,6 +780,12 @@ export class CabinetGrid extends LitElement {
     return typeof mm === "number" && mm > 0 ? mm : null;
   }
 
+  /* The clear gap between one shelf and the next, when it was measured. */
+  private _shelfHeightMm(): number | null {
+    const mm = this.cabinet.shelf_height_mm;
+    return typeof mm === "number" && mm > 0 ? mm : null;
+  }
+
   private _isStacked(row: number): boolean {
     return (this.cabinet.stacked_rows || []).includes(row);
   }
@@ -1113,43 +1125,61 @@ export class CabinetGrid extends LitElement {
        ghost bottle. It still contributes nothing to the row's width; this is
        only about how loud it is, and in a mostly-empty cabinet -- which is the
        normal condition -- full-size rings drown the wine. */
-    const marker = (item: RowLayout<Wine>["items"][number]) => item.emptyRefPct * 0.46;
-    const drawn = (item: RowLayout<Wine>["items"][number]) =>
-      item.occupant ? item.widthPct : marker(item);
+    const drawnPct = (item: RowLayout<Wine>["items"][number]) =>
+      item.occupant ? item.widthPct : item.emptyRefPct * 0.46;
+    /* ...and its real height in millimetres, which is what has to clear the
+       shelf above. A bottle lying down is as tall as it is wide. */
+    const drawnMm = (item: RowLayout<Wine>["items"][number]) =>
+      item.occupant ? item.mm : EMPTY_REFERENCE_MM * 0.46;
 
-    /* The row is as tall as the largest thing actually in it, so a shelf with
-       nothing on it collapses to a thin strip instead of reserving a bottle's
-       worth of height to show nothing. */
-    /* Each row sized independently: a stack row holding nothing should not
-       reserve a magnum's worth of height because a magnum sits below it. */
-    const aspectOf = (l: RowLayout<Wine>) =>
-      (100 / Math.max(...l.items.map(drawn), 1)).toFixed(4);
-    const baseAspect = aspectOf(base);
-    const stackAspect = stack ? aspectOf(stack) : baseAspect;
+    /* How high the second course sits: two tangent circles whose centres are
+       one radius apart, so the upper one rests sqrt(3)/2 of a diameter above
+       the shelf, not a whole one. */
+    const beneath = base.items.filter((i) => i.mm > 0);
+    const meanBaseMm = beneath.length
+      ? beneath.reduce((m, i) => m + i.mm, 0) / beneath.length
+      : EMPTY_REFERENCE_MM;
+    const stackLiftMm = meanBaseMm * (1 - STACK_OVERLAP_FRACTION);
 
-    /* Sized by width alone and bottom-aligned, so every bottle is a true circle
-       at its real diameter and all of them rest on the same shelf. */
-    const place = (item: RowLayout<Wine>["items"][number]) => {
-      const w = drawn(item);
-      return `width:${w.toFixed(3)}%;left:${(item.centrePct - w / 2).toFixed(3)}%;`;
+    /* ONE shelf is ONE gap. A stacked shelf does not get two: the second
+       course nests inside the same space, which is the whole question of
+       whether a stack fits at all. */
+    const tallestBaseMm = Math.max(...base.items.map(drawnMm), 1);
+    const tallestStackMm = stack ? Math.max(...stack.items.map(drawnMm), 1) : 0;
+    const naturalMm = stack
+      ? stackLiftMm + tallestStackMm
+      : tallestBaseMm;
+    const gapMm = this._shelfHeightMm() ?? naturalMm * 1.08;
+
+    /* Same millimetres-per-pixel in both axes: a shelf 430 mm wide and 140 mm
+       tall is drawn 430/140. A bottle too fat for the gap then rises past the
+       shelf above and is seen doing it -- the vertical twin of a row running
+       off the end. */
+    const aspect = (span / gapMm).toFixed(4);
+    const liftPct = (stackLiftMm / gapMm) * 100;
+
+    const cell = (
+      item: RowLayout<Wine>["items"][number],
+      layer: "base" | "stack",
+      bottomPct: number
+    ) => {
+      const w = drawnPct(item);
+      return this._renderCell(
+        row,
+        item.index,
+        layer,
+        `width:${w.toFixed(3)}%;left:${(item.centrePct - w / 2).toFixed(3)}%;` +
+          `bottom:${bottomPct.toFixed(3)}%;`
+      );
     };
 
     return html`
-      ${stack
-        ? html`
-            <div
-              class="row to-scale stack-row"
-              style="aspect-ratio:${stackAspect};margin-bottom:-${stackOverlapPct(base).toFixed(2)}%"
-            >
-              ${stack.items.map((item) => this._renderCell(row, item.index, "stack", place(item)))}
-            </div>
-          `
-        : nothing}
       <div
-        class="row to-scale base-row ${base.overflow ? "over-capacity" : ""}"
-        style="aspect-ratio:${baseAspect}"
+        class="row to-scale shelf-space ${base.overflow ? "over-capacity" : ""}"
+        style="aspect-ratio:${aspect}"
       >
-        ${base.items.map((item) => this._renderCell(row, item.index, "base", place(item)))}
+        ${base.items.map((item) => cell(item, "base", 0))}
+        ${stack ? stack.items.map((item) => cell(item, "stack", liftPct)) : nothing}
       </div>
     `;
   }
@@ -1175,7 +1205,7 @@ export class CabinetGrid extends LitElement {
           const isDragOver = this._dragOverCell === cellKey;
           return html`
             <div
-              class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""}"
+              class="cell ${frontWine ? "filled" : "empty"} ${layer === "stack" ? "stacked" : ""} ${isDragOver ? "drag-over" : ""}"
               style=${frontWine ? `background: ${bgColor}; --bottle-type-color: ${ringColor}` : ""}
               draggable=${frontWine ? "true" : "false"}
               @click=${() => this._onCellClick(row, col, frontWine, wineCount, cabinetDepth, wines)}
@@ -1261,7 +1291,7 @@ export class CabinetGrid extends LitElement {
       : "";
     return html`
       <div
-        class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""}"
+        class="cell ${frontWine ? "filled" : "empty"} ${layer === "stack" ? "stacked" : ""} ${isDragOver ? "drag-over" : ""}"
         style=${`${fillStyle}${posStyle}` || nothing}
         draggable=${frontWine ? "true" : "false"}
         @click=${() => this._onCellClick(row, col, frontWine, wineCount, cabinetDepth, wines)}
