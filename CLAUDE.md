@@ -77,45 +77,47 @@ course needs about 138 mm, so it fits — but it will not fit over a magnum.
 This is a drawing, not a CAD model. It is never going to be exactly right and
 does not need to be.
 
-### A bottle is drawn as a bottle, and the footprint is sacred
+### A slot, not a picture of a bottle
 
-`_bottleGlyph` in `cabinet-grid.ts` draws an SVG bottle lying down: base at the
-top of the cell, body running toward you, capsule at the bottom on the front
-rail. It replaced a circle with an offset specular highlight, which is
-definitionally a marble — no amount of shading fixes that, because what
-identifies a bottle is its **silhouette**: straight sides stepping in at the
-shoulder to a narrower neck.
+`.cell.filled` is a matte hollow with a coloured ring around it — the treatment
+from the standalone prototype (`wine-cellar/mockup.html`, now archived):
 
-**The whole bottle stays inside the cell**, because the cell's box *is* the
-bottle's true footprint — base width across, the same real millimetres tall.
-That is what keeps five bottles across a 430 mm shelf measuring five bottles
-across a 430 mm shelf, and what keeps the empty placeholders the right size
-beside them.
+```
+background: radial-gradient(circle at 34% 30%, <weak wine tint>, #0b0909 78%);
+border: 2.5px solid var(--bottle-type-color);
+box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.75);
+```
 
-Three shapes were built and rejected; do not re-derive them:
+**Do not try to draw a bottle in it.** Four attempts were built and all four
+were rejected, in this order:
 
-- **A dome** reads as a mushroom, **a flat top** as a jar.
-- **A neck hanging below the cell**, over the front rail — physically where a
-  neck is — reads on screen as the bottle *falling out of the cabinet*.
-- **A full-length bottle receding into the rack**, faded out at the back, is
-  the most literally correct of the lot and looked the worst: the bottles
-  dissolve into pale plumes and swallow the placeholders. It also quietly
-  changes what the vertical axis means, from shelf gap to depth.
+1. **A lit sphere** — a circle with an offset specular highlight, which is
+   definitionally a marble.
+2. **A shouldered silhouette** compressed into the cell — squat; reads as a
+   lampshade, a mushroom or a jar depending on how the far end is drawn.
+3. **The neck hanging below the cell**, over the front rail, which is
+   physically where a neck is — on screen it reads as the bottle *falling out
+   of the cabinet*.
+4. **A full-length bottle receding into the rack**, faded out at the back. The
+   most literally correct of the four and the worst-looking: the bottles
+   dissolve into pale plumes and swallow the empty placeholders. It also
+   quietly changes what the vertical axis means, from shelf gap to depth.
 
-What makes it read as three-dimensional is **lighting, not outline**: a
-cylinder gradient across the glass brightest left of centre where the cabinet
-lamp is, a specular strip down that lit side, a top-to-front shade so the base
-catches the lamp and the front sits in its own shadow, a lit rim on the base
-disc, and — the one that does most of the work — a **contact shadow on the
-shelf**, which is what makes an object look like it is resting on something
-rather than floating.
+Drawing the shelf *surface* behind them — a lit beech tray receding into the
+dark — was also tried. It reads well on its own but the empty placeholders are
+a faint cream ring tuned against black, and they vanish against lit wood.
 
-A label photograph is inset into the body rather than filling the cell. At full
-bleed it covers the shoulder and the silhouette is a disc again.
+The lesson under all of it: the prototype was never illustrating a bottle, it
+was drawing the **slot**. Identity comes from the ring colour and the badges,
+not from a rendering. Matte on purpose — a specular highlight is exactly what
+turns a dark circle into a marble. The wine tint is held at 12% because at full
+strength every slot is a saturated dot and the rack becomes a colour chart.
 
-To check it: every `.cell.filled` box must measure square and equal to the
-bottle's base width, and every to-scale row must measure `shelf_height_mm` at
-the row's own `internal_width_mm` scale.
+What must stay true regardless of treatment: every `.cell.filled` box measures
+square and equal to the bottle's base width, and every to-scale row measures
+`shelf_height_mm` at the row's own `internal_width_mm` scale. That is what
+keeps five bottles across a 430 mm shelf measuring five bottles across a 430 mm
+shelf, and the empty placeholders the right size beside them.
 
 ### Stacking is a different axis from depth
 

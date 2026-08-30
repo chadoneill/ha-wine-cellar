@@ -297,6 +297,9 @@
       }
     });
   </script>
-  <script type="module" src="./wine-cellar-card.js"></script>
+  <!-- Dev harness only: a timestamped import so a rebuild is always picked up.
+       A plain src= is served from the browser cache and silently shows you the
+       previous build, which wasted a lot of time. -->
+  <script type="module">import(`./wine-cellar-card.js?t=${Date.now()}`);</script>
 </body>
 </html>

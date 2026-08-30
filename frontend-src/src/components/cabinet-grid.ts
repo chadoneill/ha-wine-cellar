@@ -1,4 +1,4 @@
-import { LitElement, html, css, svg, nothing } from "lit";
+import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Cabinet, Wine, StorageRow, WINE_TYPE_COLORS, WineType } from "../models";
 import { sharedStyles } from "../styles";
@@ -106,6 +106,10 @@ export class CabinetGrid extends LitElement {
       .cell {
         flex: 1;
         aspect-ratio: 1;
+        /* The ring has to sit INSIDE the width. At content-box a 2.5px border
+           adds 5px to every cell, which drew a 74 mm bottle at 79 mm and put
+           five of them across 395 mm of a 430 mm shelf. */
+        box-sizing: border-box;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -305,48 +309,45 @@ export class CabinetGrid extends LitElement {
         border-color: rgba(214, 197, 176, 0.34);
       }
 
-      /* A bottle, seen from above, in EVERY rack -- not only the to-scale one.
-         Two renderings of the same object in one app made it look like two
-         apps, and the flat disc version read as a counter rather than wine.
-         Dark glass, faintly tinted by what is in it, with the type carried at
-         full strength by the capsule at the centre. */
-      /* The cell is now only a BOX -- the true footprint. Everything visible is
-         drawn by the SVG in _bottleGlyph, which is the only way to get the
-         shoulder curve that makes the thing read as a bottle rather than a
-         marble. */
+      /* A SLOT, not a picture of a bottle.
+       *
+       * This is the standalone prototype's treatment, brought back after four
+       * attempts at drawing an actual bottle -- a lit sphere, a shouldered
+       * silhouette, a neck hanging over the rail, and a full-length bottle
+       * receding into the rack. Every one of them looked worse than this, and
+       * the reason is that the prototype was never illustrating a bottle. It
+       * drew the SLOT: a matte hollow with a coloured ring around it. The
+       * identity comes from the ring and the badges, not from a rendering.
+       *
+       * Matte on purpose. A specular highlight is what turns a dark circle
+       * into a marble, so there is none -- the gradient is offset to 34%/30%
+       * and lands on near-black, which reads as a recess rather than a bead.
+       * The ring is 2.5px and the inset shadow is heavy; those two do all the
+       * work.
+       *
+       * The wine tint is deliberately weak. At full strength every slot is a
+       * saturated dot and the rack becomes a colour chart; at 12% it is just
+       * enough that a red slot is not the same object as a white one. */
       .cell.filled {
-        background: none;
-        border: none;
-        box-shadow: none;
-        overflow: visible;
-      }
-
-      /* The whole bottle lives inside its own footprint, so the box stays
-         square and the empty placeholders beside it stay the right size. The
-         viewBox carries a little margin for the cast shadow to spill into. */
-      .bottle-glyph {
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        top: auto;
-        width: 100%;
-        height: 100%;
-        overflow: visible;
-        pointer-events: none;
+        background: radial-gradient(
+          circle at 34% 30%,
+          color-mix(in srgb, var(--wine, #722f37) 12%, #241e1d) 0%,
+          #0b0909 78%
+        );
+        border: 2.5px solid var(--bottle-type-color, rgba(255, 255, 255, 0.35));
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.75);
+        overflow: hidden;
       }
 
 
-      /* A label photograph sits INSIDE the bottle's body, not across the whole
-         cell -- at full bleed it covered the shoulder and the silhouette went
-         back to being a disc. */
+      /* With no silhouette left to protect, a label photograph fills its slot
+         again, inside the ring. */
       .cell .wine-thumb {
         position: absolute;
-        inset: 16%;
-        width: auto;
-        height: auto;
+        width: 100%;
+        height: 100%;
         object-fit: cover;
         border-radius: 50%;
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
       }
 
       .cell.filled:hover {
@@ -1209,8 +1210,7 @@ export class CabinetGrid extends LitElement {
             >
               ${frontWine
                 ? html`
-                    ${this._bottleGlyph(cellKey)}
-                    ${frontWine.image_url ? html`<img class="wine-thumb" src="${frontWine.image_url}" alt="" />` : nothing}
+                          ${frontWine.image_url ? html`<img class="wine-thumb" src="${frontWine.image_url}" alt="" />` : nothing}
                     <span class="bottle-label">${frontWine.vintage || "NV"}</span>
                     ${dispClass ? html`<span class="disposition ${dispClass}">${disp}</span>` : nothing}
                     ${ratingDisplay ? html`<span class="rating-badge">★${ratingDisplay}</span>` : nothing}
@@ -1246,92 +1246,6 @@ export class CabinetGrid extends LitElement {
         })}
       </div>
     `;
-  }
-
-  /* A bottle lying down, lit as a solid object.
-   *
-   * You are looking into the front of a shelf. A bottle lies necks-to-the-
-   * front, so its base is at the top of the cell, the body runs toward you,
-   * and the capsule sits at the bottom on the front rail.
-   *
-   * Everything stays INSIDE the cell, because the cell's box IS the bottle's
-   * true footprint -- base width across, the same real millimetres tall. That
-   * is what keeps five bottles across a 430 mm shelf measuring five bottles
-   * across a 430 mm shelf, and what keeps the empty placeholders the right
-   * size beside them. Two versions that broke out of the box were tried and
-   * both were worse: a neck hanging under the shelf read as the bottle
-   * falling out of the cabinet, and a full-length bottle receding into the
-   * rack dissolved into a pale plume and swallowed the placeholders.
-   *
-   * What makes it read as three-dimensional is LIGHTING, not outline:
-   *   - a cylinder gradient across the glass, brightest left of centre where
-   *     the cabinet lamp is, falling to near-black at both edges
-   *   - a soft specular strip down that lit side
-   *   - a top-to-front shade, so the base end catches the lamp and the front
-   *     of the bottle sits in its own shadow
-   *   - a lit rim on the base disc, the one edge square-on to the lamp
-   *   - a contact shadow on the shelf, which is what actually makes an object
-   *     look like it is resting on something rather than floating
-   *
-   * viewBox units are percentages of the base width. The box is 100 square;
-   * the viewBox is wider only so the cast shadow has somewhere to spill.
-   *
-   * `uid` only exists because each cell needs its own gradients -- they
-   * resolve `--wine` from the cell they sit in, so cannot be shared. */
-  private _bottleGlyph(uid: string) {
-    const body =
-      "M 3 62 L 3 12 A 47 8 0 0 1 97 12 L 97 62" +
-      " C 97 75 68 73 67 84 L 67 100 L 33 100 L 33 84 C 32 73 3 75 3 62 Z";
-    const w = "var(--wine, #722f37)";
-    return svg`
-      <svg class="bottle-glyph" viewBox="-8 0 116 104"
-           preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-        <defs>
-          <linearGradient id="wcb-${uid}" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w} 6%, #04060a)" />
-            <stop offset="14%" style="stop-color: color-mix(in srgb, ${w} 24%, #171d14)" />
-            <stop offset="27%" style="stop-color: color-mix(in srgb, ${w} 40%, #333d2c)" />
-            <stop offset="46%" style="stop-color: color-mix(in srgb, ${w} 27%, #1a2116)" />
-            <stop offset="80%" style="stop-color: color-mix(in srgb, ${w} 13%, #0b0f08)" />
-            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w} 5%, #04060a)" />
-          </linearGradient>
-          <!-- base end toward the lamp, front of the bottle in its own shade -->
-          <linearGradient id="wcv-${uid}" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.16" />
-            <stop offset="34%" stop-color="#ffffff" stop-opacity="0.02" />
-            <stop offset="68%" stop-color="#000000" stop-opacity="0.16" />
-            <stop offset="100%" stop-color="#000000" stop-opacity="0.38" />
-          </linearGradient>
-          <linearGradient id="wcc-${uid}" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w} 44%, #000)" />
-            <stop offset="26%" style="stop-color: color-mix(in srgb, ${w} 92%, #fff)" />
-            <stop offset="58%" style="stop-color: ${w}" />
-            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w} 38%, #000)" />
-          </linearGradient>
-          <radialGradient id="wcs-${uid}">
-            <stop offset="0%" stop-color="#000000" stop-opacity="0.62" />
-            <stop offset="100%" stop-color="#000000" stop-opacity="0" />
-          </radialGradient>
-          <clipPath id="wcp-${uid}"><path d="${body}" /></clipPath>
-        </defs>
-        <!-- the shadow the bottle casts on the shelf it rests on -->
-        <ellipse cx="52" cy="99" rx="54" ry="7" fill="url(#wcs-${uid})" />
-        <path d="${body}" fill="url(#wcb-${uid})"
-              style="stroke: ${w}" stroke-opacity="0.45" stroke-width="1.2" />
-        <g clip-path="url(#wcp-${uid})">
-          <rect x="0" y="0" width="100" height="100" fill="url(#wcv-${uid})" />
-          <!-- specular strip down the lit side of the glass -->
-          <rect x="19" y="15" width="9" height="66" rx="4.5"
-                fill="#ffffff" opacity="0.13" />
-        </g>
-        <!-- the base disc: a lit rim on the edge square-on to the lamp -->
-        <ellipse cx="50" cy="12" rx="47" ry="8" fill="rgba(255, 255, 255, 0.05)" />
-        <path d="M 3 12 A 47 8 0 0 1 97 12" fill="none"
-              stroke="#ffffff" stroke-opacity="0.20" stroke-width="1.4" />
-        <!-- foil capsule over the end of the neck, on the rail -->
-        <rect x="33" y="85" width="34" height="15" fill="url(#wcc-${uid})" />
-        <rect x="31" y="94" width="38" height="6" rx="1.8" fill="url(#wcc-${uid})" />
-      </svg>`;
   }
 
   private _renderCell(
@@ -1380,7 +1294,6 @@ export class CabinetGrid extends LitElement {
       >
         ${frontWine
           ? html`
-              ${this._bottleGlyph(cellKey)}
               ${frontWine.image_url ? html`<img class="wine-thumb" src="${frontWine.image_url}" alt="" />` : nothing}
               <span class="bottle-label">${frontWine.vintage || "NV"}</span>
               ${dispClass ? html`<span class="disposition ${dispClass}">${disp}</span>` : nothing}
