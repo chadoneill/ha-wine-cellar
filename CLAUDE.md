@@ -49,9 +49,14 @@ Two rules make a scale drawing honest, and both are easy to get wrong:
 
 `bordeaux_heavy` exists at 85 mm because premium heavy glass — Grange, Hill of
 Grace, Sassicaia, most serious Barossa Shiraz — runs 82–88, not the nominal 76.
-Five of them is 425 mm in a 430 mm row: full, with a millimetre a side. Called
-`bordeaux`, the same row computes to 380 mm and 50 mm of slack. That is exactly
-the case the drawing exists to reveal.
+Nine millimetres a bottle is the difference between a row that looks crowded
+and one that looks roomy, and seeing that is the whole point.
+
+**The drawing never reports fit.** No free-space figures, no "over by N mm", no
+commentary of any kind. An over-capacity row simply runs past the shelf edge
+and is seen doing it. The person standing at the cabinet knows what fits; a
+tool that does arithmetic at them about their own shelf is worse than one that
+stays quiet.
 
 ### Stacking is a different axis from depth
 

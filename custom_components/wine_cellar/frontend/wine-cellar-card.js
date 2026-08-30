@@ -751,10 +751,9 @@ const BOTTLE_SHAPES = [
 ];
 /* `bordeaux_heavy` exists because premium heavy glass -- Grange, Hill of
    Grace, Unico, Sassicaia, most serious Barossa Shiraz -- runs 82-88 mm, not
-   the nominal 76. The arithmetic is the whole point: five of them is
-   5 x 85 = 425 mm in a 430 mm row, full with a millimetre a side, where five
-   nominal Bordeaux compute to 380 mm and 50 mm of slack. That is precisely
-   the case a scale drawing exists to reveal.
+   the nominal 76. Nine millimetres a bottle is the difference between a row
+   that looks crowded and one that looks roomy, which is the whole reason a
+   drawing to scale is worth having.
  *
  * `port` is 305 mm, not the 265 often quoted -- 265 is a 500 ml fortified, not
  * a 750 ml port, and the difference matters on a shelf where clearance is
@@ -834,8 +833,8 @@ function layoutRow(count, span_mm, occupantAt, widthOf) {
         found.push({ index, occupant, mm: occupant ? widthOf(occupant) : 0 });
     }
     const occupied = found.reduce((m, i) => m + i.mm, 0);
-    const free = span - occupied;
-    const gapMm = count > 0 ? Math.max(0, free) / (count + 1) : 0;
+    /* Leftover span, used only to space the row out. It is never reported. */
+    const gapMm = count > 0 ? Math.max(0, span - occupied) / (count + 1) : 0;
     const gapPct = gapMm * scale;
     const items = [];
     let x = 0;
@@ -856,10 +855,8 @@ function layoutRow(count, span_mm, occupantAt, widthOf) {
     return {
         span_mm: span,
         occupied_mm: occupied,
-        free_mm: free,
         /* Rule 2: the scale is the row's own, so too much wine runs past 100%. */
         overflow: occupied > span,
-        overflow_mm: Math.max(0, occupied - span),
         scale,
         gapPct,
         items,
@@ -1212,14 +1209,18 @@ let CabinetGrid = class CabinetGrid extends i {
         const stack = stacked && stackCount > 0
             ? nestOverBase(this._rowLayout(row, "stack", stackCount, span), base)
             : null;
-        /* The row's HEIGHT comes from the same scale as its widths, so a reference
-           ring is a true circle at any viewport width and a bottle drawn to its
-           real base width is not distorted by the container. */
-        const refPct = Math.max(1, base.items[0]?.emptyRefPct ?? 20);
-        const aspect = (100 / refPct).toFixed(4);
-        const place = (item) => item.occupant
-            ? `width:${item.widthPct.toFixed(3)}%;left:${item.leftPct.toFixed(3)}%;`
-            : `width:${item.emptyRefPct.toFixed(3)}%;left:${(item.centrePct - item.emptyRefPct / 2).toFixed(3)}%;`;
+        /* A bottle seen from above is a circle of its own diameter, so the row has
+           to be as tall as its WIDEST bottle -- otherwise a heavy Bordeaux gets
+           squashed into an ellipse instead of drawn as the bigger circle it is. */
+        const widest = (l) => l ? Math.max(...l.items.map((i) => (i.occupant ? i.widthPct : i.emptyRefPct)), 1) : 1;
+        const tallest = Math.max(widest(base), widest(stack));
+        const aspect = (100 / tallest).toFixed(4);
+        /* Every cell is sized by width alone and centred on its own centre line,
+           so each is a true circle at its real diameter. */
+        const place = (item) => {
+            const w = item.occupant ? item.widthPct : item.emptyRefPct;
+            return `width:${w.toFixed(3)}%;left:${(item.centrePct - w / 2).toFixed(3)}%;`;
+        };
         return b `
       ${stack
             ? b `
@@ -1231,13 +1232,11 @@ let CabinetGrid = class CabinetGrid extends i {
             </div>
           `
             : A}
-      <div class="row to-scale" style="aspect-ratio:${aspect}">
+      <div
+        class="row to-scale base-row ${base.overflow ? "over-capacity" : ""}"
+        style="aspect-ratio:${aspect}"
+      >
         ${base.items.map((item) => this._renderCell(row, item.index, "base", place(item)))}
-      </div>
-      <div class="scale-readout ${base.overflow ? "over" : ""}">
-        ${base.overflow
-            ? `${base.occupied_mm} mm in a ${base.span_mm} mm row — over by ${base.overflow_mm} mm`
-            : `${base.occupied_mm} of ${base.span_mm} mm · ${base.free_mm} mm free`}
       </div>
     `;
     }
@@ -1331,7 +1330,13 @@ let CabinetGrid = class CabinetGrid extends i {
         const ringColor = frontWine ? this._brightenColor(bgColor) : "";
         const cellKey = layer === "stack" ? `${row}-${col}-stack` : `${row}-${col}`;
         const isDragOver = this._dragOverCell === cellKey;
-        const fillStyle = frontWine ? `background: ${bgColor}; --bottle-type-color: ${ringColor};` : "";
+        /* In to-scale mode the colour is a custom property the stylesheet builds a
+           glass gradient from; a flat background would paint over it. */
+        const fillStyle = frontWine
+            ? posStyle
+                ? `--wine: ${bgColor};`
+                : `background: ${bgColor}; --bottle-type-color: ${ringColor};`
+            : "";
         return b `
       <div
         class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""}"
@@ -1405,7 +1410,7 @@ let CabinetGrid = class CabinetGrid extends i {
           @click=${hasGridRows ? () => this._onRackClick() : A}
           title=${hasGridRows ? "Tap to view and reorder this rack" : ""}
         >${this.cabinet.name}</div>
-        <div class="grid-inner">
+        <div class="grid-inner ${scaleWidth ? "to-scale" : ""}">
           ${Array.from({ length: rows }, (_, row) => storageRows.has(row)
             ? this._renderStorageZone(row)
             : scaleWidth
@@ -1536,41 +1541,230 @@ CabinetGrid.styles = [
         container-type: inline-size;
       }
 
-      /* ---- to-scale rows -------------------------------------------------
-         Used only when the cabinet has a measured internal width. The row
-         becomes a positioning context and each cell is placed at its real
-         width, so a row holding more millimetres of glass than it has of shelf
-         runs past the edge and is seen doing it -- the rack clips it rather
-         than rescaling it away. */
+      /* ================= to-scale rows =================================
+         Used only when the cabinet has a measured internal width. Scoped to
+         .to-scale throughout so a rack without one keeps upstream's look
+         exactly.
+
+         A bottle seen from above is a CIRCLE OF ITS OWN DIAMETER, so a heavy
+         Bordeaux is a bigger circle than a standard one -- not a wider
+         ellipse. Cells are therefore sized by width alone, with aspect-ratio 1
+         and centred on the row's midline; the row is as tall as its widest
+         bottle. */
+
+      .grid-inner.to-scale {
+        /* Warm and dark, like the inside of a cabinet. Upstream's navy and its
+           blue glow are wrong for wine and are not inherited here. */
+        background: linear-gradient(180deg, #1b1613 0%, #100d0b 100%);
+        padding: 10px 10px 4px;
+      }
+      .grid-inner.to-scale::before {
+        background: radial-gradient(
+          ellipse at 50% 0%,
+          rgba(198, 151, 73, 0.10) 0%,
+          transparent 65%
+        );
+      }
+
       .row.to-scale {
         display: block;
         gap: 0;
+        position: relative;
       }
+
+      /* The shelf the bottles rest on: a thin oak edge with a lit top arris
+         and a shadow falling away beneath it. */
+      .row.to-scale.base-row::after {
+        content: "";
+        position: absolute;
+        left: -6px;
+        right: -6px;
+        bottom: -3px;
+        height: 4px;
+        border-radius: 1px;
+        background: linear-gradient(180deg, #6d523049 0%, #8a6a3e 35%, #4a3720 100%);
+        box-shadow: 0 3px 7px rgba(0, 0, 0, 0.55);
+        z-index: 0;
+      }
+
       .row.to-scale .cell {
         position: absolute;
-        top: 0;
-        bottom: 0;
+        top: 50%;
+        bottom: auto;
+        transform: translateY(-50%);
         flex: none;
-        aspect-ratio: auto;
-      }
-      /* An empty position has zero width in the layout; the ring is drawn at a
-         fixed reference diameter so it is never fatter than the wine. */
-      .row.to-scale .cell.empty {
+        aspect-ratio: 1;
         border-radius: 50%;
+        overflow: visible;
+        z-index: 1;
       }
-      .row.stack-row {
+
+      /* ---- a bottle, seen from above -------------------------------------
+         Looking down at a rack you see dark glass and a capsule, not a disc of
+         wine-coloured plastic. So the body is glass -- deeply darkened, only
+         faintly tinted by what is in it -- and the CAPSULE at the centre
+         carries the wine type at full strength. That keeps type instantly
+         readable while letting the thing that actually matters here, the
+         bottle's diameter, be what the eye measures. */
+      .row.to-scale .cell.filled {
+        border: none;
+        background:
+          /* specular highlight, offset up and left as if lit from the front */
+          radial-gradient(
+            circle at 33% 26%,
+            rgba(255, 255, 255, 0.34) 0%,
+            rgba(255, 255, 255, 0.07) 18%,
+            transparent 38%
+          ),
+          /* a bright arc along the far rim, where glass catches the light */
+          radial-gradient(
+            circle at 68% 76%,
+            rgba(255, 255, 255, 0.13) 0%,
+            transparent 30%
+          ),
+          /* the glass itself */
+          radial-gradient(
+            circle at 50% 44%,
+            color-mix(in srgb, var(--wine, #722f37) 46%, #2a2f26) 0%,
+            color-mix(in srgb, var(--wine, #722f37) 32%, #1b1f18) 58%,
+            color-mix(in srgb, var(--wine, #722f37) 16%, #0a0c0b) 100%
+          );
+        box-shadow:
+          0 3px 7px rgba(0, 0, 0, 0.62),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.20),
+          inset 0 1px 1px rgba(255, 255, 255, 0.12),
+          inset 0 -5px 9px rgba(0, 0, 0, 0.5);
+      }
+
+      /* the capsule over the cork: the wine type, at full strength, small */
+      .row.to-scale .cell.filled::after {
+        content: "";
+        position: absolute;
+        /* a capsule is roughly 30% of the base diameter -- 29 mm across a
+           76 mm Bordeaux -- so it reads as a bottle top, not a bullseye */
+        inset: 34%;
+        border-radius: 50%;
+        background:
+          radial-gradient(
+            circle at 36% 28%,
+            rgba(255, 255, 255, 0.45) 0%,
+            rgba(255, 255, 255, 0.12) 30%,
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 50% 50%,
+            color-mix(in srgb, var(--wine, #722f37) 92%, #fff) 0%,
+            var(--wine, #722f37) 55%,
+            color-mix(in srgb, var(--wine, #722f37) 70%, #000) 100%
+          );
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.30),
+          0 1px 2px rgba(0, 0, 0, 0.5);
+        pointer-events: none;
+      }
+
+      /* ---- an empty position ---------------------------------------------
+         Recessed and quiet. It contributes nothing to the row's width and must
+         never read as louder than the wine. */
+      .row.to-scale .cell.empty {
+        background: radial-gradient(
+          circle at 50% 35%,
+          rgba(255, 255, 255, 0.045) 0%,
+          rgba(0, 0, 0, 0.30) 75%
+        );
+        border: 1px dashed rgba(214, 197, 176, 0.22);
+        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+      }
+      .row.to-scale .cell.empty:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(214, 197, 176, 0.34);
+      }
+
+      /* ---- the stack row --------------------------------------------------
+         Nested in the valleys on top, so it needs to read as ABOVE: a deeper
+         shadow, and it paints over the base row. */
+      .row.to-scale.stack-row {
         z-index: 2;
       }
-      .scale-readout {
-        font-size: 10px;
-        opacity: 0.55;
-        text-align: right;
-        padding: 0 2px 2px;
+      .row.to-scale.stack-row .cell.filled {
+        box-shadow:
+          0 5px 11px rgba(0, 0, 0, 0.62),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+          inset 0 -3px 6px rgba(0, 0, 0, 0.35);
       }
-      .scale-readout.over {
-        color: #ff8a65;
-        opacity: 1;
-        font-weight: 600;
+      .row.to-scale.stack-row .cell.empty {
+        border-style: dotted;
+        opacity: 0.5;
+      }
+
+      .row.to-scale .cell.drag-over {
+        outline: 2px solid #c69749;
+        outline-offset: 2px;
+      }
+
+      /* ---- overlays, resized for a to-scale cell --------------------------
+         Upstream draws the disposition as a disc across 65% of the cell. That
+         reads well at 30 px, but a to-scale cell is 80 px and the disc then
+         covers the bottle -- and the bottle's SIZE is the information here. So
+         in this mode the disposition becomes a pip on the rim: same colour,
+         same letter, out of the way. */
+      .row.to-scale .cell .disposition {
+        top: auto;
+        left: auto;
+        right: -1%;
+        bottom: -1%;
+        transform: none;
+        width: 29%;
+        height: 29%;
+        font-size: clamp(6px, 12cqi, 10px);
+        opacity: 0.92;
+        border-width: 1px;
+        border-color: rgba(0, 0, 0, 0.35);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+      }
+
+      /* The label photograph becomes the disc at the centre, where the capsule
+         would be -- a bottle from above has no label face to show, but the
+         picture is still how you recognise it. */
+      .row.to-scale .cell .wine-thumb {
+        inset: 32%;
+        width: auto;
+        height: auto;
+        box-shadow:
+          0 0 0 1px rgba(255, 255, 255, 0.14),
+          0 1px 3px rgba(0, 0, 0, 0.5);
+      }
+      /* ...and then the drawn capsule would sit on top of it, so it stands down */
+      .row.to-scale .cell.filled:has(.wine-thumb)::after {
+        display: none;
+      }
+
+      .row.to-scale .cell .depth-badge {
+        top: -2%;
+        left: -2%;
+        width: 28%;
+        height: 28%;
+        min-width: 12px;
+        min-height: 12px;
+        font-size: clamp(6px, 12cqi, 10px);
+      }
+
+      .row.to-scale .cell.filled:hover {
+        filter: brightness(1.12);
+      }
+
+      /* An over-capacity row runs past the shelf edge. The drawing says so on
+         its own; there is no commentary. */
+      .row.to-scale.over-capacity::before {
+        content: "";
+        position: absolute;
+        top: -4px;
+        bottom: -4px;
+        right: -10px;
+        width: 26px;
+        background: linear-gradient(90deg, transparent, rgba(180, 70, 40, 0.55));
+        z-index: 3;
+        pointer-events: none;
       }
 
       .cell.empty {

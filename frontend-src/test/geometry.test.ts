@@ -56,9 +56,8 @@ describe("bottle dimensions", () => {
     }
   });
 
-  /* The whole reason bordeaux_heavy exists: five of them fill a 430 mm row,
-     where five nominal Bordeaux leave 50 mm of slack. */
-  it("bordeaux_heavy is the difference between a full row and 50 mm of slack", () => {
+  /* The whole reason bordeaux_heavy exists: nine millimetres a bottle. */
+  it("bordeaux_heavy is meaningfully wider than nominal", () => {
     expect(SHAPES.bordeaux_heavy.base_width_mm * 5).toBe(425);
     expect(SHAPES.bordeaux.base_width_mm * 5).toBe(380);
   });
@@ -136,7 +135,6 @@ describe("a row drawn to scale", () => {
     const l = row(430, [90, 90, 90, 90, 90]);
     expect(l.occupied_mm).toBe(450);
     expect(l.overflow).toBe(true);
-    expect(l.overflow_mm).toBe(20);
     expect(totalWidth(l)).toBeGreaterThan(100);
     expect(l.gapPct).toBe(0);
   });
@@ -160,13 +158,12 @@ describe("a row drawn to scale", () => {
     expect(new Set(scales).size).toBe(1);
   });
 
-  it("five heavy bottles fill the row where five nominal ones leave slack", () => {
+  it("a row of heavy bottles is visibly tighter than a row of nominal ones", () => {
     const heavy = row(430, [85, 85, 85, 85, 85]);
     const light = row(430, [76, 76, 76, 76, 76]);
     expect(heavy.occupied_mm).toBe(425);
-    expect(heavy.free_mm).toBe(5);
     expect(heavy.overflow).toBe(false);
-    expect(light.free_mm).toBe(50);
+    /* the difference shows up as air between the bottles, not as a number */
     expect(heavy.gapPct).toBeLessThan(light.gapPct);
   });
 

@@ -40,10 +40,9 @@ export interface ShapeSpec {
 
 /* `bordeaux_heavy` exists because premium heavy glass -- Grange, Hill of
    Grace, Unico, Sassicaia, most serious Barossa Shiraz -- runs 82-88 mm, not
-   the nominal 76. The arithmetic is the whole point: five of them is
-   5 x 85 = 425 mm in a 430 mm row, full with a millimetre a side, where five
-   nominal Bordeaux compute to 380 mm and 50 mm of slack. That is precisely
-   the case a scale drawing exists to reveal.
+   the nominal 76. Nine millimetres a bottle is the difference between a row
+   that looks crowded and one that looks roomy, which is the whole reason a
+   drawing to scale is worth having.
  *
  * `port` is 305 mm, not the 265 often quoted -- 265 is a 500 ml fortified, not
  * a 750 ml port, and the difference matters on a shelf where clearance is
@@ -162,10 +161,10 @@ export interface RowLayout<T> {
   span_mm: number;
   /* the sum of real bottle widths. Empty positions add nothing. */
   occupied_mm: number;
-  free_mm: number;
-  /* true when the wine in this row is wider than the row is */
+  /* true when the wine in this row is wider than the row is. A boolean, not a
+     margin: the drawing shows the overflow, and how many millimetres are spare
+     is not something to tell somebody about their own shelf. */
   overflow: boolean;
-  overflow_mm: number;
   /* percent per millimetre. Always 100 / span, so overflow overflows. */
   scale: number;
   gapPct: number;
@@ -195,8 +194,8 @@ export function layoutRow<T>(
   }
 
   const occupied = found.reduce((m, i) => m + i.mm, 0);
-  const free = span - occupied;
-  const gapMm = count > 0 ? Math.max(0, free) / (count + 1) : 0;
+  /* Leftover span, used only to space the row out. It is never reported. */
+  const gapMm = count > 0 ? Math.max(0, span - occupied) / (count + 1) : 0;
   const gapPct = gapMm * scale;
 
   const items: RowItem<T>[] = [];
@@ -219,10 +218,8 @@ export function layoutRow<T>(
   return {
     span_mm: span,
     occupied_mm: occupied,
-    free_mm: free,
     /* Rule 2: the scale is the row's own, so too much wine runs past 100%. */
     overflow: occupied > span,
-    overflow_mm: Math.max(0, occupied - span),
     scale,
     gapPct,
     items,
