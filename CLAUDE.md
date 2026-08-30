@@ -79,35 +79,39 @@ does not need to be.
 
 ### A bottle is drawn as a bottle, and the footprint is sacred
 
-`_bottleGlyph` in `cabinet-grid.ts` draws an SVG bottle in steep perspective.
-It replaced a circle with an offset specular highlight, which is definitionally
-a marble -- no amount of shading fixes that, because what identifies a bottle
-is its **silhouette**: straight body sides stepping in at the shoulder to a
-longer, narrower neck. A domed far end reads as a mushroom and a flat one as a
-jar; both were built and rejected.
+`_bottleGlyph` in `cabinet-grid.ts` draws an SVG bottle lying down: base at the
+top of the cell, body running toward you, capsule at the bottom on the front
+rail. It replaced a circle with an offset specular highlight, which is
+definitionally a marble — no amount of shading fixes that, because what
+identifies a bottle is its **silhouette**: straight sides stepping in at the
+shoulder to a narrower neck.
 
-The rule that shapes the drawing: **the cell's box is the bottle's true
-footprint** -- base width across, and the same real millimetres tall, which is
-what draws the 155 mm shelf gap to scale. So the BODY must stay inside the box.
-The neck and capsule hang *below* it, out over the front rail -- which is where
-they physically are, since bottles lie necks to the front. The silhouette comes
-back and no vertical shelf budget is spent on it.
+**The whole bottle stays inside the cell**, because the cell's box *is* the
+bottle's true footprint — base width across, the same real millimetres tall.
+That is what keeps five bottles across a 430 mm shelf measuring five bottles
+across a 430 mm shelf, and what keeps the empty placeholders the right size
+beside them.
 
-Consequences worth not undoing:
+Three shapes were built and rejected; do not re-derive them:
 
-- The glyph viewBox is `0 0 100 136`: 100 across is the base width, 100 down is
-  the footprint, and the extra 36 is neck. Its CSS height is therefore `136%`.
-  Change one without the other and the bottle stops being to scale.
-- `.row:not(.to-scale)` carries `margin-bottom: calc(2px + 36% / var(--wc-cols))`
-  so an ordinary rack has room for the neck. It is scoped away from `.to-scale`
-  **on purpose**: there the row's height *is* the shelf gap, and padding it out
-  silently draws 155 mm as something else. Letterboxing the glyph into the cell
-  was the other option and it drew the wine smaller than the empty slots.
-- Filled to-scale cells sit at `z-index: 4` so the neck paints over the shelf
-  rail (`z-index: 3`) rather than being sliced off at it -- the capsule is what
-  carries the wine type.
-- A label photograph is inset into the body rather than filling the cell. At
-  full bleed it covers the shoulder and the silhouette is a disc again.
+- **A dome** reads as a mushroom, **a flat top** as a jar.
+- **A neck hanging below the cell**, over the front rail — physically where a
+  neck is — reads on screen as the bottle *falling out of the cabinet*.
+- **A full-length bottle receding into the rack**, faded out at the back, is
+  the most literally correct of the lot and looked the worst: the bottles
+  dissolve into pale plumes and swallow the placeholders. It also quietly
+  changes what the vertical axis means, from shelf gap to depth.
+
+What makes it read as three-dimensional is **lighting, not outline**: a
+cylinder gradient across the glass brightest left of centre where the cabinet
+lamp is, a specular strip down that lit side, a top-to-front shade so the base
+catches the lamp and the front sits in its own shadow, a lit rim on the base
+disc, and — the one that does most of the work — a **contact shadow on the
+shelf**, which is what makes an object look like it is resting on something
+rather than floating.
+
+A label photograph is inset into the body rather than filling the cell. At full
+bleed it covers the shoulder and the silhouette is a disc again.
 
 To check it: every `.cell.filled` box must measure square and equal to the
 bottle's base width, and every to-scale row must measure `shelf_height_mm` at

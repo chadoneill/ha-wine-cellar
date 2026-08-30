@@ -149,20 +149,6 @@ export class CabinetGrid extends LitElement {
         );
       }
 
-      /* Room under an ORDINARY row for the neck to hang into. A percentage
-         margin resolves against the GRID's width, and a cell is a col-th of
-         that, so dividing by the column count gives 36% of a cell -- exactly
-         the overhang. Letterboxing the glyph into the cell instead was tried
-         and drew the wine smaller than the empty slots around it.
-
-         Scoped away from .to-scale deliberately: there the row's height IS the
-         shelf gap in millimetres, and padding it out would silently draw a
-         155 mm gap as something else. A to-scale neck hangs into the air over
-         the shelf below, which is where there is room for it. */
-      .row:not(.to-scale) {
-        margin-bottom: calc(2px + 36% / var(--wc-cols, 6));
-      }
-
       .row.to-scale {
         display: block;
         gap: 0;
@@ -335,24 +321,18 @@ export class CabinetGrid extends LitElement {
         overflow: visible;
       }
 
+      /* The whole bottle lives inside its own footprint, so the box stays
+         square and the empty placeholders beside it stay the right size. The
+         viewBox carries a little margin for the cast shadow to spill into. */
       .bottle-glyph {
         position: absolute;
         left: 0;
-        top: 0;
+        bottom: 0;
+        top: auto;
         width: 100%;
-        /* 100% is the footprint the body fills; the extra 36% is the neck,
-           hanging forward past the shelf edge where it physically is. */
-        height: 136%;
+        height: 100%;
         overflow: visible;
         pointer-events: none;
-        filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
-      }
-
-      /* The neck crosses the shelf rail, so it has to be painted over it --
-         the rail is z-index 3. A neck sliced off at the rail loses the
-         capsule, which is what carries the wine type. */
-      .row.to-scale .cell.filled {
-        z-index: 4;
       }
 
 
@@ -1268,63 +1248,89 @@ export class CabinetGrid extends LitElement {
     `;
   }
 
-  /* A bottle, drawn as a bottle.
+  /* A bottle lying down, lit as a solid object.
    *
-   * A circle with an offset highlight is, definitionally, a marble -- no
-   * amount of shading fixes it, because what identifies a bottle is its
-   * SILHOUETTE: straight body sides that step in at the shoulder to a longer,
-   * narrower neck. (A domed top reads as a mushroom; a flat one as a jar.
-   * Both were tried.)
+   * You are looking into the front of a shelf. A bottle lies necks-to-the-
+   * front, so its base is at the top of the cell, the body runs toward you,
+   * and the capsule sits at the bottom on the front rail.
    *
-   * The constraint that shapes everything here: the cell's box IS the
-   * bottle's true footprint -- base width across, and the same real
-   * millimetres tall, which is what draws the shelf gap to scale. So the BODY
-   * has to stay inside the box. The neck and capsule hang BELOW it instead,
-   * out over the front rail -- which is where they physically are, since
-   * bottles lie necks to the front. The silhouette comes back and no vertical
-   * shelf budget is spent on it.
+   * Everything stays INSIDE the cell, because the cell's box IS the bottle's
+   * true footprint -- base width across, the same real millimetres tall. That
+   * is what keeps five bottles across a 430 mm shelf measuring five bottles
+   * across a 430 mm shelf, and what keeps the empty placeholders the right
+   * size beside them. Two versions that broke out of the box were tried and
+   * both were worse: a neck hanging under the shelf read as the bottle
+   * falling out of the cabinet, and a full-length bottle receding into the
+   * rack dissolved into a pale plume and swallowed the placeholders.
    *
-   * viewBox units are therefore percentages of the base width: 100 across,
-   * 100 down for the cell box, and 36 more of neck hanging past it.
+   * What makes it read as three-dimensional is LIGHTING, not outline:
+   *   - a cylinder gradient across the glass, brightest left of centre where
+   *     the cabinet lamp is, falling to near-black at both edges
+   *   - a soft specular strip down that lit side
+   *   - a top-to-front shade, so the base end catches the lamp and the front
+   *     of the bottle sits in its own shadow
+   *   - a lit rim on the base disc, the one edge square-on to the lamp
+   *   - a contact shadow on the shelf, which is what actually makes an object
+   *     look like it is resting on something rather than floating
+   *
+   * viewBox units are percentages of the base width. The box is 100 square;
+   * the viewBox is wider only so the cast shadow has somewhere to spill.
    *
    * `uid` only exists because each cell needs its own gradients -- they
-   * resolve `--wine` from the cell they sit in, so they cannot be shared. */
+   * resolve `--wine` from the cell they sit in, so cannot be shared. */
   private _bottleGlyph(uid: string) {
-    /* Straight sides have to DOMINATE. With a deep top arc and an early
-       shoulder the straight run is only a third of the body and the whole
-       thing reads as a lampshade; the arc is therefore shallow (a bottle's
-       base, seen at this angle, is a shallow ellipse) and the shoulder is a
-       short concave transition right at the end. */
     const body =
-      "M 1 62 L 1 26 A 49 25 0 0 1 99 26 L 99 62" +
-      " C 99 77 70 79 67 86 L 33 86 C 30 79 1 77 1 62 Z";
+      "M 3 62 L 3 12 A 47 8 0 0 1 97 12 L 97 62" +
+      " C 97 75 68 73 67 84 L 67 100 L 33 100 L 33 84 C 32 73 3 75 3 62 Z";
     const w = "var(--wine, #722f37)";
     return svg`
-      <svg class="bottle-glyph" viewBox="0 0 100 136"
+      <svg class="bottle-glyph" viewBox="-8 0 116 104"
            preserveAspectRatio="xMidYMax meet" aria-hidden="true">
         <defs>
           <linearGradient id="wcb-${uid}" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w} 9%, #04060a)" />
-            <stop offset="15%" style="stop-color: color-mix(in srgb, ${w} 26%, #171d14)" />
-            <stop offset="29%" style="stop-color: rgba(255, 255, 255, 0.28)" />
-            <stop offset="41%" style="stop-color: color-mix(in srgb, ${w} 30%, #1c2318)" />
-            <stop offset="76%" style="stop-color: color-mix(in srgb, ${w} 17%, #0d1109)" />
-            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w} 7%, #04060a)" />
+            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w} 6%, #04060a)" />
+            <stop offset="14%" style="stop-color: color-mix(in srgb, ${w} 24%, #171d14)" />
+            <stop offset="27%" style="stop-color: color-mix(in srgb, ${w} 40%, #333d2c)" />
+            <stop offset="46%" style="stop-color: color-mix(in srgb, ${w} 27%, #1a2116)" />
+            <stop offset="80%" style="stop-color: color-mix(in srgb, ${w} 13%, #0b0f08)" />
+            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w} 5%, #04060a)" />
+          </linearGradient>
+          <!-- base end toward the lamp, front of the bottle in its own shade -->
+          <linearGradient id="wcv-${uid}" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.16" />
+            <stop offset="34%" stop-color="#ffffff" stop-opacity="0.02" />
+            <stop offset="68%" stop-color="#000000" stop-opacity="0.16" />
+            <stop offset="100%" stop-color="#000000" stop-opacity="0.38" />
           </linearGradient>
           <linearGradient id="wcc-${uid}" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w} 52%, #000)" />
-            <stop offset="28%" style="stop-color: color-mix(in srgb, ${w} 90%, #fff)" />
-            <stop offset="60%" style="stop-color: ${w}" />
-            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w} 45%, #000)" />
+            <stop offset="0%" style="stop-color: color-mix(in srgb, ${w} 44%, #000)" />
+            <stop offset="26%" style="stop-color: color-mix(in srgb, ${w} 92%, #fff)" />
+            <stop offset="58%" style="stop-color: ${w}" />
+            <stop offset="100%" style="stop-color: color-mix(in srgb, ${w} 38%, #000)" />
           </linearGradient>
+          <radialGradient id="wcs-${uid}">
+            <stop offset="0%" stop-color="#000000" stop-opacity="0.62" />
+            <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+          </radialGradient>
+          <clipPath id="wcp-${uid}"><path d="${body}" /></clipPath>
         </defs>
-        <rect x="33" y="84" width="34" height="21" fill="url(#wcb-${uid})" />
-        <rect x="33" y="103" width="34" height="27" fill="url(#wcc-${uid})" />
-        <rect x="30.9" y="130" width="38.2" height="6" rx="2.4" fill="url(#wcc-${uid})" />
-        <ellipse cx="50" cy="133" rx="10.2" ry="1.5" fill="rgba(0, 0, 0, 0.45)" />
+        <!-- the shadow the bottle casts on the shelf it rests on -->
+        <ellipse cx="52" cy="99" rx="54" ry="7" fill="url(#wcs-${uid})" />
         <path d="${body}" fill="url(#wcb-${uid})"
-              style="stroke: ${w}" stroke-opacity="0.55" stroke-width="1.5" />
-        <ellipse cx="50" cy="26" rx="47.5" ry="14" fill="rgba(255, 255, 255, 0.06)" />
+              style="stroke: ${w}" stroke-opacity="0.45" stroke-width="1.2" />
+        <g clip-path="url(#wcp-${uid})">
+          <rect x="0" y="0" width="100" height="100" fill="url(#wcv-${uid})" />
+          <!-- specular strip down the lit side of the glass -->
+          <rect x="19" y="15" width="9" height="66" rx="4.5"
+                fill="#ffffff" opacity="0.13" />
+        </g>
+        <!-- the base disc: a lit rim on the edge square-on to the lamp -->
+        <ellipse cx="50" cy="12" rx="47" ry="8" fill="rgba(255, 255, 255, 0.05)" />
+        <path d="M 3 12 A 47 8 0 0 1 97 12" fill="none"
+              stroke="#ffffff" stroke-opacity="0.20" stroke-width="1.4" />
+        <!-- foil capsule over the end of the neck, on the rail -->
+        <rect x="33" y="85" width="34" height="15" fill="url(#wcc-${uid})" />
+        <rect x="31" y="94" width="38" height="6" rx="1.8" fill="url(#wcc-${uid})" />
       </svg>`;
   }
 
@@ -1435,8 +1441,7 @@ export class CabinetGrid extends LitElement {
           @click=${hasGridRows ? () => this._onRackClick() : nothing}
           title=${hasGridRows ? "Tap to view and reorder this rack" : ""}
         >${this.cabinet.name}</div>
-        <div class="grid-inner ${scaleWidth ? "to-scale" : ""}"
-             style="--wc-cols: ${cols}">
+        <div class="grid-inner ${scaleWidth ? "to-scale" : ""}">
           ${Array.from({ length: rows }, (_, row) =>
               storageRows.has(row)
                 ? this._renderStorageZone(row)
