@@ -124,7 +124,7 @@ export class CabinetGrid extends LitElement {
       .grid-inner.to-scale {
         /* Warm and dark, like the inside of a cabinet. Upstream's navy and its
            blue glow are wrong for wine and are not inherited here. */
-        background: linear-gradient(180deg, #1f1a16 0%, #131010 100%);
+        background: linear-gradient(180deg, #17151400 0%, #0a0a0a 100%), #0e0e0e;
         padding: 12px 12px 6px;
         /* A cabinet has to fit on a screen. Widths stay proportional -- that is
            the information -- but the whole drawing is capped so a rack is not
@@ -133,10 +133,11 @@ export class CabinetGrid extends LitElement {
         margin: 0 auto;
       }
       .grid-inner.to-scale::before {
+        /* the cabinet's own light, from the top */
         background: radial-gradient(
-          ellipse at 50% 0%,
-          rgba(198, 151, 73, 0.10) 0%,
-          transparent 65%
+          ellipse at 50% -10%,
+          rgba(240, 226, 200, 0.11) 0%,
+          transparent 62%
         );
       }
 
@@ -151,17 +152,28 @@ export class CabinetGrid extends LitElement {
 
       /* The shelf the bottles rest on: a thin oak edge with a lit top arris
          and a shadow falling away beneath it. */
+      /* A beech shelf, seen edge-on: the pale front rail of the slatted tray
+         the bottles lie in. It is the brightest thing in the cabinet, which is
+         what makes the shelves read as shelves. */
       .row.to-scale.shelf-space::after {
         content: "";
         position: absolute;
-        left: -6px;
-        right: -6px;
-        bottom: -3px;
-        height: 4px;
-        border-radius: 1px;
-        background: linear-gradient(180deg, #6d523049 0%, #8a6a3e 35%, #4a3720 100%);
-        box-shadow: 0 3px 7px rgba(0, 0, 0, 0.55);
-        z-index: 0;
+        left: -8px;
+        right: -8px;
+        bottom: -5px;
+        height: 7px;
+        border-radius: 2px;
+        background: linear-gradient(
+          180deg,
+          #f0dfc0 0%,
+          #d9c199 38%,
+          #b99b6d 78%,
+          #7d6446 100%
+        );
+        box-shadow:
+          0 4px 9px rgba(0, 0, 0, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        z-index: 3;
       }
 
       /* Bottles REST ON the shelf. Centring them in the row made a small
@@ -209,9 +221,9 @@ export class CabinetGrid extends LitElement {
              at full strength by the capsule instead. */
           radial-gradient(
             circle at 50% 43%,
-            color-mix(in srgb, var(--wine, #722f37) 26%, #232b1f) 0%,
-            color-mix(in srgb, var(--wine, #722f37) 17%, #151a12) 60%,
-            color-mix(in srgb, var(--wine, #722f37) 8%, #060806) 100%
+            color-mix(in srgb, var(--wine, #722f37) 20%, #1a1f16) 0%,
+            color-mix(in srgb, var(--wine, #722f37) 12%, #0e1109) 58%,
+            color-mix(in srgb, var(--wine, #722f37) 5%, #030403) 100%
           );
         box-shadow:
           0 3px 7px rgba(0, 0, 0, 0.62),
@@ -237,9 +249,9 @@ export class CabinetGrid extends LitElement {
           ),
           radial-gradient(
             circle at 50% 50%,
-            color-mix(in srgb, var(--wine, #722f37) 92%, #fff) 0%,
-            var(--wine, #722f37) 55%,
-            color-mix(in srgb, var(--wine, #722f37) 70%, #000) 100%
+            color-mix(in srgb, var(--wine, #722f37) 80%, #fff) 0%,
+            var(--wine, #722f37) 48%,
+            color-mix(in srgb, var(--wine, #722f37) 78%, #000) 100%
           );
         box-shadow:
           inset 0 0 0 1px rgba(0, 0, 0, 0.30),

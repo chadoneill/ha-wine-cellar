@@ -58,6 +58,25 @@ and is seen doing it. The person standing at the cabinet knows what fits; a
 tool that does arithmetic at them about their own shelf is worse than one that
 stays quiet.
 
+### The reference cabinet, measured
+
+A Vintec 35, photographed and measured by the owner:
+
+- **155 mm between shelves**, with a half-step adjustment available.
+- **Bottles about 74 mm across** — a couple of millimetres under the table's
+  nominal Bordeaux, which is a difference nobody will see on screen. One boxed
+  bottle is an exception and is deliberately ignored.
+- **430 mm internal width.**
+- Shelves are pale beech slatted trays with a solid front rail, in a black
+  interior. The beech is the brightest thing in the cabinet, which is what makes
+  a shelf read as a shelf; the drawing follows the photograph on this.
+
+Bottles lie lengthways, necks to the front. At 155 mm of gap a nested second
+course needs about 138 mm, so it fits — but it will not fit over a magnum.
+
+This is a drawing, not a CAD model. It is never going to be exactly right and
+does not need to be.
+
 ### Stacking is a different axis from depth
 
 Upstream's `depth` is front-to-back into the rack (1–6 bottles, slide-out
