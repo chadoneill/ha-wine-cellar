@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { Wine, Cabinet, TastingNotes, WINE_TYPE_LABELS, WINE_TYPE_COLORS, WineType, REMOVAL_REASONS, getWineLocation } from "../models";
+import { BOTTLE_FORMATS, BOTTLE_SHAPES, FORMATS, SHAPES, bottleDims } from "../geometry";
 import { sharedStyles } from "../styles";
 import { resizeImageForStorage } from "../utils/image";
 import "./star-rating";
@@ -618,6 +619,10 @@ export class WineDetailDialog extends LitElement {
       // Convert empty strings to null for numeric fields
       if (updates.vintage === "" || updates.vintage === null) updates.vintage = null;
       else updates.vintage = parseInt(updates.vintage) || null;
+      if (updates.format_ml !== undefined) updates.format_ml = parseInt(updates.format_ml) || 750;
+      // A measured width beats the shape table; blank means "use the table".
+      if (updates.base_width_mm === "" || updates.base_width_mm === null) updates.base_width_mm = null;
+      else if (updates.base_width_mm !== undefined) updates.base_width_mm = parseInt(updates.base_width_mm) || null;
       if (updates.price === "" || updates.price === null) updates.price = null;
       else updates.price = parseFloat(updates.price) || null;
       if (updates.retail_price === "" || updates.retail_price === null) updates.retail_price = null;
@@ -963,6 +968,34 @@ export class WineDetailDialog extends LitElement {
             <label>Purchase Price</label>
             <input type="number" step="0.01" .value=${d.price?.toString() || ""}
               @input=${(e: Event) => this._updateEditField("price", (e.target as HTMLInputElement).value)} />
+          </div>
+        </div>
+
+        <!-- Physical bottle. Only used where a rack is drawn to scale; a wine
+             with neither set is a nominal Bordeaux 750. -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Bottle shape</label>
+            <select @change=${(e: Event) => this._updateEditField("shape", (e.target as HTMLSelectElement).value)}>
+              ${BOTTLE_SHAPES.map(
+                (value) => html`<option value=${value} ?selected=${(d as any).shape === value}>${SHAPES[value].name}</option>`
+              )}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Size</label>
+            <select @change=${(e: Event) => this._updateEditField("format_ml", (e.target as HTMLSelectElement).value)}>
+              ${BOTTLE_FORMATS.map(
+                (value) => html`<option value=${value} ?selected=${Number((d as any).format_ml ?? 750) === value}>${FORMATS[value].name}</option>`
+              )}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Measured width (mm)</label>
+            <input type="number" min="30" max="300"
+              placeholder=${String(bottleDims(d as any).base_width_mm)}
+              .value=${(d as any).base_width_mm?.toString() || ""}
+              @input=${(e: Event) => this._updateEditField("base_width_mm", (e.target as HTMLInputElement).value)} />
           </div>
         </div>
 

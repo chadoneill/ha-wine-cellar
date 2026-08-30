@@ -7,6 +7,7 @@ import {
   WineType,
   WINE_TYPE_LABELS,
 } from "../models";
+import { BOTTLE_FORMATS, BOTTLE_SHAPES, FORMATS, SHAPES } from "../geometry";
 import { sharedStyles } from "../styles";
 import { resizeImageForStorage } from "../utils/image";
 
@@ -981,6 +982,36 @@ export class AddWineDialog extends LitElement {
               @input=${(e: InputEvent) =>
                 this._updateField("price", parseFloat((e.target as HTMLInputElement).value) || null)}
             />
+          </div>
+        </div>
+
+        <!-- Bottle shape and size. Worth setting at add time for anything that
+             is not a standard 750: a magnum takes a third more shelf than its
+             neighbours, which is the thing a to-scale rack exists to show. -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Bottle shape</label>
+            <select
+              @change=${(e: Event) =>
+                this._updateField("shape", (e.target as HTMLSelectElement).value)}
+            >
+              ${BOTTLE_SHAPES.map(
+                (value) =>
+                  html`<option value=${value} ?selected=${((this._wineData as any).shape || "bordeaux") === value}>${SHAPES[value].name}</option>`
+              )}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Size</label>
+            <select
+              @change=${(e: Event) =>
+                this._updateField("format_ml", parseInt((e.target as HTMLSelectElement).value, 10))}
+            >
+              ${BOTTLE_FORMATS.map(
+                (value) =>
+                  html`<option value=${value} ?selected=${Number((this._wineData as any).format_ml ?? 750) === value}>${FORMATS[value].name}</option>`
+              )}
+            </select>
           </div>
         </div>
 

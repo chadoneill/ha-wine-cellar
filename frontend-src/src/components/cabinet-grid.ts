@@ -1221,7 +1221,7 @@ export class CabinetGrid extends LitElement {
           const isDragOver = this._dragOverCell === cellKey;
           return html`
             <div
-              class="cell ${frontWine ? "filled" : "empty"} ${layer === "stack" ? "stacked" : ""} ${isDragOver ? "drag-over" : ""}"
+              class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""}"
               style=${frontWine ? `background: ${bgColor}; --bottle-type-color: ${ringColor}` : ""}
               draggable=${frontWine ? "true" : "false"}
               @click=${() => this._onCellClick(row, col, frontWine, wineCount, cabinetDepth, wines)}

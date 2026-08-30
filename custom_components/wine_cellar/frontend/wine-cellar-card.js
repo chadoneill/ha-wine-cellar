@@ -1270,7 +1270,7 @@ let CabinetGrid = class CabinetGrid extends i {
             const isDragOver = this._dragOverCell === cellKey;
             return b `
             <div
-              class="cell ${frontWine ? "filled" : "empty"} ${layer === "stack" ? "stacked" : ""} ${isDragOver ? "drag-over" : ""}"
+              class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""}"
               style=${frontWine ? `background: ${bgColor}; --bottle-type-color: ${ringColor}` : ""}
               draggable=${frontWine ? "true" : "false"}
               @click=${() => this._onCellClick(row, col, frontWine, wineCount, cabinetDepth, wines)}
@@ -2768,6 +2768,13 @@ let WineDetailDialog = class WineDetailDialog extends i {
                 updates.vintage = null;
             else
                 updates.vintage = parseInt(updates.vintage) || null;
+            if (updates.format_ml !== undefined)
+                updates.format_ml = parseInt(updates.format_ml) || 750;
+            // A measured width beats the shape table; blank means "use the table".
+            if (updates.base_width_mm === "" || updates.base_width_mm === null)
+                updates.base_width_mm = null;
+            else if (updates.base_width_mm !== undefined)
+                updates.base_width_mm = parseInt(updates.base_width_mm) || null;
             if (updates.price === "" || updates.price === null)
                 updates.price = null;
             else
@@ -3111,6 +3118,30 @@ let WineDetailDialog = class WineDetailDialog extends i {
             <label>Purchase Price</label>
             <input type="number" step="0.01" .value=${d.price?.toString() || ""}
               @input=${(e) => this._updateEditField("price", e.target.value)} />
+          </div>
+        </div>
+
+        <!-- Physical bottle. Only used where a rack is drawn to scale; a wine
+             with neither set is a nominal Bordeaux 750. -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Bottle shape</label>
+            <select @change=${(e) => this._updateEditField("shape", e.target.value)}>
+              ${BOTTLE_SHAPES.map((value) => b `<option value=${value} ?selected=${d.shape === value}>${SHAPES[value].name}</option>`)}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Size</label>
+            <select @change=${(e) => this._updateEditField("format_ml", e.target.value)}>
+              ${BOTTLE_FORMATS.map((value) => b `<option value=${value} ?selected=${Number(d.format_ml ?? 750) === value}>${FORMATS[value].name}</option>`)}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Measured width (mm)</label>
+            <input type="number" min="30" max="300"
+              placeholder=${String(bottleDims(d).base_width_mm)}
+              .value=${d.base_width_mm?.toString() || ""}
+              @input=${(e) => this._updateEditField("base_width_mm", e.target.value)} />
           </div>
         </div>
 
@@ -4994,6 +5025,28 @@ let AddWineDialog = class AddWineDialog extends i {
           </div>
         </div>
 
+        <!-- Bottle shape and size. Worth setting at add time for anything that
+             is not a standard 750: a magnum takes a third more shelf than its
+             neighbours, which is the thing a to-scale rack exists to show. -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Bottle shape</label>
+            <select
+              @change=${(e) => this._updateField("shape", e.target.value)}
+            >
+              ${BOTTLE_SHAPES.map((value) => b `<option value=${value} ?selected=${(this._wineData.shape || "bordeaux") === value}>${SHAPES[value].name}</option>`)}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Size</label>
+            <select
+              @change=${(e) => this._updateField("format_ml", parseInt(e.target.value, 10))}
+            >
+              ${BOTTLE_FORMATS.map((value) => b `<option value=${value} ?selected=${Number(this._wineData.format_ml ?? 750) === value}>${FORMATS[value].name}</option>`)}
+            </select>
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Current Value</label>
@@ -5976,6 +6029,21 @@ let RackSettingsDialog = class RackSettingsDialog extends i {
             return { ...sr, boxes, capacity };
         });
     }
+    /* Which shelves carry a second course nested in the valleys on top. */
+    _isStackedRow(row) {
+        return (this._editCabinet.stacked_rows || []).includes(row);
+    }
+    _setStackedRow(row, on) {
+        const current = new Set(this._editCabinet.stacked_rows || []);
+        if (on)
+            current.add(row);
+        else
+            current.delete(row);
+        this._editCabinet = {
+            ...this._editCabinet,
+            stacked_rows: [...current].sort((a, b) => a - b),
+        };
+    }
     _isStorageRow(row) {
         return this._editStorageRows.some((sr) => sr.row === row);
     }
@@ -6068,6 +6136,11 @@ let RackSettingsDialog = class RackSettingsDialog extends i {
                     bottom_zone_name: "",
                     storage_rows: validStorageRows,
                     orientation: "vertical",
+                    internal_width_mm: this._editCabinet.internal_width_mm ?? null,
+                    shelf_height_mm: this._editCabinet.shelf_height_mm ?? null,
+                    /* a shelf that no longer exists, or has become a storage row,
+                       cannot carry a second course */
+                    stacked_rows: (this._editCabinet.stacked_rows || []).filter((r) => r < newRows && !validStorageRows.some((sr) => sr.row === r)),
                 },
             });
             // Unassign wines that are out of bounds or on rows that became storage
@@ -6243,6 +6316,47 @@ let RackSettingsDialog = class RackSettingsDialog extends i {
           />
         </div>
 
+        <!-- Physical size. Optional: leave the width blank and the rack draws
+             as equal cells, exactly as it always has. -->
+        <div class="grid-editor">
+          <div class="grid-editor-title">Physical size (optional)</div>
+          <p class="phys-hint">
+            Measure the inside of the cabinet and the rack is drawn to scale —
+            every bottle at its real width, so a magnum crowds its neighbours.
+            Leave blank for the standard even grid.
+          </p>
+          <div class="phys-row">
+            <div class="form-group">
+              <label>Internal width (mm)</label>
+              <input
+                type="number" min="50" max="3000" placeholder="e.g. 430"
+                .value=${this._editCabinet.internal_width_mm ?? ""}
+                @input=${(e) => {
+            const v = parseInt(e.target.value, 10);
+            this._editCabinet = {
+                ...this._editCabinet,
+                internal_width_mm: Number.isFinite(v) && v > 0 ? v : null,
+            };
+        }}
+              />
+            </div>
+            <div class="form-group">
+              <label>Between shelves (mm)</label>
+              <input
+                type="number" min="30" max="1000" placeholder="e.g. 155"
+                .value=${this._editCabinet.shelf_height_mm ?? ""}
+                @input=${(e) => {
+            const v = parseInt(e.target.value, 10);
+            this._editCabinet = {
+                ...this._editCabinet,
+                shelf_height_mm: Number.isFinite(v) && v > 0 ? v : null,
+            };
+        }}
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- Grid Editor -->
         <div class="grid-editor">
           <div class="grid-editor-title">Grid Layout</div>
@@ -6354,7 +6468,21 @@ let RackSettingsDialog = class RackSettingsDialog extends i {
                               </div>
                             `}
                       `
-                : b `<span class="row-type-info">${numCols} col${numCols !== 1 ? "s" : ""}${numDepth > 1 ? ` × ${numDepth} deep` : ""}</span>`}
+                : b `
+                        <span class="row-type-info">${numCols} col${numCols !== 1 ? "s" : ""}${numDepth > 1 ? ` × ${numDepth} deep` : ""}</span>
+                        <label
+                          class="stack-toggle"
+                          title="A second course of bottles nested in the valleys on top of this shelf. Holds one fewer than the shelf beneath."
+                          @click=${(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="checkbox"
+                            .checked=${this._isStackedRow(row)}
+                            @change=${(e) => this._setStackedRow(row, e.target.checked)}
+                          />
+                          stack ${this._isStackedRow(row) ? b `<span class="stack-count">+${Math.max(0, numCols - 1)}</span>` : A}
+                        </label>
+                      `}
                 </div>
               `;
         })}
@@ -6749,6 +6877,40 @@ RackSettingsDialog.styles = [
         background: var(--wc-bg);
         color: var(--wc-text);
         cursor: pointer;
+      }
+
+      .phys-hint {
+        font-size: 0.72em;
+        color: var(--wc-text-secondary);
+        margin: 0 0 10px;
+        line-height: 1.4;
+      }
+      .phys-row {
+        display: flex;
+        gap: 12px;
+      }
+      .phys-row .form-group {
+        flex: 1;
+        min-width: 0;
+      }
+      .stack-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72em;
+        color: var(--wc-text-secondary);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .stack-toggle input {
+        width: 15px;
+        height: 15px;
+        margin: 0;
+        cursor: pointer;
+      }
+      .stack-count {
+        color: var(--wc-accent, #c69749);
+        font-weight: 600;
       }
 
       .row-name-input {

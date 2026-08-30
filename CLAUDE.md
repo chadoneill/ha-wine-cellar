@@ -85,19 +85,32 @@ panel). This fork's `layer` is a second course of bottles nested in the
 work. They are orthogonal; a cabinet can have both. A wine with no `layer` is
 in the base row, which is where every bottle created before this existed.
 
+## Where the fields are set and stored
+
+| Field | Set in | Stored by |
+|---|---|---|
+| `internal_width_mm`, `shelf_height_mm`, `stacked_rows` | Manage Racks → Edit | `add_cabinet` / `update_cabinet` |
+| `shape`, `format_ml` | Add Wine, and the wine editor | `add_wine` / `update_wine` |
+| `base_width_mm` | the wine editor | as above |
+| `layer` | drag and drop | `move_wine`, over the websocket |
+
+`update_wine` and `update_cabinet` copy any key they are given, so only
+`add_wine` and `add_cabinet` — which build an explicit dict — needed the new
+fields adding.
+
+`cabinet_capacity` counts a stacked shelf's second course: it holds one fewer
+than the shelf beneath, and those slots are real.
+
 ## Build and verify
 
 ```bash
-cd frontend-src && npm install && npm run build
+cd frontend-src && npm install && npm run verify
 ```
 
-Four `TS2339` warnings in `add-wine-dialog.ts` are pre-existing upstream and
-harmless. The build writes
-`custom_components/wine_cellar/frontend/wine-cellar-card.js`.
-
-```bash
-cd frontend-src && npm test
-```
+`verify` is typecheck, then tests, then build. **Use it rather than
+`npm run build` alone**: rollup's TypeScript plugin reports type errors as
+*warnings* and emits the bundle regardless, which shipped a `ReferenceError`
+here once. `tsc --noEmit` is now clean, so any error is one you just made.
 
 There is no live Home Assistant here. Visual checking is done by serving
 `custom_components/wine_cellar/frontend/` and opening `index.html`, which is a

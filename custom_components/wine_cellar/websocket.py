@@ -400,6 +400,8 @@ async def ws_update_wine(
         vol.Optional("col"): int,
         vol.Optional("zone", default=""): str,
         vol.Optional("depth", default=0): int,
+        # Which course of a stacked shelf. A different axis from depth.
+        vol.Optional("layer", default="base"): vol.In(["base", "stack"]),
     }
 )
 @websocket_api.async_response
@@ -417,6 +419,7 @@ async def ws_move_wine(
         msg.get("col"),
         msg.get("zone", ""),
         msg.get("depth", 0),
+        msg.get("layer", "base"),
     )
     if wine:
         await storage.async_save()

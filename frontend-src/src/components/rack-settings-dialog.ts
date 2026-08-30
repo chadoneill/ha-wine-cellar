@@ -322,6 +322,40 @@ export class RackSettingsDialog extends LitElement {
         cursor: pointer;
       }
 
+      .phys-hint {
+        font-size: 0.72em;
+        color: var(--wc-text-secondary);
+        margin: 0 0 10px;
+        line-height: 1.4;
+      }
+      .phys-row {
+        display: flex;
+        gap: 12px;
+      }
+      .phys-row .form-group {
+        flex: 1;
+        min-width: 0;
+      }
+      .stack-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72em;
+        color: var(--wc-text-secondary);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .stack-toggle input {
+        width: 15px;
+        height: 15px;
+        margin: 0;
+        cursor: pointer;
+      }
+      .stack-count {
+        color: var(--wc-accent, #c69749);
+        font-weight: 600;
+      }
+
       .row-name-input {
         width: 80px;
         padding: 2px 6px;
@@ -561,6 +595,21 @@ export class RackSettingsDialog extends LitElement {
     });
   }
 
+  /* Which shelves carry a second course nested in the valleys on top. */
+  private _isStackedRow(row: number): boolean {
+    return (this._editCabinet.stacked_rows || []).includes(row);
+  }
+
+  private _setStackedRow(row: number, on: boolean) {
+    const current = new Set(this._editCabinet.stacked_rows || []);
+    if (on) current.add(row);
+    else current.delete(row);
+    this._editCabinet = {
+      ...this._editCabinet,
+      stacked_rows: [...current].sort((a, b) => a - b),
+    };
+  }
+
   private _isStorageRow(row: number): boolean {
     return this._editStorageRows.some((sr) => sr.row === row);
   }
@@ -657,6 +706,13 @@ export class RackSettingsDialog extends LitElement {
           bottom_zone_name: "",
           storage_rows: validStorageRows,
           orientation: "vertical",
+          internal_width_mm: this._editCabinet.internal_width_mm ?? null,
+          shelf_height_mm: this._editCabinet.shelf_height_mm ?? null,
+          /* a shelf that no longer exists, or has become a storage row,
+             cannot carry a second course */
+          stacked_rows: (this._editCabinet.stacked_rows || []).filter(
+            (r) => r < newRows && !validStorageRows.some((sr) => sr.row === r)
+          ),
         },
       });
 
@@ -844,6 +900,47 @@ export class RackSettingsDialog extends LitElement {
           />
         </div>
 
+        <!-- Physical size. Optional: leave the width blank and the rack draws
+             as equal cells, exactly as it always has. -->
+        <div class="grid-editor">
+          <div class="grid-editor-title">Physical size (optional)</div>
+          <p class="phys-hint">
+            Measure the inside of the cabinet and the rack is drawn to scale —
+            every bottle at its real width, so a magnum crowds its neighbours.
+            Leave blank for the standard even grid.
+          </p>
+          <div class="phys-row">
+            <div class="form-group">
+              <label>Internal width (mm)</label>
+              <input
+                type="number" min="50" max="3000" placeholder="e.g. 430"
+                .value=${this._editCabinet.internal_width_mm ?? ""}
+                @input=${(e: InputEvent) => {
+                  const v = parseInt((e.target as HTMLInputElement).value, 10);
+                  this._editCabinet = {
+                    ...this._editCabinet,
+                    internal_width_mm: Number.isFinite(v) && v > 0 ? v : null,
+                  };
+                }}
+              />
+            </div>
+            <div class="form-group">
+              <label>Between shelves (mm)</label>
+              <input
+                type="number" min="30" max="1000" placeholder="e.g. 155"
+                .value=${this._editCabinet.shelf_height_mm ?? ""}
+                @input=${(e: InputEvent) => {
+                  const v = parseInt((e.target as HTMLInputElement).value, 10);
+                  this._editCabinet = {
+                    ...this._editCabinet,
+                    shelf_height_mm: Number.isFinite(v) && v > 0 ? v : null,
+                  };
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- Grid Editor -->
         <div class="grid-editor">
           <div class="grid-editor-title">Grid Layout</div>
@@ -959,7 +1056,22 @@ export class RackSettingsDialog extends LitElement {
                               </div>
                             `}
                       `
-                    : html`<span class="row-type-info">${numCols} col${numCols !== 1 ? "s" : ""}${numDepth > 1 ? ` × ${numDepth} deep` : ""}</span>`}
+                    : html`
+                        <span class="row-type-info">${numCols} col${numCols !== 1 ? "s" : ""}${numDepth > 1 ? ` × ${numDepth} deep` : ""}</span>
+                        <label
+                          class="stack-toggle"
+                          title="A second course of bottles nested in the valleys on top of this shelf. Holds one fewer than the shelf beneath."
+                          @click=${(e: Event) => e.stopPropagation()}
+                        >
+                          <input
+                            type="checkbox"
+                            .checked=${this._isStackedRow(row)}
+                            @change=${(e: Event) =>
+                              this._setStackedRow(row, (e.target as HTMLInputElement).checked)}
+                          />
+                          stack ${this._isStackedRow(row) ? html`<span class="stack-count">+${Math.max(0, numCols - 1)}</span>` : nothing}
+                        </label>
+                      `}
                 </div>
               `;
             })}

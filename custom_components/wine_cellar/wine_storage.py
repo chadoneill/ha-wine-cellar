@@ -164,6 +164,17 @@ class WineCellarStorage:
             "vivino_updated_at": wine_data.get("vivino_updated_at"),
             "ai_updated_at": wine_data.get("ai_updated_at"),
             "vivino_id": wine_data.get("vivino_id"),
+            # Physical geometry. All optional: a bottle with no shape or format
+            # is a nominal Bordeaux 750, which is what every bottle stored
+            # before these fields existed silently was.
+            "shape": wine_data.get("shape"),
+            "format_ml": wine_data.get("format_ml"),
+            # Measured with a caliper; beats the shape table when set.
+            "base_width_mm": wine_data.get("base_width_mm"),
+            "length_mm": wine_data.get("length_mm"),
+            # "base" or "stack" -- which course of a stacked shelf this lies
+            # in. Not the same axis as depth, which runs back into the rack.
+            "layer": wine_data.get("layer"),
         }
         self._data[CONF_WINES].append(wine)
         return wine
@@ -225,11 +236,20 @@ class WineCellarStorage:
 
     def move_wine(
         self, wine_id: str, cabinet_id: str, row: int | None = None, col: int | None = None,
-        zone: str = "", depth: int = 0
+        zone: str = "", depth: int = 0, layer: str | None = None
     ) -> dict[str, Any] | None:
-        """Move a wine to a new location."""
+        """Move a wine to a new location.
+
+        `layer` is which course of a stacked shelf the bottle lies in, "base"
+        or "stack". It is a different axis from `depth`, which runs back into
+        the rack: a shelf can have both.
+        """
         return self.update_wine(
-            wine_id, {"cabinet_id": cabinet_id, "row": row, "col": col, "zone": zone, "depth": depth}
+            wine_id,
+            {
+                "cabinet_id": cabinet_id, "row": row, "col": col,
+                "zone": zone, "depth": depth, "layer": layer or "base",
+            },
         )
 
     def get_wine(self, wine_id: str) -> dict[str, Any] | None:
@@ -263,6 +283,11 @@ class WineCellarStorage:
             "bottom_zone_name": cabinet_data.get("bottom_zone_name", "Storage"),
             "storage_rows": cabinet_data.get("storage_rows", []),
             "order": cabinet_data.get("order", len(self.cabinets)),
+            # Physical geometry, all optional. Without internal_width_mm the
+            # rack draws exactly as it always has, as equal cells.
+            "internal_width_mm": cabinet_data.get("internal_width_mm"),
+            "shelf_height_mm": cabinet_data.get("shelf_height_mm"),
+            "stacked_rows": cabinet_data.get("stacked_rows", []),
         }
         self._data[CONF_CABINETS].append(cabinet)
         return cabinet
@@ -303,8 +328,17 @@ class WineCellarStorage:
         if cabinet.get("type") != "grid":
             return 0
         storage_rows = cabinet.get("storage_rows", [])
+        storage_row_indices = {sr.get("row") for sr in storage_rows}
         grid_rows = max(0, cabinet.get("rows", 0) - len(storage_rows))
-        capacity = grid_rows * cabinet.get("cols", 0) * cabinet.get("depth", 1)
+        cols = cabinet.get("cols", 0)
+        capacity = grid_rows * cols * cabinet.get("depth", 1)
+        # A stacked shelf carries a second course nested in the valleys, which
+        # holds one fewer bottle than the shelf beneath it. Those slots are
+        # real and are not counted by rows*cols.
+        for row_index in cabinet.get("stacked_rows") or []:
+            if row_index in storage_row_indices:
+                continue
+            capacity += max(0, cols - 1) * cabinet.get("depth", 1)
         for sr in storage_rows:
             if sr.get("type") == "box":
                 capacity += sum(sr.get("boxes", []))

@@ -8,7 +8,9 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm test && npm run build"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",

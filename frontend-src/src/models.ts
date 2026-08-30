@@ -139,6 +139,13 @@ export interface BarcodeLookupResult {
   image_url: string;
   price: number | null;
   source: string;
+  /* The lookup returns these and add-wine-dialog reads them; they were simply
+     missing from the type, which is why `npm run typecheck` reported four
+     errors on a working feature. */
+  ratings_count?: number | null;
+  description?: string;
+  food_pairings?: string;
+  alcohol?: string;
 }
 
 export interface WineListItem {
