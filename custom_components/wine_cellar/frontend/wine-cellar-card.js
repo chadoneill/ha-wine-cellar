@@ -2470,7 +2470,10 @@ StarRating.styles = i$3 `
 
     .rating-text {
       margin-left: 6px;
-      font-size: var(--wc-fs-md);
+      /* star-rating does not include sharedStyles, so this token only
+         resolves by inheriting from its host dialog. The fallback keeps
+         it correct if it is ever mounted somewhere that has none. */
+      font-size: var(--wc-fs-md, 14px);
       font-weight: 600;
       color: var(--wc-text, #212121);
     }
