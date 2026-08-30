@@ -123,8 +123,13 @@ export class CabinetGrid extends LitElement {
       .grid-inner.to-scale {
         /* Warm and dark, like the inside of a cabinet. Upstream's navy and its
            blue glow are wrong for wine and are not inherited here. */
-        background: linear-gradient(180deg, #1b1613 0%, #100d0b 100%);
-        padding: 10px 10px 4px;
+        background: linear-gradient(180deg, #1f1a16 0%, #131010 100%);
+        padding: 12px 12px 6px;
+        /* A cabinet has to fit on a screen. Widths stay proportional -- that is
+           the information -- but the whole drawing is capped so a rack is not
+           taller than it is wide. */
+        max-width: 380px;
+        margin: 0 auto;
       }
       .grid-inner.to-scale::before {
         background: radial-gradient(
@@ -155,11 +160,14 @@ export class CabinetGrid extends LitElement {
         z-index: 0;
       }
 
+      /* Bottles REST ON the shelf. Centring them in the row made a small
+         bottle float above the shelf line while a large one crossed it, which
+         is why the lines never looked like they were holding anything up. */
       .row.to-scale .cell {
         position: absolute;
-        top: 50%;
-        bottom: auto;
-        transform: translateY(-50%);
+        top: auto;
+        bottom: 0;
+        transform: none;
         flex: none;
         aspect-ratio: 1;
         border-radius: 50%;
@@ -238,18 +246,18 @@ export class CabinetGrid extends LitElement {
       /* ---- an empty position ---------------------------------------------
          Recessed and quiet. It contributes nothing to the row's width and must
          never read as louder than the wine. */
+      /* An empty position is a MARKER, not a ghost bottle. Drawn at full
+         bottle diameter it turns a sparse cabinet into a field of circles with
+         the wine lost among them -- and this cabinet is mostly empty, which is
+         its normal condition. Small, thin, and low contrast. */
       .row.to-scale .cell.empty {
-        background: radial-gradient(
-          circle at 50% 35%,
-          rgba(255, 255, 255, 0.045) 0%,
-          rgba(0, 0, 0, 0.30) 75%
-        );
-        border: 1px dashed rgba(214, 197, 176, 0.22);
-        box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+        background: none;
+        border: 1px solid rgba(214, 197, 176, 0.13);
+        box-shadow: none;
       }
       .row.to-scale .cell.empty:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(214, 197, 176, 0.34);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(214, 197, 176, 0.32);
       }
 
       /* ---- the stack row --------------------------------------------------
@@ -1101,18 +1109,28 @@ export class CabinetGrid extends LitElement {
       ? nestOverBase(this._rowLayout(row, "stack", stackCount, span), base)
       : null;
 
-    /* A bottle seen from above is a circle of its own diameter, so the row has
-       to be as tall as its WIDEST bottle -- otherwise a heavy Bordeaux gets
-       squashed into an ellipse instead of drawn as the bigger circle it is. */
-    const widest = (l: RowLayout<Wine> | null) =>
-      l ? Math.max(...l.items.map((i) => (i.occupant ? i.widthPct : i.emptyRefPct)), 1) : 1;
-    const tallest = Math.max(widest(base), widest(stack));
-    const aspect = (100 / tallest).toFixed(4);
+    /* An empty position draws as a small marker rather than a full-diameter
+       ghost bottle. It still contributes nothing to the row's width; this is
+       only about how loud it is, and in a mostly-empty cabinet -- which is the
+       normal condition -- full-size rings drown the wine. */
+    const marker = (item: RowLayout<Wine>["items"][number]) => item.emptyRefPct * 0.46;
+    const drawn = (item: RowLayout<Wine>["items"][number]) =>
+      item.occupant ? item.widthPct : marker(item);
 
-    /* Every cell is sized by width alone and centred on its own centre line,
-       so each is a true circle at its real diameter. */
+    /* The row is as tall as the largest thing actually in it, so a shelf with
+       nothing on it collapses to a thin strip instead of reserving a bottle's
+       worth of height to show nothing. */
+    /* Each row sized independently: a stack row holding nothing should not
+       reserve a magnum's worth of height because a magnum sits below it. */
+    const aspectOf = (l: RowLayout<Wine>) =>
+      (100 / Math.max(...l.items.map(drawn), 1)).toFixed(4);
+    const baseAspect = aspectOf(base);
+    const stackAspect = stack ? aspectOf(stack) : baseAspect;
+
+    /* Sized by width alone and bottom-aligned, so every bottle is a true circle
+       at its real diameter and all of them rest on the same shelf. */
     const place = (item: RowLayout<Wine>["items"][number]) => {
-      const w = item.occupant ? item.widthPct : item.emptyRefPct;
+      const w = drawn(item);
       return `width:${w.toFixed(3)}%;left:${(item.centrePct - w / 2).toFixed(3)}%;`;
     };
 
@@ -1121,7 +1139,7 @@ export class CabinetGrid extends LitElement {
         ? html`
             <div
               class="row to-scale stack-row"
-              style="aspect-ratio:${aspect};margin-bottom:-${stackOverlapPct(base).toFixed(2)}%"
+              style="aspect-ratio:${stackAspect};margin-bottom:-${stackOverlapPct(base).toFixed(2)}%"
             >
               ${stack.items.map((item) => this._renderCell(row, item.index, "stack", place(item)))}
             </div>
@@ -1129,7 +1147,7 @@ export class CabinetGrid extends LitElement {
         : nothing}
       <div
         class="row to-scale base-row ${base.overflow ? "over-capacity" : ""}"
-        style="aspect-ratio:${aspect}"
+        style="aspect-ratio:${baseAspect}"
       >
         ${base.items.map((item) => this._renderCell(row, item.index, "base", place(item)))}
       </div>
