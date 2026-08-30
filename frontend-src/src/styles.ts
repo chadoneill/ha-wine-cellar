@@ -109,14 +109,41 @@ export const sharedStyles = css`
     gap: var(--wc-sp-2);
     padding: var(--wc-sp-1) var(--wc-sp-4) var(--wc-sp-3);
     overflow-x: auto;
+    /* A flex/grid item defaults to min-width:auto, so this scroller was sized
+       by its content and pushed the whole PAGE sideways instead of scrolling
+       within itself. */
+    min-width: 0;
+    max-width: 100%;
     scrollbar-width: none;
     border-bottom: 1px solid var(--wc-border);
+    /* The bar scrolls, and it was simply cut off at the right edge with no
+       sign that there was more. Fade the ends so the overflow is legible, and
+       let a swipe settle on a tab rather than mid-tab. */
+    scroll-snap-type: x proximity;
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 18px,
+      #000 calc(100% - 26px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 18px,
+      #000 calc(100% - 26px),
+      transparent 100%
+    );
+  }
+  .tab-bar > * {
+    scroll-snap-align: start;
   }
   .tab-bar::-webkit-scrollbar {
     display: none;
   }
 
   .tab {
+    flex: 0 0 auto;
     padding: 7px 14px;
     min-height: 34px;
     border-radius: var(--wc-r-pill);

@@ -206,67 +206,9 @@ export class CabinetGrid extends LitElement {
          carries the wine type at full strength. That keeps type instantly
          readable while letting the thing that actually matters here, the
          bottle's diameter, be what the eye measures. */
-      .row.to-scale .cell.filled {
-        border: none;
-        background:
-          /* specular highlight, offset up and left as if lit from the front */
-          radial-gradient(
-            circle at 32% 25%,
-            rgba(255, 255, 255, 0.50) 0%,
-            rgba(255, 255, 255, 0.13) 15%,
-            transparent 33%
-          ),
-          /* a bright arc along the far rim, where glass catches the light */
-          radial-gradient(
-            circle at 70% 78%,
-            rgba(255, 255, 255, 0.20) 0%,
-            transparent 26%
-          ),
-          /* The glass itself. Bottle glass is DARK GREEN whatever is inside it,
-             so the base is green and the wine type is only a hint through it --
-             tint it by the liquid colour and a sparkling turns into a pale
-             olive puck, which is not what a rack looks like. Type is carried
-             at full strength by the capsule instead. */
-          radial-gradient(
-            circle at 50% 43%,
-            color-mix(in srgb, var(--wine, #722f37) 20%, #1a1f16) 0%,
-            color-mix(in srgb, var(--wine, #722f37) 12%, #0e1109) 58%,
-            color-mix(in srgb, var(--wine, #722f37) 5%, #030403) 100%
-          );
-        box-shadow:
-          0 3px 7px rgba(0, 0, 0, 0.62),
-          inset 0 0 0 1px rgba(255, 255, 255, 0.20),
-          inset 0 1px 1px rgba(255, 255, 255, 0.12),
-          inset 0 -5px 9px rgba(0, 0, 0, 0.5);
-      }
-
+      
       /* the capsule over the cork: the wine type, at full strength, small */
-      .row.to-scale .cell.filled::after {
-        content: "";
-        position: absolute;
-        /* a capsule is roughly 30% of the base diameter -- 29 mm across a
-           76 mm Bordeaux -- so it reads as a bottle top, not a bullseye */
-        inset: 34%;
-        border-radius: 50%;
-        background:
-          radial-gradient(
-            circle at 36% 28%,
-            rgba(255, 255, 255, 0.45) 0%,
-            rgba(255, 255, 255, 0.12) 30%,
-            transparent 60%
-          ),
-          radial-gradient(
-            circle at 50% 50%,
-            color-mix(in srgb, var(--wine, #722f37) 80%, #fff) 0%,
-            var(--wine, #722f37) 48%,
-            color-mix(in srgb, var(--wine, #722f37) 78%, #000) 100%
-          );
-        box-shadow:
-          inset 0 0 0 1px rgba(0, 0, 0, 0.30),
-          0 1px 2px rgba(0, 0, 0, 0.5);
-        pointer-events: none;
-      }
-
+      
       /* ---- an empty position ---------------------------------------------
          Recessed and quiet. It contributes nothing to the row's width and must
          never read as louder than the wine. */
@@ -318,21 +260,7 @@ export class CabinetGrid extends LitElement {
          covers the bottle -- and the bottle's SIZE is the information here. So
          in this mode the disposition becomes a pip on the rim: same colour,
          same letter, out of the way. */
-      .row.to-scale .cell .disposition {
-        top: auto;
-        left: auto;
-        right: -1%;
-        bottom: -1%;
-        transform: none;
-        width: 26%;
-        height: 26%;
-        font-size: clamp(5px, 11cqi, 9px);
-        opacity: 0.82;
-        border-width: 1px;
-        border-color: rgba(0, 0, 0, 0.35);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-      }
-
+      
       /* The label photograph becomes the disc at the centre, where the capsule
          would be -- a bottle from above has no label face to show, but the
          picture is still how you recognise it. */
@@ -345,10 +273,7 @@ export class CabinetGrid extends LitElement {
           0 1px 3px rgba(0, 0, 0, 0.5);
       }
       /* ...and then the drawn capsule would sit on top of it, so it stands down */
-      .row.to-scale .cell.filled:has(.wine-thumb)::after {
-        display: none;
-      }
-
+      
       .row.to-scale .cell .depth-badge {
         top: -2%;
         left: -2%;
@@ -359,8 +284,8 @@ export class CabinetGrid extends LitElement {
         font-size: clamp(6px, 12cqi, 10px);
       }
 
-      .row.to-scale .cell.filled:hover {
-        filter: brightness(1.12);
+      .cell.filled:hover {
+        filter: brightness(1.14);
       }
 
       /* An over-capacity row runs past the shelf edge. The drawing says so on
@@ -377,22 +302,85 @@ export class CabinetGrid extends LitElement {
         pointer-events: none;
       }
 
+      /* A mostly-empty rack is the normal condition, so an empty slot has to
+         stay quiet or it drowns the wine by sheer number. */
       .cell.empty {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px dashed rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.22);
+        border: 1px solid rgba(214, 197, 176, 0.10);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
       }
 
       .cell.empty:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(214, 197, 176, 0.34);
       }
 
+      /* A bottle, seen from above, in EVERY rack -- not only the to-scale one.
+         Two renderings of the same object in one app made it look like two
+         apps, and the flat disc version read as a counter rather than wine.
+         Dark glass, faintly tinted by what is in it, with the type carried at
+         full strength by the capsule at the centre. */
       .cell.filled {
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45),
-          inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-        border: 2px solid var(--bottle-type-color, rgba(255, 255, 255, 0.1));
-        overflow: hidden;
+        /* A rim in the wine's own colour. The glass body alone is nearly black
+           at 42px -- especially under a dark label photograph -- and a filled
+           slot stopped reading as different from an empty one. The rim is what
+           carries "there is a bottle here" at small sizes; the glass and the
+           capsule carry it at large ones. */
+        border: 1.5px solid var(--bottle-type-color, rgba(255, 255, 255, 0.35));
+        overflow: visible;
+        background:
+          radial-gradient(
+            circle at 32% 25%,
+            rgba(255, 255, 255, 0.50) 0%,
+            rgba(255, 255, 255, 0.13) 15%,
+            transparent 33%
+          ),
+          radial-gradient(
+            circle at 70% 78%,
+            rgba(255, 255, 255, 0.20) 0%,
+            transparent 26%
+          ),
+          radial-gradient(
+            circle at 50% 43%,
+            color-mix(in srgb, var(--wine, #722f37) 34%, #232a1e) 0%,
+            color-mix(in srgb, var(--wine, #722f37) 22%, #141810) 58%,
+            color-mix(in srgb, var(--wine, #722f37) 10%, #050706) 100%
+          );
+        box-shadow:
+          0 3px 7px rgba(0, 0, 0, 0.62),
+          inset 0 1px 1px rgba(255, 255, 255, 0.14),
+          inset 0 -5px 9px rgba(0, 0, 0, 0.5);
       }
+
+      /* the capsule over the cork */
+      .cell.filled::after {
+        content: "";
+        position: absolute;
+        inset: 34%;
+        border-radius: 50%;
+        background:
+          radial-gradient(
+            circle at 36% 28%,
+            rgba(255, 255, 255, 0.45) 0%,
+            rgba(255, 255, 255, 0.12) 30%,
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 50% 50%,
+            color-mix(in srgb, var(--wine, #722f37) 80%, #fff) 0%,
+            var(--wine, #722f37) 48%,
+            color-mix(in srgb, var(--wine, #722f37) 78%, #000) 100%
+          );
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.30),
+          0 1px 2px rgba(0, 0, 0, 0.5);
+        pointer-events: none;
+      }
+      /* a label photograph replaces the capsule rather than sitting under it */
+      .cell.filled:has(.wine-thumb)::after {
+        display: none;
+      }
+
 
       .cell .wine-thumb {
         position: absolute;
@@ -428,15 +416,21 @@ export class CabinetGrid extends LitElement {
         display: block;
       }
 
+      /* The disposition used to be a disc across 65% of the cell, centred. At
+         44px that IS the bottle, so a rack read as a field of blue letters
+         rather than as wine. A pip on the rim: same colour, same letter, out
+         of the way of the thing it is annotating. */
       .cell .disposition {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 65%;
-        height: 65%;
+        top: auto;
+        left: auto;
+        right: -2%;
+        bottom: -2%;
+        transform: none;
+        width: 34%;
+        height: 34%;
         border-radius: 50%;
-        font-size: clamp(7px, 30cqi, 14px);
+        font-size: clamp(6px, 15cqi, 11px);
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -445,8 +439,9 @@ export class CabinetGrid extends LitElement {
         z-index: 2;
         pointer-events: none;
         line-height: 1;
-        border: 2px solid rgba(255, 255, 255, 0.5);
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(0, 0, 0, 0.35);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        opacity: 0.92;
       }
 
       .cell .disposition.drink,
@@ -523,9 +518,13 @@ export class CabinetGrid extends LitElement {
         box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
       }
 
+      /* One pair of these sits in every empty cell of a deep rack. On a 90-slot
+         cabinet that is 180 dots competing with six bottles, so an unoccupied
+         depth reads as a hint rather than a mark. */
       .depth-dot.empty {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.25);
+        background: none;
+        border-color: rgba(255, 255, 255, 0.14);
+        box-shadow: none;
       }
 
       .bottom-zone {
@@ -1231,7 +1230,7 @@ export class CabinetGrid extends LitElement {
           return html`
             <div
               class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""}"
-              style=${frontWine ? `background: ${bgColor}; --bottle-type-color: ${ringColor}` : ""}
+              style=${frontWine ? `--wine: ${bgColor}; --bottle-type-color: ${ringColor}` : ""}
               draggable=${frontWine ? "true" : "false"}
               @click=${() => this._onCellClick(row, col, frontWine, wineCount, cabinetDepth, wines)}
               @touchstart=${frontWine ? () => this._onTouchStart(frontWine) : nothing}
@@ -1307,12 +1306,10 @@ export class CabinetGrid extends LitElement {
     const ringColor = frontWine ? this._brightenColor(bgColor) : "";
     const cellKey = layer === "stack" ? `${row}-${col}-stack` : `${row}-${col}`;
     const isDragOver = this._dragOverCell === cellKey;
-    /* In to-scale mode the colour is a custom property the stylesheet builds a
-       glass gradient from; a flat background would paint over it. */
+    /* The colour is a custom property the stylesheet builds a glass gradient
+       from. Painting a flat background here would cover it. */
     const fillStyle = frontWine
-      ? posStyle
-        ? `--wine: ${bgColor};`
-        : `background: ${bgColor}; --bottle-type-color: ${ringColor};`
+      ? `--wine: ${bgColor}; --bottle-type-color: ${ringColor};`
       : "";
     return html`
       <div

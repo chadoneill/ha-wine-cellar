@@ -12,13 +12,38 @@ export class WineSearchBar extends LitElement {
     css`
       :host {
         display: block;
+        /* the component was 80px wider than its column on a phone, which was
+           what made the whole page scroll sideways */
+        max-width: 100%;
+        min-width: 0;
       }
 
       .search-container {
         display: flex;
-        gap: 8px;
-        padding: 0 16px 8px;
+        flex-wrap: wrap;
+        gap: var(--wc-sp-2);
+        padding: 0 var(--wc-sp-4) var(--wc-sp-2);
         align-items: center;
+        min-width: 0;
+      }
+      /* the input keeps the row; the type chips wrap beneath it and scroll
+         rather than pushing the page wider */
+      .search-container > .search-input-wrapper {
+        flex: 1 1 190px;
+        min-width: 0;
+      }
+      .search-container > .filter-chips {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .search-container > .filter-chips::-webkit-scrollbar {
+        display: none;
+      }
+      .search-container > .filter-chips > * {
+        flex: 0 0 auto;
       }
 
       .search-input-wrapper {

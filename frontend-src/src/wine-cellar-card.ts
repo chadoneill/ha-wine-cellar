@@ -98,11 +98,31 @@ export class WineCellarCard extends LitElement {
         overflow: hidden;
       }
 
+      /* The actions were nowrap next to the title, so on a phone they ran 71px
+         off the right edge and the whole page scrolled sideways. This is the
+         Home Assistant companion app's width, which is where the app is
+         actually used. */
       .header-row {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        padding: 16px 16px 8px;
+        gap: var(--wc-sp-3);
+        padding: var(--wc-sp-4) var(--wc-sp-4) var(--wc-sp-2);
+      }
+      .header-row > .header-actions {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      @media (max-width: 620px) {
+        /* title on its own line, actions below it filling the width */
+        .header-row > .header-actions {
+          flex-basis: 100%;
+          justify-content: flex-start;
+        }
+        .header-actions .btn {
+          flex: 1 1 auto;
+        }
       }
 
       .title {
