@@ -21,7 +21,7 @@ export class VivinoAiSettingsDialog extends LitElement {
         gap: 12px;
         padding: 10px 0;
         border-bottom: 1px solid var(--wc-border);
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
       }
 
       .settings-row:last-of-type {
@@ -39,12 +39,12 @@ export class VivinoAiSettingsDialog extends LitElement {
 
       .pill {
         padding: 3px 10px;
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         border: 1px solid var(--wc-border);
         cursor: pointer;
         background: transparent;
         color: var(--wc-text-secondary);
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .pill.active {
@@ -69,7 +69,7 @@ export class VivinoAiSettingsDialog extends LitElement {
 
       .info-title {
         margin: 0 0 12px;
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         color: var(--wc-text);
       }
 
@@ -79,7 +79,7 @@ export class VivinoAiSettingsDialog extends LitElement {
 
       .info-block-title {
         font-weight: 600;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
         margin-bottom: 6px;
       }
@@ -87,14 +87,14 @@ export class VivinoAiSettingsDialog extends LitElement {
       .info-block ul {
         margin: 0;
         padding-left: 20px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         line-height: 1.7;
       }
 
       .info-note {
         margin: 0;
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         font-style: italic;
       }

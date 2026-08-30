@@ -2,9 +2,10 @@ import { css } from "lit";
 
 export const sharedStyles = css`
   :host {
-    --wc-primary: #722f37;
+    --wc-primary: #7b333c;
     --wc-primary-light: #9a4a54;
     --wc-primary-text: #c48b91;
+    --wc-accent: #c69749;
     --wc-bg: var(--ha-card-background, var(--card-background-color, #fff));
     --wc-surface: var(--ha-card-background, var(--card-background-color, #fff));
     --wc-text: var(--primary-text-color, #212121);
@@ -12,16 +13,68 @@ export const sharedStyles = css`
     --wc-border: var(--divider-color, #e0e0e0);
     --wc-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0, 0, 0, 0.1));
     --wc-hover: rgba(128, 128, 128, 0.12);
-    font-family: var(--paper-font-body1_-_font-family, "Roboto", sans-serif);
+
+    /* ---- type scale -------------------------------------------------------
+       Absolute, not em. Every size in this app used to be a fraction of its
+       parent -- 0.8em was the single commonest value, used 37 times -- and
+       because em compounds, an 0.8 inside an 0.85 landed at about 11px. That
+       is what made the whole thing look shrunken and soft. These are fixed
+       steps, so a label is the same size wherever it appears. */
+    --wc-fs-2xs: 11px;
+    --wc-fs-xs: 12px;
+    --wc-fs-sm: 13px;
+    --wc-fs-md: 14px;
+    --wc-fs-lg: 15px;
+    --wc-fs-xl: 18px;
+    --wc-fs-2xl: 22px;
+
+    --wc-fw-normal: 400;
+    --wc-fw-medium: 500;
+    --wc-fw-semi: 600;
+    --wc-fw-bold: 700;
+
+    /* ---- corner radii, four steps instead of nine ad-hoc values ---- */
+    --wc-r-xs: 5px;
+    --wc-r-sm: 9px;
+    --wc-r-md: 13px;
+    --wc-r-lg: 18px;
+    --wc-r-pill: 999px;
+
+    /* ---- spacing rhythm ---- */
+    --wc-sp-1: 4px;
+    --wc-sp-2: 8px;
+    --wc-sp-3: 12px;
+    --wc-sp-4: 16px;
+    --wc-sp-5: 24px;
+
+    font-family: var(
+      --paper-font-body1_-_font-family,
+      ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text",
+      "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+    );
+    font-size: var(--wc-fs-md);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Figures line up in columns and do not jitter as they change. */
+  .stat-value,
+  .num,
+  .stepper-value,
+  .stepper-val-sm {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
 
   .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 16px 0;
-    font-size: 1.2em;
-    font-weight: 500;
+    padding: var(--wc-sp-4) var(--wc-sp-4) var(--wc-sp-2);
+    font-size: var(--wc-fs-2xl);
+    font-weight: var(--wc-fw-semi);
+    letter-spacing: -0.015em;
     color: var(--wc-text);
   }
 
@@ -31,9 +84,10 @@ export const sharedStyles = css`
 
   .stats-bar {
     display: flex;
-    gap: 16px;
-    padding: 8px 16px;
-    font-size: 0.85em;
+    flex-wrap: wrap;
+    gap: var(--wc-sp-2) var(--wc-sp-5);
+    padding: var(--wc-sp-1) var(--wc-sp-4) var(--wc-sp-3);
+    font-size: var(--wc-fs-sm);
     color: var(--wc-text-secondary);
   }
 
@@ -44,28 +98,36 @@ export const sharedStyles = css`
   }
 
   .stats-bar .stat-value {
-    font-weight: 600;
+    font-weight: var(--wc-fw-semi);
+    font-size: var(--wc-fs-lg);
+    letter-spacing: -0.01em;
     color: var(--wc-text);
   }
 
   .tab-bar {
     display: flex;
-    gap: 4px;
-    padding: 8px 16px;
+    gap: var(--wc-sp-2);
+    padding: var(--wc-sp-1) var(--wc-sp-4) var(--wc-sp-3);
     overflow-x: auto;
+    scrollbar-width: none;
     border-bottom: 1px solid var(--wc-border);
+  }
+  .tab-bar::-webkit-scrollbar {
+    display: none;
   }
 
   .tab {
-    padding: 6px 16px;
-    border-radius: 20px;
-    border: 1px solid var(--wc-border);
-    background: transparent;
+    padding: 7px 14px;
+    min-height: 34px;
+    border-radius: var(--wc-r-pill);
+    border: 1px solid transparent;
+    background: var(--wc-hover);
     color: var(--wc-text-secondary);
     cursor: pointer;
     white-space: nowrap;
-    font-size: 0.85em;
-    transition: all 0.2s;
+    font-size: var(--wc-fs-sm);
+    font-weight: var(--wc-fw-medium);
+    transition: background 0.15s ease, color 0.15s ease;
   }
 
   .tab:hover {
@@ -75,7 +137,8 @@ export const sharedStyles = css`
   .tab.active {
     background: var(--wc-primary);
     color: #fff;
-    border-color: var(--wc-primary);
+    border-color: transparent;
+    font-weight: var(--wc-fw-semi);
   }
 
   .manage-racks-btn {
@@ -83,7 +146,7 @@ export const sharedStyles = css`
     border-color: transparent;
     color: var(--wc-primary-text);
     font-weight: 500;
-    font-size: 0.8em;
+    font-size: var(--wc-fs-sm);
     padding: 6px 12px;
   }
 
@@ -98,7 +161,7 @@ export const sharedStyles = css`
     border-color: transparent;
     color: var(--wc-primary-text);
     font-weight: 500;
-    font-size: 0.8em;
+    font-size: var(--wc-fs-sm);
     padding: 6px 12px;
   }
 
@@ -109,14 +172,28 @@ export const sharedStyles = css`
   .btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: none;
+    justify-content: center;
+    gap: var(--wc-sp-2);
+    padding: 0 16px;
+    /* a real tap target: 36px was the effective height before, and on a phone
+       that is a miss waiting to happen */
+    min-height: 38px;
+    border-radius: var(--wc-r-sm);
+    border: 1px solid transparent;
     cursor: pointer;
-    font-size: 0.9em;
-    font-weight: 500;
-    transition: all 0.2s;
+    font-family: inherit;
+    font-size: var(--wc-fs-sm);
+    font-weight: var(--wc-fw-medium);
+    letter-spacing: 0.005em;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--wc-accent);
+    outline-offset: 2px;
   }
 
   .btn-primary {
@@ -128,10 +205,29 @@ export const sharedStyles = css`
     background: var(--wc-primary-light);
   }
 
+  /* Tonal action button: a wash of its own colour rather than a saturated
+     fill. Five solid pills in a row -- blue, purple, teal, slate, red -- read
+     as a toolbar from a decade ago and shout over the wine, which is the thing
+     the page is actually about. The colour still identifies the action; it
+     just stops competing. Pass the colour as --tint. */
+  .btn-tonal {
+    background: color-mix(in srgb, var(--tint, var(--wc-primary)) 16%, transparent);
+    border-color: color-mix(in srgb, var(--tint, var(--wc-primary)) 38%, transparent);
+    color: var(--wc-text);
+  }
+  .btn-tonal:hover {
+    background: color-mix(in srgb, var(--tint, var(--wc-primary)) 26%, transparent);
+    border-color: color-mix(in srgb, var(--tint, var(--wc-primary)) 55%, transparent);
+  }
+  .btn-tonal[disabled] {
+    opacity: 0.45;
+    cursor: default;
+  }
+
   .btn-outline {
     background: transparent;
     color: var(--wc-text);
-    border: 1px solid var(--wc-border);
+    border-color: var(--wc-border);
   }
 
   .btn-outline:hover {
@@ -144,6 +240,8 @@ export const sharedStyles = css`
     color: var(--wc-text-secondary);
     cursor: pointer;
     padding: 8px;
+    min-width: 38px;
+    min-height: 38px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
@@ -170,7 +268,7 @@ export const sharedStyles = css`
 
   .dialog {
     background: var(--wc-bg);
-    border-radius: 16px;
+    border-radius: var(--wc-r-lg);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
     max-width: 500px;
     width: 90%;
@@ -188,7 +286,7 @@ export const sharedStyles = css`
 
   .dialog-header {
     padding: 20px 20px 12px;
-    font-size: 1.2em;
+    font-size: var(--wc-fs-xl);
     font-weight: 500;
     border-bottom: 1px solid var(--wc-border);
   }
@@ -210,7 +308,7 @@ export const sharedStyles = css`
 
   .form-group label {
     display: block;
-    font-size: 0.85em;
+    font-size: var(--wc-fs-md);
     font-weight: 500;
     color: var(--wc-text-secondary);
     margin-bottom: 4px;
@@ -222,8 +320,8 @@ export const sharedStyles = css`
     width: 100%;
     padding: 8px 12px;
     border: 1px solid var(--wc-border);
-    border-radius: 8px;
-    font-size: 0.95em;
+    border-radius: var(--wc-r-sm);
+    font-size: var(--wc-fs-lg);
     background: var(--wc-bg);
     color: var(--wc-text);
     box-sizing: border-box;
@@ -264,7 +362,7 @@ export const sharedStyles = css`
     }
     .dialog-header {
       padding: 16px 16px 10px;
-      font-size: 1.1em;
+      font-size: var(--wc-fs-xl);
     }
     .dialog-body {
       padding: 12px 16px;
@@ -282,7 +380,7 @@ export const sharedStyles = css`
     }
     .tab {
       padding: 5px 12px;
-      font-size: 0.8em;
+      font-size: var(--wc-fs-sm);
     }
     .depth-panel {
       width: 100% !important;
@@ -336,7 +434,7 @@ export const sharedStyles = css`
 
   .depth-panel-title {
     font-weight: 600;
-    font-size: 1em;
+    font-size: var(--wc-fs-lg);
     color: var(--wc-text, #333);
     display: flex;
     flex-direction: column;
@@ -344,7 +442,7 @@ export const sharedStyles = css`
   }
 
   .depth-panel-subtitle {
-    font-size: 0.8em;
+    font-size: var(--wc-fs-sm);
     font-weight: 400;
     color: var(--wc-text-secondary, #888);
   }
@@ -352,10 +450,10 @@ export const sharedStyles = css`
   .depth-panel-close {
     background: none;
     border: none;
-    font-size: 1.2em;
+    font-size: var(--wc-fs-xl);
     cursor: pointer;
     padding: 4px 8px;
-    border-radius: 6px;
+    border-radius: var(--wc-r-sm);
     color: var(--wc-text-secondary, #888);
   }
 
@@ -372,7 +470,7 @@ export const sharedStyles = css`
 
   .depth-slot {
     position: relative;
-    border-radius: 10px;
+    border-radius: var(--wc-r-md);
     cursor: pointer;
     transition: background 0.15s, box-shadow 0.15s;
   }
@@ -405,7 +503,7 @@ export const sharedStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8em;
+    font-size: var(--wc-fs-sm);
     line-height: 1;
     color: var(--wc-text-secondary, #888);
     background: rgba(0, 0, 0, 0.06);
@@ -427,11 +525,11 @@ export const sharedStyles = css`
   .depth-panel-add-box select {
     flex: 1;
     padding: 8px 10px;
-    border-radius: 8px;
+    border-radius: var(--wc-r-sm);
     border: 1px solid var(--wc-border, #ddd);
     background: var(--wc-bg);
     color: var(--wc-text, #333);
-    font-size: 0.85em;
+    font-size: var(--wc-fs-md);
   }
 
   .depth-panel-add-box .depth-panel-grow {
@@ -441,7 +539,7 @@ export const sharedStyles = css`
   }
 
   .depth-slot-label {
-    font-size: 0.7em;
+    font-size: var(--wc-fs-xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -456,7 +554,7 @@ export const sharedStyles = css`
     padding: 10px 12px;
     background: var(--wc-bg);
     border: 1px solid var(--wc-border);
-    border-radius: 10px;
+    border-radius: var(--wc-r-md);
   }
 
   .depth-slot-avatar {
@@ -467,7 +565,7 @@ export const sharedStyles = css`
   .depth-slot-thumb {
     width: 32px;
     height: 44px;
-    border-radius: 4px;
+    border-radius: var(--wc-r-xs);
     object-fit: cover;
     flex-shrink: 0;
   }
@@ -516,7 +614,7 @@ export const sharedStyles = css`
 
   .depth-slot-name {
     font-weight: 600;
-    font-size: 0.88em;
+    font-size: var(--wc-fs-md);
     color: var(--wc-text, #333);
     white-space: nowrap;
     overflow: hidden;
@@ -524,7 +622,7 @@ export const sharedStyles = css`
   }
 
   .depth-slot-meta {
-    font-size: 0.78em;
+    font-size: var(--wc-fs-sm);
     color: var(--wc-text-secondary, #888);
     margin-top: 2px;
   }
@@ -535,9 +633,9 @@ export const sharedStyles = css`
     gap: 8px;
     padding: 14px 12px;
     border: 2px dashed var(--wc-border, #ddd);
-    border-radius: 10px;
+    border-radius: var(--wc-r-md);
     color: var(--wc-text-secondary, #aaa);
-    font-size: 0.85em;
+    font-size: var(--wc-fs-md);
   }
 
   .depth-slot.empty:hover .depth-slot-empty {
@@ -546,7 +644,7 @@ export const sharedStyles = css`
   }
 
   .depth-slot-plus {
-    font-size: 1.3em;
+    font-size: var(--wc-fs-2xl);
     font-weight: 300;
     width: 28px;
     height: 28px;
@@ -568,11 +666,11 @@ export const sharedStyles = css`
     gap: 6px;
     padding: 10px;
     margin-top: 4px;
-    border-radius: 10px;
+    border-radius: var(--wc-r-md);
     border: 1px dashed var(--wc-border, #ddd);
     color: var(--wc-text-secondary, #888);
     cursor: pointer;
-    font-size: 0.85em;
+    font-size: var(--wc-fs-md);
     font-weight: 600;
     transition: background 0.15s, color 0.15s;
   }

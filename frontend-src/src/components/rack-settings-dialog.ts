@@ -34,7 +34,7 @@ export class RackSettingsDialog extends LitElement {
         gap: 8px;
         padding: 10px 12px;
         border: 1px solid var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         transition: background 0.2s;
       }
 
@@ -49,11 +49,11 @@ export class RackSettingsDialog extends LitElement {
 
       .rack-name {
         font-weight: 600;
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
       }
 
       .rack-meta {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-top: 2px;
       }
@@ -68,10 +68,10 @@ export class RackSettingsDialog extends LitElement {
       .small-btn {
         background: transparent;
         border: 1px solid var(--wc-border);
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         cursor: pointer;
         padding: 4px 8px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         transition: all 0.2s;
       }
@@ -97,15 +97,15 @@ export class RackSettingsDialog extends LitElement {
       .warning-msg {
         background: rgba(255, 152, 0, 0.1);
         border: 1px solid rgba(255, 152, 0, 0.3);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         padding: 10px;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: #e65100;
         margin-top: 12px;
       }
 
       .delete-info {
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         margin: 12px 0;
         line-height: 1.5;
       }
@@ -122,11 +122,11 @@ export class RackSettingsDialog extends LitElement {
         gap: 6px;
         padding: 10px;
         border: 2px dashed var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         transition: all 0.2s;
         width: 100%;
       }
@@ -143,7 +143,7 @@ export class RackSettingsDialog extends LitElement {
       }
 
       .grid-editor-title {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         font-weight: 600;
         color: var(--wc-text);
         margin-bottom: 12px;
@@ -162,12 +162,12 @@ export class RackSettingsDialog extends LitElement {
         align-items: center;
         gap: 0;
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         overflow: hidden;
       }
 
       .stepper-label {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -190,7 +190,7 @@ export class RackSettingsDialog extends LitElement {
         background: transparent;
         border: none;
         cursor: pointer;
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
         font-weight: 600;
         color: var(--wc-text-secondary);
         transition: all 0.15s;
@@ -210,7 +210,7 @@ export class RackSettingsDialog extends LitElement {
       .stepper-value {
         flex: 1;
         text-align: center;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         font-weight: 600;
         color: var(--wc-text);
         padding: 6px 0;
@@ -220,7 +220,7 @@ export class RackSettingsDialog extends LitElement {
       /* Visual grid preview */
       .grid-preview {
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         padding: 8px;
         margin-bottom: 8px;
         overflow-x: auto;
@@ -239,7 +239,7 @@ export class RackSettingsDialog extends LitElement {
 
       .grid-preview-label {
         width: 28px;
-        font-size: 0.65em;
+        font-size: var(--wc-fs-2xs);
         font-weight: 600;
         color: var(--wc-text-secondary);
         text-align: center;
@@ -261,7 +261,7 @@ export class RackSettingsDialog extends LitElement {
       }
 
       .grid-preview-storage-label {
-        font-size: 0.6em;
+        font-size: var(--wc-fs-2xs);
         color: #8b6914;
         font-weight: 600;
         white-space: nowrap;
@@ -282,7 +282,7 @@ export class RackSettingsDialog extends LitElement {
         max-height: 200px;
         overflow-y: auto;
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         padding: 6px;
       }
 
@@ -291,8 +291,8 @@ export class RackSettingsDialog extends LitElement {
         align-items: center;
         gap: 6px;
         padding: 4px 6px;
-        border-radius: 6px;
-        font-size: 0.8em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-sm);
         transition: background 0.15s;
       }
 
@@ -309,21 +309,21 @@ export class RackSettingsDialog extends LitElement {
         width: 28px;
         font-weight: 600;
         color: var(--wc-text-secondary);
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
       }
 
       .row-type-select {
         padding: 2px 4px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
-        font-size: 0.8em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-sm);
         background: var(--wc-bg);
         color: var(--wc-text);
         cursor: pointer;
       }
 
       .phys-hint {
-        font-size: 0.72em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         margin: 0 0 10px;
         line-height: 1.4;
@@ -340,7 +340,7 @@ export class RackSettingsDialog extends LitElement {
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        font-size: 0.72em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         cursor: pointer;
         white-space: nowrap;
@@ -360,8 +360,8 @@ export class RackSettingsDialog extends LitElement {
         width: 80px;
         padding: 2px 6px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
-        font-size: 0.8em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-sm);
         background: var(--wc-bg);
         color: var(--wc-text);
         flex-shrink: 1;
@@ -371,8 +371,8 @@ export class RackSettingsDialog extends LitElement {
       .row-cap-select {
         padding: 2px 4px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
-        font-size: 0.8em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-sm);
         background: var(--wc-bg);
         color: var(--wc-text);
         cursor: pointer;
@@ -388,11 +388,11 @@ export class RackSettingsDialog extends LitElement {
         width: 20px;
         height: 20px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         background: var(--wc-bg);
         color: var(--wc-text);
         cursor: pointer;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -404,7 +404,7 @@ export class RackSettingsDialog extends LitElement {
       }
 
       .stepper-val-sm {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         min-width: 22px;
         text-align: center;
@@ -412,7 +412,7 @@ export class RackSettingsDialog extends LitElement {
 
       .row-type-info {
         flex: 1;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -420,8 +420,8 @@ export class RackSettingsDialog extends LitElement {
         width: 100px;
         padding: 2px 6px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
-        font-size: 0.85em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-md);
         background: var(--wc-bg);
         color: var(--wc-text);
       }
@@ -440,11 +440,11 @@ export class RackSettingsDialog extends LitElement {
         gap: 4px;
         padding: 6px 0;
         border: 1px dashed var(--wc-border);
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         transition: all 0.15s;
       }
 
@@ -988,7 +988,7 @@ export class RackSettingsDialog extends LitElement {
                         html`<div class="grid-preview-cell"></div>`
                       )}
                   ${!isStorage && numCols > 15
-                    ? html`<span style="font-size:0.65em;color:var(--wc-text-secondary)">+${numCols - 15}</span>`
+                    ? html`<span style="font-size: var(--wc-fs-2xs);color:var(--wc-text-secondary)">+${numCols - 15}</span>`
                     : nothing}
                 </div>
               `;
@@ -1045,7 +1045,7 @@ export class RackSettingsDialog extends LitElement {
                                     ${BOX_SIZES.map((s) => html`<option value=${s} ?selected=${boxSize === s}>${s}-pk</option>`)}
                                   </select>
                                 `)}
-                                <span style="font-size:0.7em;color:var(--wc-text-secondary);">= ${sr?.capacity || 12}</span>
+                                <span style="font-size: var(--wc-fs-xs);color:var(--wc-text-secondary);">= ${sr?.capacity || 12}</span>
                               </div>
                             `
                           : html`
@@ -1123,7 +1123,7 @@ export class RackSettingsDialog extends LitElement {
             : nothing}
         </div>
         ${this._error
-          ? html`<div style="color:#ef5350;font-size:0.85em">${this._error}</div>`
+          ? html`<div style="color:#ef5350;font-size:var(--wc-fs-md)">${this._error}</div>`
           : nothing}
       </div>
       <div class="dialog-footer">

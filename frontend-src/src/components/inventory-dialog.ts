@@ -48,7 +48,7 @@ export class InventoryDialog extends LitElement {
       }
 
       .inv-header-title {
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
         font-weight: 600;
         color: var(--wc-text);
       }
@@ -56,10 +56,10 @@ export class InventoryDialog extends LitElement {
       .inv-close {
         background: none;
         border: none;
-        font-size: 1.3em;
+        font-size: var(--wc-fs-2xl);
         cursor: pointer;
         padding: 4px 8px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -72,7 +72,7 @@ export class InventoryDialog extends LitElement {
         gap: 16px;
         padding: 4px 20px 10px;
         flex-wrap: wrap;
-        font-size: 0.82em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -113,8 +113,8 @@ export class InventoryDialog extends LitElement {
         width: 100%;
         padding: 8px 12px 8px 30px;
         border: 1px solid var(--wc-border);
-        border-radius: 20px;
-        font-size: 0.88em;
+        border-radius: var(--wc-r-pill);
+        font-size: var(--wc-fs-md);
         background: var(--wc-bg);
         color: var(--wc-text);
         box-sizing: border-box;
@@ -130,7 +130,7 @@ export class InventoryDialog extends LitElement {
         left: 10px;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         pointer-events: none;
       }
 
@@ -143,20 +143,20 @@ export class InventoryDialog extends LitElement {
       .inv-sort select {
         padding: 6px 10px;
         border: 1px solid var(--wc-border);
-        border-radius: 14px;
+        border-radius: var(--wc-r-lg);
         background: var(--wc-bg);
         color: var(--wc-text);
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         cursor: pointer;
       }
 
       .inv-sort-dir {
         background: none;
         border: 1px solid var(--wc-border);
-        border-radius: 14px;
+        border-radius: var(--wc-r-lg);
         padding: 5px 9px;
         cursor: pointer;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         line-height: 1;
       }
@@ -174,12 +174,12 @@ export class InventoryDialog extends LitElement {
 
       .inv-chip {
         padding: 4px 10px;
-        border-radius: 14px;
+        border-radius: var(--wc-r-lg);
         border: 1px solid var(--wc-border);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         transition: all 0.2s;
         white-space: nowrap;
       }
@@ -221,7 +221,7 @@ export class InventoryDialog extends LitElement {
       .inv-thumb {
         width: 48px;
         height: 66px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         object-fit: cover;
         flex-shrink: 0;
       }
@@ -240,7 +240,7 @@ export class InventoryDialog extends LitElement {
 
       .inv-name {
         font-weight: 600;
-        font-size: 0.88em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
         white-space: nowrap;
         overflow: hidden;
@@ -248,7 +248,7 @@ export class InventoryDialog extends LitElement {
       }
 
       .inv-meta {
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-top: 1px;
         white-space: nowrap;
@@ -264,12 +264,12 @@ export class InventoryDialog extends LitElement {
 
       .inv-price {
         font-weight: 600;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
       }
 
       .inv-location {
-        font-size: 0.72em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
       }
 
@@ -277,7 +277,7 @@ export class InventoryDialog extends LitElement {
         text-align: center;
         padding: 40px 20px;
         color: var(--wc-text-secondary);
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .inv-footer {
@@ -291,7 +291,7 @@ export class InventoryDialog extends LitElement {
       }
 
       .inv-count {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -302,9 +302,9 @@ export class InventoryDialog extends LitElement {
       }
 
       .inv-btn {
-        font-size: 0.76em;
+        font-size: var(--wc-fs-xs);
         padding: 5px 12px;
-        border-radius: 16px;
+        border-radius: var(--wc-r-lg);
         border: 1px solid var(--wc-border);
         background: transparent;
         color: var(--wc-text-secondary);
@@ -326,7 +326,7 @@ export class InventoryDialog extends LitElement {
       .inv-status {
         width: 100%;
         text-align: center;
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         padding: 4px 0 0;
         color: #2e7d32;
         font-weight: 500;
@@ -341,12 +341,12 @@ export class InventoryDialog extends LitElement {
         align-items: center;
         justify-content: center;
         z-index: 10;
-        border-radius: 16px;
+        border-radius: var(--wc-r-lg);
       }
 
       .inv-confirm-box {
         background: var(--wc-bg);
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         padding: 24px;
         max-width: 380px;
         width: 90%;
@@ -355,24 +355,24 @@ export class InventoryDialog extends LitElement {
 
       .inv-confirm-box h3 {
         margin: 0 0 8px;
-        font-size: 1em;
+        font-size: var(--wc-fs-lg);
         color: var(--wc-text);
       }
 
       .inv-confirm-box p {
         margin: 0 0 16px;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         line-height: 1.4;
       }
 
       .inv-confirm-stats {
-        font-size: 0.82em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text);
         margin: 0 0 16px;
         padding: 10px;
         background: rgba(0, 0, 0, 0.05);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
       }
 
       .inv-confirm-btns {
@@ -383,9 +383,9 @@ export class InventoryDialog extends LitElement {
 
       .inv-confirm-btns button {
         padding: 8px 20px;
-        border-radius: 20px;
+        border-radius: var(--wc-r-pill);
         border: none;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         cursor: pointer;
         font-weight: 500;
       }
@@ -404,7 +404,7 @@ export class InventoryDialog extends LitElement {
         display: flex;
         margin: 0 16px 8px;
         border: 1px solid var(--wc-border);
-        border-radius: 20px;
+        border-radius: var(--wc-r-pill);
         overflow: hidden;
       }
 
@@ -414,7 +414,7 @@ export class InventoryDialog extends LitElement {
         border: none;
         background: transparent;
         color: var(--wc-text-secondary);
-        font-size: 0.82em;
+        font-size: var(--wc-fs-sm);
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
@@ -440,8 +440,8 @@ export class InventoryDialog extends LitElement {
       .inv-reason-badge {
         display: inline-block;
         padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 0.72em;
+        border-radius: var(--wc-r-md);
+        font-size: var(--wc-fs-xs);
         font-weight: 500;
         background: rgba(114, 47, 55, 0.12);
         color: var(--wc-primary);
@@ -457,7 +457,7 @@ export class InventoryDialog extends LitElement {
         }
         .inv-stats {
           gap: 8px;
-          font-size: 0.78em;
+          font-size: var(--wc-fs-sm);
           padding: 4px 16px 8px;
         }
         .inv-list {
@@ -1331,11 +1331,11 @@ export class InventoryDialog extends LitElement {
                             (b: any) => html`
                               <button
                                 class="inv-btn"
-                                style="width:100%;margin-bottom:4px;text-align:left;font-size:0.82em;padding:8px 12px;"
+                                style="width:100%;margin-bottom:4px;text-align:left;font-size: var(--wc-fs-sm);padding:8px 12px;"
                                 @click=${() => this._serverBackupRestore(b.filename)}
                               >
                                 <div>${b.timestamp ? new Date(b.timestamp).toLocaleString() : b.filename}</div>
-                                <div style="font-size:0.85em;color:var(--wc-text-secondary);">${b.wines} wines, ${b.cabinets} racks</div>
+                                <div style="font-size: var(--wc-fs-md);color:var(--wc-text-secondary);">${b.wines} wines, ${b.cabinets} racks</div>
                               </button>
                             `
                           )}

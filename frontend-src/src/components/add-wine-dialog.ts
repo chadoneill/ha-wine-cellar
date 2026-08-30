@@ -66,7 +66,7 @@ export class AddWineDialog extends LitElement {
       .step-dot.active {
         background: var(--wc-primary);
         width: 24px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
       }
 
       .step-dot.done {
@@ -90,13 +90,13 @@ export class AddWineDialog extends LitElement {
         gap: 12px;
         padding: 14px;
         border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         cursor: pointer;
         transition: all 0.2s;
         background: rgba(255, 255, 255, 0.06);
         color: var(--wc-text);
         text-align: left;
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         width: 100%;
       }
 
@@ -106,7 +106,7 @@ export class AddWineDialog extends LitElement {
       }
 
       .scan-option-icon {
-        font-size: 1.5em;
+        font-size: var(--wc-fs-2xl);
         flex-shrink: 0;
       }
 
@@ -120,7 +120,7 @@ export class AddWineDialog extends LitElement {
       }
 
       .scan-option-desc {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -139,8 +139,8 @@ export class AddWineDialog extends LitElement {
         flex: 1;
         padding: 10px 14px;
         border: 2px solid var(--wc-border);
-        border-radius: 10px;
-        font-size: 1em;
+        border-radius: var(--wc-r-md);
+        font-size: var(--wc-fs-lg);
         text-align: center;
         letter-spacing: 2px;
         background: var(--wc-bg);
@@ -159,7 +159,7 @@ export class AddWineDialog extends LitElement {
         gap: 12px;
         margin: 14px 0;
         color: var(--wc-text-secondary);
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
       }
 
       .or-divider::before,
@@ -174,8 +174,8 @@ export class AddWineDialog extends LitElement {
         width: 100%;
         padding: 10px 14px;
         border: 2px solid var(--wc-border);
-        border-radius: 10px;
-        font-size: 1em;
+        border-radius: var(--wc-r-md);
+        font-size: var(--wc-fs-lg);
         box-sizing: border-box;
         background: var(--wc-bg);
         color: var(--wc-text);
@@ -189,7 +189,7 @@ export class AddWineDialog extends LitElement {
       .lookup-result {
         background: rgba(114, 47, 55, 0.05);
         border: 1px solid rgba(114, 47, 55, 0.2);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         padding: 12px;
         margin-top: 12px;
         text-align: left;
@@ -197,11 +197,11 @@ export class AddWineDialog extends LitElement {
 
       .lookup-result .result-name {
         font-weight: 600;
-        font-size: 1em;
+        font-size: var(--wc-fs-lg);
       }
 
       .lookup-result .result-detail {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         margin-top: 2px;
       }
@@ -215,7 +215,7 @@ export class AddWineDialog extends LitElement {
 
       .location-cabinet {
         border: 2px solid var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         padding: 12px;
         text-align: center;
         cursor: pointer;
@@ -234,11 +234,11 @@ export class AddWineDialog extends LitElement {
 
       .location-cabinet .cab-name {
         font-weight: 600;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .location-cabinet .cab-info {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         margin-top: 4px;
       }
@@ -255,7 +255,7 @@ export class AddWineDialog extends LitElement {
 
       .error-msg {
         color: #c62828;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         margin-top: 8px;
       }
 
@@ -275,7 +275,7 @@ export class AddWineDialog extends LitElement {
 
       .confirm-summary {
         background: rgba(128, 128, 128, 0.08);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         padding: 16px;
       }
 
@@ -283,7 +283,7 @@ export class AddWineDialog extends LitElement {
         display: flex;
         justify-content: space-between;
         padding: 4px 0;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .confirm-summary .summary-label {
@@ -319,7 +319,7 @@ export class AddWineDialog extends LitElement {
       }
 
       .rating-label {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         font-weight: 500;
         color: var(--wc-text-secondary);
         margin-bottom: 6px;
@@ -335,7 +335,7 @@ export class AddWineDialog extends LitElement {
       }
 
       .search-results-label {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-bottom: 2px;
       }
@@ -346,7 +346,7 @@ export class AddWineDialog extends LitElement {
         gap: 10px;
         padding: 10px 12px;
         border: 1px solid var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         cursor: pointer;
         transition: all 0.15s;
         background: transparent;
@@ -364,7 +364,7 @@ export class AddWineDialog extends LitElement {
       .search-result-thumb {
         width: 36px;
         height: 48px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         object-fit: cover;
         flex-shrink: 0;
         background: rgba(128, 128, 128, 0.1);
@@ -377,20 +377,20 @@ export class AddWineDialog extends LitElement {
 
       .search-result-name {
         font-weight: 600;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .search-result-meta {
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-top: 2px;
       }
 
       .search-result-rating {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         color: #f5a623;
         flex-shrink: 0;
@@ -761,9 +761,9 @@ export class AddWineDialog extends LitElement {
             : this._showBackPrompt
               ? html`
                   <div style="text-align:center;padding:24px 12px">
-                    <div style="font-size:2em;margin-bottom:8px">✅</div>
+                    <div style="font-size: var(--wc-fs-2xl);margin-bottom:8px">✅</div>
                     <div style="margin-bottom:12px;font-weight:500">Front label captured</div>
-                    <p style="font-size:0.85em;color:var(--wc-text-secondary);margin-bottom:16px">
+                    <p style="font-size: var(--wc-fs-md);color:var(--wc-text-secondary);margin-bottom:16px">
                       Add a photo of the back label too? It often has the vintage year (and sometimes a barcode).
                     </p>
                     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
@@ -892,7 +892,7 @@ export class AddWineDialog extends LitElement {
                     >
                       ${item.image_url
                         ? html`<img class="search-result-thumb" src="${item.image_url}" alt="" />`
-                        : html`<div class="search-result-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2em;">🍷</div>`}
+                        : html`<div class="search-result-thumb" style="display:flex;align-items:center;justify-content:center;font-size: var(--wc-fs-xl);">🍷</div>`}
                       <div class="search-result-info">
                         <div class="search-result-name">${item.name || "Unknown"}</div>
                         <div class="search-result-meta">
@@ -1136,7 +1136,7 @@ export class AddWineDialog extends LitElement {
     return html`
       <div class="dialog-body">
         <div style="font-weight: 500; margin-bottom: 8px">Choose Location</div>
-        <div style="font-size: 0.85em; color: var(--wc-text-secondary); margin-bottom: 12px">
+        <div style="font-size: var(--wc-fs-md); color: var(--wc-text-secondary); margin-bottom: 12px">
           Select a cabinet and position for this bottle
         </div>
 
@@ -1158,17 +1158,17 @@ export class AddWineDialog extends LitElement {
 
         ${selectedCabinet && zones.length > 0 ? html`
           <div style="margin-top:12px">
-            <label style="display:block;font-size:0.8em;color:var(--wc-text-secondary);margin-bottom:6px">Bulk / Box Zone</label>
+            <label style="display:block;font-size: var(--wc-fs-sm);color:var(--wc-text-secondary);margin-bottom:6px">Bulk / Box Zone</label>
             <div style="display:flex;flex-wrap:wrap;gap:6px">
               <button
                 class="btn ${!hasZone ? "btn-primary" : "btn-outline"}"
-                style="font-size:0.8em;padding:6px 10px"
+                style="font-size: var(--wc-fs-sm);padding:6px 10px"
                 @click=${() => this._updateField("zone", "")}
               >None — use grid Row/Col</button>
               ${zones.map((sr) => html`
                 <button
                   class="btn ${this._wineData.zone === `storage-${sr.row}` ? "btn-primary" : "btn-outline"}"
-                  style="font-size:0.8em;padding:6px 10px"
+                  style="font-size: var(--wc-fs-sm);padding:6px 10px"
                   @click=${() => this._selectZone(`storage-${sr.row}`)}
                 >${sr.name || (sr.type === "box" ? "Box" : "Bulk Bin")}</button>
               `)}

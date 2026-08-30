@@ -51,9 +51,9 @@ export class WineDetailDialog extends LitElement {
         background: none;
         border: none;
         cursor: pointer;
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
         padding: 6px 8px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         color: var(--wc-text-secondary);
         transition: background 0.2s;
         line-height: 1;
@@ -64,7 +64,7 @@ export class WineDetailDialog extends LitElement {
       }
 
       .icon-btn.close-btn {
-        font-size: 1.3em;
+        font-size: var(--wc-fs-2xl);
         font-weight: 600;
       }
 
@@ -77,7 +77,7 @@ export class WineDetailDialog extends LitElement {
       .wine-image {
         width: 135px;
         height: 195px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         object-fit: cover;
         background: #f0f0f0;
         flex-shrink: 0;
@@ -118,9 +118,9 @@ export class WineDetailDialog extends LitElement {
         left: 6px;
         background: rgba(0, 0, 0, 0.6);
         color: #fff;
-        font-size: 0.6em;
+        font-size: var(--wc-fs-2xs);
         padding: 2px 6px;
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         pointer-events: none;
       }
 
@@ -143,7 +143,7 @@ export class WineDetailDialog extends LitElement {
         background: rgba(255, 255, 255, 0.95);
         color: #333;
         cursor: pointer;
-        font-size: 1em;
+        font-size: var(--wc-fs-lg);
         line-height: 1;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
         transition: background 0.15s, transform 0.15s;
@@ -163,11 +163,11 @@ export class WineDetailDialog extends LitElement {
       .wine-image-placeholder {
         width: 135px;
         height: 195px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2em;
+        font-size: var(--wc-fs-2xl);
         flex-shrink: 0;
         color: #fff;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -187,7 +187,7 @@ export class WineDetailDialog extends LitElement {
         justify-content: center;
         gap: 3px;
         width: 90px;
-        font-size: 0.68em;
+        font-size: var(--wc-fs-2xs);
         line-height: 1.3;
         text-align: center;
         color: var(--wc-text-secondary, #888);
@@ -205,14 +205,14 @@ export class WineDetailDialog extends LitElement {
       }
 
       .wine-name {
-        font-size: 1.2em;
+        font-size: var(--wc-fs-xl);
         font-weight: 600;
         color: var(--wc-text);
         margin-bottom: 4px;
       }
 
       .wine-winery {
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         margin-bottom: 8px;
       }
@@ -220,8 +220,8 @@ export class WineDetailDialog extends LitElement {
       .wine-type-badge {
         display: inline-block;
         padding: 2px 10px;
-        border-radius: 12px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-md);
+        font-size: var(--wc-fs-xs);
         font-weight: 600;
         color: #fff;
         text-transform: uppercase;
@@ -233,7 +233,7 @@ export class WineDetailDialog extends LitElement {
         align-items: center;
         gap: 4px;
         margin-top: 8px;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .rating-star {
@@ -245,7 +245,7 @@ export class WineDetailDialog extends LitElement {
         align-items: center;
         gap: 8px;
         padding: 10px 20px;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         font-weight: 500;
       }
 
@@ -266,7 +266,7 @@ export class WineDetailDialog extends LitElement {
 
       .wine-description {
         padding: 0 20px 12px;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         line-height: 1.4;
         font-style: italic;
@@ -284,15 +284,15 @@ export class WineDetailDialog extends LitElement {
         align-items: center;
         gap: 4px;
         padding: 4px 10px;
-        border-radius: 16px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-lg);
+        font-size: var(--wc-fs-xs);
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid var(--wc-border);
         color: var(--wc-text-secondary);
       }
 
       .info-chip-icon {
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
       }
 
       .details-grid {
@@ -308,7 +308,7 @@ export class WineDetailDialog extends LitElement {
       }
 
       .detail-label {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -316,7 +316,7 @@ export class WineDetailDialog extends LitElement {
       }
 
       .detail-value {
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         color: var(--wc-text);
         font-weight: 500;
       }
@@ -326,12 +326,12 @@ export class WineDetailDialog extends LitElement {
       }
 
       .wine-notes-text {
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         font-style: italic;
         background: rgba(128, 128, 128, 0.08);
         padding: 10px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
       }
 
       /* Rating & Tasting Notes section */
@@ -347,7 +347,7 @@ export class WineDetailDialog extends LitElement {
       }
 
       .section-title {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         font-weight: 600;
         color: var(--wc-text);
         text-transform: uppercase;
@@ -359,10 +359,10 @@ export class WineDetailDialog extends LitElement {
         border: none;
         color: var(--wc-primary-text);
         cursor: pointer;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         font-weight: 500;
         padding: 4px 8px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         transition: background 0.2s;
       }
 
@@ -378,13 +378,13 @@ export class WineDetailDialog extends LitElement {
       }
 
       .rating-label {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         min-width: 70px;
       }
 
       .no-rating {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         font-style: italic;
       }
@@ -405,7 +405,7 @@ export class WineDetailDialog extends LitElement {
       }
 
       .tasting-field label {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -414,10 +414,10 @@ export class WineDetailDialog extends LitElement {
 
       .tasting-field textarea {
         font-family: inherit;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         padding: 8px;
         border: 1px solid var(--wc-border, #e0e0e0);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         resize: vertical;
         min-height: 50px;
         background: var(--wc-bg);
@@ -430,11 +430,11 @@ export class WineDetailDialog extends LitElement {
       }
 
       .tasting-value {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
         background: rgba(128, 128, 128, 0.08);
         padding: 8px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         min-height: 20px;
       }
 
@@ -450,8 +450,8 @@ export class WineDetailDialog extends LitElement {
         align-items: center;
         gap: 4px;
         padding: 4px 10px;
-        border-radius: 16px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-lg);
+        font-size: var(--wc-fs-xs);
         background: rgba(245, 166, 35, 0.12);
         border: 1px solid rgba(245, 166, 35, 0.3);
         color: #f5a623;
@@ -464,7 +464,7 @@ export class WineDetailDialog extends LitElement {
       }
 
       .drink-window {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         padding: 0 20px 8px;
       }
@@ -485,7 +485,7 @@ export class WineDetailDialog extends LitElement {
       }
 
       .actions .btn {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         padding: 6px 10px;
         white-space: nowrap;
       }
@@ -501,7 +501,7 @@ export class WineDetailDialog extends LitElement {
 
       .edit-form .form-group label {
         display: block;
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         font-weight: 500;
         color: var(--wc-text-secondary);
         text-transform: uppercase;
@@ -515,8 +515,8 @@ export class WineDetailDialog extends LitElement {
         width: 100%;
         padding: 8px 12px;
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
-        font-size: 0.9em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-md);
         background: var(--wc-bg);
         color: var(--wc-text);
         box-sizing: border-box;
@@ -1157,7 +1157,7 @@ export class WineDetailDialog extends LitElement {
                     <div class="wine-rating">
                       <span class="rating-star">★</span>
                       ${wine.rating.toFixed(1)}
-                      <span style="font-size:0.8em;color:var(--wc-text-secondary)">
+                      <span style="font-size: var(--wc-fs-sm);color:var(--wc-text-secondary)">
                         Vivino${wine.ratings_count ? ` (${wine.ratings_count.toLocaleString()} ratings)` : ""}
                       </span>
                     </div>
@@ -1165,8 +1165,8 @@ export class WineDetailDialog extends LitElement {
                 : nothing}
               ${this.mode !== "winelist"
                 ? html`
-                    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:0.9em">
-                      <span style="font-size:0.8em;color:var(--wc-text-secondary)">My Rating</span>
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:var(--wc-fs-md)">
+                      <span style="font-size: var(--wc-fs-sm);color:var(--wc-text-secondary)">My Rating</span>
                       <star-rating
                         .value=${this._userRating}
                         .readonly=${!this._editing}
@@ -1174,9 +1174,9 @@ export class WineDetailDialog extends LitElement {
                         @rating-change=${this._onRatingChange}
                       ></star-rating>
                       ${!this._editing && this._userRating === 0
-                        ? html`<span class="no-rating" style="font-size:0.8em">Not rated</span>`
+                        ? html`<span class="no-rating" style="font-size:var(--wc-fs-sm)">Not rated</span>`
                         : nothing}
-                      <button class="edit-toggle" style="font-size:0.75em;padding:2px 6px" @click=${() => (this._editing = !this._editing)}>
+                      <button class="edit-toggle" style="font-size: var(--wc-fs-xs);padding:2px 6px" @click=${() => (this._editing = !this._editing)}>
                         ${this._editing ? "Cancel" : "Edit"}
                       </button>
                     </div>
@@ -1209,7 +1209,7 @@ export class WineDetailDialog extends LitElement {
                 </div>
                 ${wine.vivino_updated_at || wine.ai_updated_at
                   ? html`
-                      <div style="text-align:center;font-size:0.68em;color:var(--wc-text-secondary);margin-top:-6px;padding-bottom:10px">
+                      <div style="text-align:center;font-size: var(--wc-fs-2xs);color:var(--wc-text-secondary);margin-top:-6px;padding-bottom:10px">
                         ${wine.vivino_updated_at
                           ? html`${wine.vivino_id
                               ? html`<a
@@ -1404,19 +1404,19 @@ export class WineDetailDialog extends LitElement {
               `}
           ${this._showRemoveConfirm ? html`
             <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:16px">
-              <div style="background:var(--wc-bg);border-radius:12px;padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
-                <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Remove Wine</h3>
-                <p style="margin:0 0 16px;font-size:0.85em;color:var(--wc-text-secondary)">Why are you removing this bottle?</p>
+              <div style="background:var(--wc-bg);border-radius: var(--wc-r-md);padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
+                <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">Remove Wine</h3>
+                <p style="margin:0 0 16px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">Why are you removing this bottle?</p>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
                   ${REMOVAL_REASONS.map(r => html`
                     <button
-                      style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em;transition:all 0.15s"
+                      style="padding:8px 16px;border-radius: var(--wc-r-pill);border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size: var(--wc-fs-md);transition:all 0.15s"
                       @click=${() => this._confirmRemove(r.id)}
                     >${r.label}</button>
                   `)}
                 </div>
                 <button
-                  style="margin-top:12px;padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.8em"
+                  style="margin-top:12px;padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-sm)"
                   @click=${() => (this._showRemoveConfirm = false)}
                 >Cancel</button>
               </div>
@@ -1424,22 +1424,22 @@ export class WineDetailDialog extends LitElement {
           ` : nothing}
           ${this._pendingVivinoImage ? html`
             <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:16px">
-              <div style="background:var(--wc-bg);border-radius:12px;padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
-                <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Vivino Photo Available</h3>
-                <p style="margin:0 0 12px;font-size:0.85em;color:var(--wc-text-secondary)">Vivino found a different bottle photo. Keep your current photo or use Vivino's?</p>
+              <div style="background:var(--wc-bg);border-radius: var(--wc-r-md);padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
+                <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">Vivino Photo Available</h3>
+                <p style="margin:0 0 12px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">Vivino found a different bottle photo. Keep your current photo or use Vivino's?</p>
                 <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px">
                   <div style="text-align:center">
-                    <img src="${wine.image_url}" style="width:70px;height:100px;object-fit:cover;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.2)" />
-                    <div style="font-size:0.7em;color:var(--wc-text-secondary);margin-top:4px">Current</div>
+                    <img src="${wine.image_url}" style="width:70px;height:100px;object-fit:cover;border-radius: var(--wc-r-sm);box-shadow:0 2px 8px rgba(0,0,0,0.2)" />
+                    <div style="font-size: var(--wc-fs-xs);color:var(--wc-text-secondary);margin-top:4px">Current</div>
                   </div>
                   <div style="text-align:center">
-                    <img src="${this._pendingVivinoImage}" style="width:70px;height:100px;object-fit:cover;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.2)" />
-                    <div style="font-size:0.7em;color:var(--wc-text-secondary);margin-top:4px">Vivino</div>
+                    <img src="${this._pendingVivinoImage}" style="width:70px;height:100px;object-fit:cover;border-radius: var(--wc-r-sm);box-shadow:0 2px 8px rgba(0,0,0,0.2)" />
+                    <div style="font-size: var(--wc-fs-xs);color:var(--wc-text-secondary);margin-top:4px">Vivino</div>
                   </div>
                 </div>
                 <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
                   <button
-                    style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em"
+                    style="padding:8px 16px;border-radius: var(--wc-r-pill);border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:var(--wc-fs-md)"
                     @click=${this._dismissVivinoPhoto}
                   >Keep My Photo</button>
                   <button class="btn btn-primary" style="background:#8e24aa" @click=${this._applyVivinoPhoto}>Use Vivino's</button>
@@ -1449,14 +1449,14 @@ export class WineDetailDialog extends LitElement {
           ` : nothing}
           ${this._showPhotoCamera ? html`
             <div
-              style="position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:16px;padding:16px"
+              style="position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:10;border-radius: var(--wc-r-lg);padding:16px"
               @click=${() => (this._showPhotoCamera = false)}
             >
               <div style="width:100%" @click=${(e: Event) => e.stopPropagation()}>
                 <label-camera .active=${this._showPhotoCamera} @photo-captured=${this._onPhotoReplaced}></label-camera>
                 <div style="text-align:center;margin-top:12px">
                   <button
-                    style="padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.85em"
+                    style="padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-md)"
                     @click=${() => (this._showPhotoCamera = false)}
                   >Cancel</button>
                 </div>
@@ -1465,19 +1465,19 @@ export class WineDetailDialog extends LitElement {
           ` : nothing}
           ${this._aiFallbackReason ? html`
             <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:16px">
-              <div style="background:var(--wc-bg);border-radius:12px;padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
-                <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">${this._aiFallbackReason === "no_match" ? "No Vivino Match" : "No Price Found"}</h3>
-                <p style="margin:0 0 16px;font-size:0.85em;color:var(--wc-text-secondary)">${this._aiFallbackReason === "no_match"
+              <div style="background:var(--wc-bg);border-radius: var(--wc-r-md);padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
+                <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">${this._aiFallbackReason === "no_match" ? "No Vivino Match" : "No Price Found"}</h3>
+                <p style="margin:0 0 16px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">${this._aiFallbackReason === "no_match"
                   ? "Vivino couldn't find a confident match for this wine. Try AI instead?"
                   : "Vivino has no price for this wine in the selected currency. Estimate it with AI?"}</p>
                 <div style="display:flex;flex-direction:column;gap:8px">
                   <button class="btn btn-primary" style="background:#1565c0" @click=${() => this._confirmAiFallback(false)}>Use AI Once</button>
                   <button
-                    style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em"
+                    style="padding:8px 16px;border-radius: var(--wc-r-pill);border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:var(--wc-fs-md)"
                     @click=${() => this._confirmAiFallback(true)}
                   >Always Use AI Automatically</button>
                   <button
-                    style="margin-top:4px;padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.8em"
+                    style="margin-top:4px;padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-sm)"
                     @click=${this._dismissAiFallback}
                   >Cancel</button>
                 </div>

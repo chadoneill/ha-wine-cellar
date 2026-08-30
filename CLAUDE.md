@@ -85,6 +85,22 @@ panel). This fork's `layer` is a second course of bottles nested in the
 work. They are orthogonal; a cabinet can have both. A wine with no `layer` is
 in the base row, which is where every bottle created before this existed.
 
+## Design tokens
+
+`src/styles.ts` defines the type scale, weights, radii and spacing on `:host`,
+and every component uses them. **Do not add a bare `font-size` in `em` or a
+raw `border-radius` in px** — that is what the tokens exist to stop.
+
+The app previously had twenty-odd font sizes, almost all fractional `em`. The
+commonest was `0.8em`, used 37 times. Because `em` compounds, an `0.8` inside
+an `0.85` lands near 11px, so text shrank the deeper it was nested and nothing
+lined up. The scale is absolute: `--wc-fs-2xs` (11px) through `--wc-fs-2xl`
+(22px). Radii went from nine ad-hoc values to five steps.
+
+Colour: one solid primary action per screen (`.btn-primary`, wine red).
+Everything else that used to be a saturated pill is `.btn-tonal` with a
+`--tint`, which washes its own colour rather than filling with it.
+
 ## Where the fields are set and stored
 
 | Field | Set in | Stored by |

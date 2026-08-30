@@ -26,18 +26,24 @@ export class CabinetGrid extends LitElement {
         display: block;
       }
 
+      /* The cabinet as a piece of furniture rather than a gold bevel: a dark
+         neutral case, a hairline edge catching the light along the top, and a
+         soft shadow underneath. The old 135deg gold gradient was the loudest
+         thing on the page and it was framing, not content. */
       .cabinet {
-        background: linear-gradient(135deg, #8b6914 0%, #c4973b 50%, #8b6914 100%);
-        border-radius: 12px;
-        padding: 8px;
-        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3),
-          0 4px 12px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(180deg, #2a2724 0%, #1c1a18 100%);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: var(--wc-r-md);
+        padding: 10px;
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.06) inset,
+          0 6px 18px rgba(0, 0, 0, 0.28);
       }
 
       .cabinet-name {
         text-align: center;
         color: #f5e6ca;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         padding: 4px 0;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -45,7 +51,7 @@ export class CabinetGrid extends LitElement {
 
       .cabinet-name.clickable {
         cursor: pointer;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
       }
 
       .cabinet-name.clickable:hover {
@@ -53,14 +59,16 @@ export class CabinetGrid extends LitElement {
       }
 
       .grid-inner {
-        background: linear-gradient(180deg, #1a1a3a 0%, #0d0d2b 100%);
-        border-radius: 8px;
-        padding: 6px;
+        background: linear-gradient(180deg, #14120f 0%, #0b0a09 100%);
+        border-radius: var(--wc-r-sm);
+        padding: 8px;
         position: relative;
         overflow: hidden;
       }
 
-      /* Blue LED glow effect */
+      /* The cabinet's interior light, from the top where the lamp actually is.
+         This was a blue LED wash across the whole rack, which tinted every
+         bottle and is why nothing in here looked like wine. */
       .grid-inner::before {
         content: "";
         position: absolute;
@@ -69,9 +77,9 @@ export class CabinetGrid extends LitElement {
         right: 0;
         bottom: 0;
         background: radial-gradient(
-          ellipse at center,
-          rgba(50, 100, 255, 0.15) 0%,
-          transparent 70%
+          ellipse at 50% -8%,
+          rgba(240, 226, 200, 0.10) 0%,
+          transparent 62%
         );
         pointer-events: none;
       }
@@ -91,7 +99,7 @@ export class CabinetGrid extends LitElement {
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #6b5010 0%, #a07828 50%, #6b5010 100%);
+        background: linear-gradient(180deg, #d9c199 0%, #b0906180 60%, #6b573a 100%);
         border-radius: 0 0 2px 2px;
       }
 
@@ -162,7 +170,7 @@ export class CabinetGrid extends LitElement {
         right: -8px;
         bottom: -5px;
         height: 7px;
-        border-radius: 2px;
+        border-radius: var(--wc-r-xs);
         background: linear-gradient(
           180deg,
           #f0dfc0 0%,
@@ -380,9 +388,8 @@ export class CabinetGrid extends LitElement {
       }
 
       .cell.filled {
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4),
-          inset 0 -2px 4px rgba(0, 0, 0, 0.3),
-          0 0 8px rgba(50, 100, 255, 0.15);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45),
+          inset 0 -2px 4px rgba(0, 0, 0, 0.3);
         border: 2px solid var(--bottle-type-color, rgba(255, 255, 255, 0.1));
         overflow: hidden;
       }
@@ -465,7 +472,7 @@ export class CabinetGrid extends LitElement {
         font-weight: 700;
         color: #fff;
         background: rgba(0,0,0,0.6);
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         padding: 1px 3px;
         z-index: 2;
         pointer-events: none;
@@ -523,8 +530,9 @@ export class CabinetGrid extends LitElement {
 
       .bottom-zone {
         margin-top: 8px;
-        background: linear-gradient(135deg, #6b5010 0%, #8b6914 100%);
-        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(214, 197, 176, 0.16);
+        border-radius: var(--wc-r-sm);
         padding: 8px;
         min-height: 40px;
         display: flex;
@@ -537,7 +545,7 @@ export class CabinetGrid extends LitElement {
       }
 
       .bottom-zone-label {
-        font-size: 0.65em;
+        font-size: var(--wc-fs-2xs);
         color: rgba(255, 255, 255, 0.6);
         width: 100%;
         text-align: center;
@@ -547,7 +555,7 @@ export class CabinetGrid extends LitElement {
         position: relative;
         width: 28px;
         height: 28px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -650,7 +658,8 @@ export class CabinetGrid extends LitElement {
       }
 
       .zone-box-row:hover {
-        background: linear-gradient(135deg, #7a5a12 0%, #9a7820 100%);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(214, 197, 176, 0.18);
       }
 
       .zone-box-grid {
@@ -681,7 +690,7 @@ export class CabinetGrid extends LitElement {
         left: -2px;
         right: -2px;
         height: 28%;
-        background: linear-gradient(180deg, #a08040 0%, #7a6020 100%);
+        background: linear-gradient(180deg, #d6bd93 0%, #a3855a 100%);
         border-radius: 2px 2px 0 0;
         border: 1px solid rgba(255, 255, 255, 0.25);
         border-bottom: none;
@@ -693,7 +702,7 @@ export class CabinetGrid extends LitElement {
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(180deg, #8b6914 0%, #6b5010 100%);
+        background: linear-gradient(180deg, #c3a678 0%, #8a6f49 100%);
         border-radius: 0 0 2px 2px;
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-top: 1px solid rgba(0, 0, 0, 0.3);
@@ -703,7 +712,7 @@ export class CabinetGrid extends LitElement {
       }
 
       .zone-box-shape .box-count {
-        font-size: 0.7em;
+        font-size: var(--wc-fs-xs);
         font-weight: 700;
         color: rgba(255, 255, 255, 0.5);
         line-height: 1;
@@ -715,7 +724,7 @@ export class CabinetGrid extends LitElement {
       }
 
       .zone-box-size {
-        font-size: 0.55em;
+        font-size: var(--wc-fs-2xs);
         color: rgba(255, 255, 255, 0.5);
       }
 
@@ -723,10 +732,10 @@ export class CabinetGrid extends LitElement {
       @media (max-width: 599px) {
         .cabinet {
           padding: 6px;
-          border-radius: 10px;
+          border-radius: var(--wc-r-md);
         }
         .cabinet-name {
-          font-size: 0.75em;
+          font-size: var(--wc-fs-xs);
           padding: 3px 0;
         }
         .grid-inner {
@@ -750,7 +759,7 @@ export class CabinetGrid extends LitElement {
           min-height: 32px;
         }
         .bottom-zone-label {
-          font-size: 0.6em;
+          font-size: var(--wc-fs-2xs);
         }
         .zone-bottle {
           width: 22px;

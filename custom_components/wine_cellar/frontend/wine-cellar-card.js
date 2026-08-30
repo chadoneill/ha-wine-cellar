@@ -74,9 +74,10 @@ const t=t=>(e,o)=>{ void 0!==o?o.addInitializer(()=>{customElements.define(t,e);
 
 const sharedStyles = i$3 `
   :host {
-    --wc-primary: #722f37;
+    --wc-primary: #7b333c;
     --wc-primary-light: #9a4a54;
     --wc-primary-text: #c48b91;
+    --wc-accent: #c69749;
     --wc-bg: var(--ha-card-background, var(--card-background-color, #fff));
     --wc-surface: var(--ha-card-background, var(--card-background-color, #fff));
     --wc-text: var(--primary-text-color, #212121);
@@ -84,16 +85,68 @@ const sharedStyles = i$3 `
     --wc-border: var(--divider-color, #e0e0e0);
     --wc-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0, 0, 0, 0.1));
     --wc-hover: rgba(128, 128, 128, 0.12);
-    font-family: var(--paper-font-body1_-_font-family, "Roboto", sans-serif);
+
+    /* ---- type scale -------------------------------------------------------
+       Absolute, not em. Every size in this app used to be a fraction of its
+       parent -- 0.8em was the single commonest value, used 37 times -- and
+       because em compounds, an 0.8 inside an 0.85 landed at about 11px. That
+       is what made the whole thing look shrunken and soft. These are fixed
+       steps, so a label is the same size wherever it appears. */
+    --wc-fs-2xs: 11px;
+    --wc-fs-xs: 12px;
+    --wc-fs-sm: 13px;
+    --wc-fs-md: 14px;
+    --wc-fs-lg: 15px;
+    --wc-fs-xl: 18px;
+    --wc-fs-2xl: 22px;
+
+    --wc-fw-normal: 400;
+    --wc-fw-medium: 500;
+    --wc-fw-semi: 600;
+    --wc-fw-bold: 700;
+
+    /* ---- corner radii, four steps instead of nine ad-hoc values ---- */
+    --wc-r-xs: 5px;
+    --wc-r-sm: 9px;
+    --wc-r-md: 13px;
+    --wc-r-lg: 18px;
+    --wc-r-pill: 999px;
+
+    /* ---- spacing rhythm ---- */
+    --wc-sp-1: 4px;
+    --wc-sp-2: 8px;
+    --wc-sp-3: 12px;
+    --wc-sp-4: 16px;
+    --wc-sp-5: 24px;
+
+    font-family: var(
+      --paper-font-body1_-_font-family,
+      ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text",
+      "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+    );
+    font-size: var(--wc-fs-md);
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Figures line up in columns and do not jitter as they change. */
+  .stat-value,
+  .num,
+  .stepper-value,
+  .stepper-val-sm {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
 
   .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 16px 0;
-    font-size: 1.2em;
-    font-weight: 500;
+    padding: var(--wc-sp-4) var(--wc-sp-4) var(--wc-sp-2);
+    font-size: var(--wc-fs-2xl);
+    font-weight: var(--wc-fw-semi);
+    letter-spacing: -0.015em;
     color: var(--wc-text);
   }
 
@@ -103,9 +156,10 @@ const sharedStyles = i$3 `
 
   .stats-bar {
     display: flex;
-    gap: 16px;
-    padding: 8px 16px;
-    font-size: 0.85em;
+    flex-wrap: wrap;
+    gap: var(--wc-sp-2) var(--wc-sp-5);
+    padding: var(--wc-sp-1) var(--wc-sp-4) var(--wc-sp-3);
+    font-size: var(--wc-fs-sm);
     color: var(--wc-text-secondary);
   }
 
@@ -116,28 +170,36 @@ const sharedStyles = i$3 `
   }
 
   .stats-bar .stat-value {
-    font-weight: 600;
+    font-weight: var(--wc-fw-semi);
+    font-size: var(--wc-fs-lg);
+    letter-spacing: -0.01em;
     color: var(--wc-text);
   }
 
   .tab-bar {
     display: flex;
-    gap: 4px;
-    padding: 8px 16px;
+    gap: var(--wc-sp-2);
+    padding: var(--wc-sp-1) var(--wc-sp-4) var(--wc-sp-3);
     overflow-x: auto;
+    scrollbar-width: none;
     border-bottom: 1px solid var(--wc-border);
+  }
+  .tab-bar::-webkit-scrollbar {
+    display: none;
   }
 
   .tab {
-    padding: 6px 16px;
-    border-radius: 20px;
-    border: 1px solid var(--wc-border);
-    background: transparent;
+    padding: 7px 14px;
+    min-height: 34px;
+    border-radius: var(--wc-r-pill);
+    border: 1px solid transparent;
+    background: var(--wc-hover);
     color: var(--wc-text-secondary);
     cursor: pointer;
     white-space: nowrap;
-    font-size: 0.85em;
-    transition: all 0.2s;
+    font-size: var(--wc-fs-sm);
+    font-weight: var(--wc-fw-medium);
+    transition: background 0.15s ease, color 0.15s ease;
   }
 
   .tab:hover {
@@ -147,7 +209,8 @@ const sharedStyles = i$3 `
   .tab.active {
     background: var(--wc-primary);
     color: #fff;
-    border-color: var(--wc-primary);
+    border-color: transparent;
+    font-weight: var(--wc-fw-semi);
   }
 
   .manage-racks-btn {
@@ -155,7 +218,7 @@ const sharedStyles = i$3 `
     border-color: transparent;
     color: var(--wc-primary-text);
     font-weight: 500;
-    font-size: 0.8em;
+    font-size: var(--wc-fs-sm);
     padding: 6px 12px;
   }
 
@@ -170,7 +233,7 @@ const sharedStyles = i$3 `
     border-color: transparent;
     color: var(--wc-primary-text);
     font-weight: 500;
-    font-size: 0.8em;
+    font-size: var(--wc-fs-sm);
     padding: 6px 12px;
   }
 
@@ -181,14 +244,28 @@ const sharedStyles = i$3 `
   .btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: none;
+    justify-content: center;
+    gap: var(--wc-sp-2);
+    padding: 0 16px;
+    /* a real tap target: 36px was the effective height before, and on a phone
+       that is a miss waiting to happen */
+    min-height: 38px;
+    border-radius: var(--wc-r-sm);
+    border: 1px solid transparent;
     cursor: pointer;
-    font-size: 0.9em;
-    font-weight: 500;
-    transition: all 0.2s;
+    font-family: inherit;
+    font-size: var(--wc-fs-sm);
+    font-weight: var(--wc-fw-medium);
+    letter-spacing: 0.005em;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--wc-accent);
+    outline-offset: 2px;
   }
 
   .btn-primary {
@@ -200,10 +277,29 @@ const sharedStyles = i$3 `
     background: var(--wc-primary-light);
   }
 
+  /* Tonal action button: a wash of its own colour rather than a saturated
+     fill. Five solid pills in a row -- blue, purple, teal, slate, red -- read
+     as a toolbar from a decade ago and shout over the wine, which is the thing
+     the page is actually about. The colour still identifies the action; it
+     just stops competing. Pass the colour as --tint. */
+  .btn-tonal {
+    background: color-mix(in srgb, var(--tint, var(--wc-primary)) 16%, transparent);
+    border-color: color-mix(in srgb, var(--tint, var(--wc-primary)) 38%, transparent);
+    color: var(--wc-text);
+  }
+  .btn-tonal:hover {
+    background: color-mix(in srgb, var(--tint, var(--wc-primary)) 26%, transparent);
+    border-color: color-mix(in srgb, var(--tint, var(--wc-primary)) 55%, transparent);
+  }
+  .btn-tonal[disabled] {
+    opacity: 0.45;
+    cursor: default;
+  }
+
   .btn-outline {
     background: transparent;
     color: var(--wc-text);
-    border: 1px solid var(--wc-border);
+    border-color: var(--wc-border);
   }
 
   .btn-outline:hover {
@@ -216,6 +312,8 @@ const sharedStyles = i$3 `
     color: var(--wc-text-secondary);
     cursor: pointer;
     padding: 8px;
+    min-width: 38px;
+    min-height: 38px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
@@ -242,7 +340,7 @@ const sharedStyles = i$3 `
 
   .dialog {
     background: var(--wc-bg);
-    border-radius: 16px;
+    border-radius: var(--wc-r-lg);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
     max-width: 500px;
     width: 90%;
@@ -260,7 +358,7 @@ const sharedStyles = i$3 `
 
   .dialog-header {
     padding: 20px 20px 12px;
-    font-size: 1.2em;
+    font-size: var(--wc-fs-xl);
     font-weight: 500;
     border-bottom: 1px solid var(--wc-border);
   }
@@ -282,7 +380,7 @@ const sharedStyles = i$3 `
 
   .form-group label {
     display: block;
-    font-size: 0.85em;
+    font-size: var(--wc-fs-md);
     font-weight: 500;
     color: var(--wc-text-secondary);
     margin-bottom: 4px;
@@ -294,8 +392,8 @@ const sharedStyles = i$3 `
     width: 100%;
     padding: 8px 12px;
     border: 1px solid var(--wc-border);
-    border-radius: 8px;
-    font-size: 0.95em;
+    border-radius: var(--wc-r-sm);
+    font-size: var(--wc-fs-lg);
     background: var(--wc-bg);
     color: var(--wc-text);
     box-sizing: border-box;
@@ -336,7 +434,7 @@ const sharedStyles = i$3 `
     }
     .dialog-header {
       padding: 16px 16px 10px;
-      font-size: 1.1em;
+      font-size: var(--wc-fs-xl);
     }
     .dialog-body {
       padding: 12px 16px;
@@ -354,7 +452,7 @@ const sharedStyles = i$3 `
     }
     .tab {
       padding: 5px 12px;
-      font-size: 0.8em;
+      font-size: var(--wc-fs-sm);
     }
     .depth-panel {
       width: 100% !important;
@@ -408,7 +506,7 @@ const sharedStyles = i$3 `
 
   .depth-panel-title {
     font-weight: 600;
-    font-size: 1em;
+    font-size: var(--wc-fs-lg);
     color: var(--wc-text, #333);
     display: flex;
     flex-direction: column;
@@ -416,7 +514,7 @@ const sharedStyles = i$3 `
   }
 
   .depth-panel-subtitle {
-    font-size: 0.8em;
+    font-size: var(--wc-fs-sm);
     font-weight: 400;
     color: var(--wc-text-secondary, #888);
   }
@@ -424,10 +522,10 @@ const sharedStyles = i$3 `
   .depth-panel-close {
     background: none;
     border: none;
-    font-size: 1.2em;
+    font-size: var(--wc-fs-xl);
     cursor: pointer;
     padding: 4px 8px;
-    border-radius: 6px;
+    border-radius: var(--wc-r-sm);
     color: var(--wc-text-secondary, #888);
   }
 
@@ -444,7 +542,7 @@ const sharedStyles = i$3 `
 
   .depth-slot {
     position: relative;
-    border-radius: 10px;
+    border-radius: var(--wc-r-md);
     cursor: pointer;
     transition: background 0.15s, box-shadow 0.15s;
   }
@@ -477,7 +575,7 @@ const sharedStyles = i$3 `
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8em;
+    font-size: var(--wc-fs-sm);
     line-height: 1;
     color: var(--wc-text-secondary, #888);
     background: rgba(0, 0, 0, 0.06);
@@ -499,11 +597,11 @@ const sharedStyles = i$3 `
   .depth-panel-add-box select {
     flex: 1;
     padding: 8px 10px;
-    border-radius: 8px;
+    border-radius: var(--wc-r-sm);
     border: 1px solid var(--wc-border, #ddd);
     background: var(--wc-bg);
     color: var(--wc-text, #333);
-    font-size: 0.85em;
+    font-size: var(--wc-fs-md);
   }
 
   .depth-panel-add-box .depth-panel-grow {
@@ -513,7 +611,7 @@ const sharedStyles = i$3 `
   }
 
   .depth-slot-label {
-    font-size: 0.7em;
+    font-size: var(--wc-fs-xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -528,7 +626,7 @@ const sharedStyles = i$3 `
     padding: 10px 12px;
     background: var(--wc-bg);
     border: 1px solid var(--wc-border);
-    border-radius: 10px;
+    border-radius: var(--wc-r-md);
   }
 
   .depth-slot-avatar {
@@ -539,7 +637,7 @@ const sharedStyles = i$3 `
   .depth-slot-thumb {
     width: 32px;
     height: 44px;
-    border-radius: 4px;
+    border-radius: var(--wc-r-xs);
     object-fit: cover;
     flex-shrink: 0;
   }
@@ -588,7 +686,7 @@ const sharedStyles = i$3 `
 
   .depth-slot-name {
     font-weight: 600;
-    font-size: 0.88em;
+    font-size: var(--wc-fs-md);
     color: var(--wc-text, #333);
     white-space: nowrap;
     overflow: hidden;
@@ -596,7 +694,7 @@ const sharedStyles = i$3 `
   }
 
   .depth-slot-meta {
-    font-size: 0.78em;
+    font-size: var(--wc-fs-sm);
     color: var(--wc-text-secondary, #888);
     margin-top: 2px;
   }
@@ -607,9 +705,9 @@ const sharedStyles = i$3 `
     gap: 8px;
     padding: 14px 12px;
     border: 2px dashed var(--wc-border, #ddd);
-    border-radius: 10px;
+    border-radius: var(--wc-r-md);
     color: var(--wc-text-secondary, #aaa);
-    font-size: 0.85em;
+    font-size: var(--wc-fs-md);
   }
 
   .depth-slot.empty:hover .depth-slot-empty {
@@ -618,7 +716,7 @@ const sharedStyles = i$3 `
   }
 
   .depth-slot-plus {
-    font-size: 1.3em;
+    font-size: var(--wc-fs-2xl);
     font-weight: 300;
     width: 28px;
     height: 28px;
@@ -640,11 +738,11 @@ const sharedStyles = i$3 `
     gap: 6px;
     padding: 10px;
     margin-top: 4px;
-    border-radius: 10px;
+    border-radius: var(--wc-r-md);
     border: 1px dashed var(--wc-border, #ddd);
     color: var(--wc-text-secondary, #888);
     cursor: pointer;
-    font-size: 0.85em;
+    font-size: var(--wc-fs-md);
     font-weight: 600;
     transition: background 0.15s, color 0.15s;
   }
@@ -1466,18 +1564,24 @@ CabinetGrid.styles = [
         display: block;
       }
 
+      /* The cabinet as a piece of furniture rather than a gold bevel: a dark
+         neutral case, a hairline edge catching the light along the top, and a
+         soft shadow underneath. The old 135deg gold gradient was the loudest
+         thing on the page and it was framing, not content. */
       .cabinet {
-        background: linear-gradient(135deg, #8b6914 0%, #c4973b 50%, #8b6914 100%);
-        border-radius: 12px;
-        padding: 8px;
-        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3),
-          0 4px 12px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(180deg, #2a2724 0%, #1c1a18 100%);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: var(--wc-r-md);
+        padding: 10px;
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.06) inset,
+          0 6px 18px rgba(0, 0, 0, 0.28);
       }
 
       .cabinet-name {
         text-align: center;
         color: #f5e6ca;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         padding: 4px 0;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -1485,7 +1589,7 @@ CabinetGrid.styles = [
 
       .cabinet-name.clickable {
         cursor: pointer;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
       }
 
       .cabinet-name.clickable:hover {
@@ -1493,14 +1597,16 @@ CabinetGrid.styles = [
       }
 
       .grid-inner {
-        background: linear-gradient(180deg, #1a1a3a 0%, #0d0d2b 100%);
-        border-radius: 8px;
-        padding: 6px;
+        background: linear-gradient(180deg, #14120f 0%, #0b0a09 100%);
+        border-radius: var(--wc-r-sm);
+        padding: 8px;
         position: relative;
         overflow: hidden;
       }
 
-      /* Blue LED glow effect */
+      /* The cabinet's interior light, from the top where the lamp actually is.
+         This was a blue LED wash across the whole rack, which tinted every
+         bottle and is why nothing in here looked like wine. */
       .grid-inner::before {
         content: "";
         position: absolute;
@@ -1509,9 +1615,9 @@ CabinetGrid.styles = [
         right: 0;
         bottom: 0;
         background: radial-gradient(
-          ellipse at center,
-          rgba(50, 100, 255, 0.15) 0%,
-          transparent 70%
+          ellipse at 50% -8%,
+          rgba(240, 226, 200, 0.10) 0%,
+          transparent 62%
         );
         pointer-events: none;
       }
@@ -1531,7 +1637,7 @@ CabinetGrid.styles = [
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #6b5010 0%, #a07828 50%, #6b5010 100%);
+        background: linear-gradient(180deg, #d9c199 0%, #b0906180 60%, #6b573a 100%);
         border-radius: 0 0 2px 2px;
       }
 
@@ -1602,7 +1708,7 @@ CabinetGrid.styles = [
         right: -8px;
         bottom: -5px;
         height: 7px;
-        border-radius: 2px;
+        border-radius: var(--wc-r-xs);
         background: linear-gradient(
           180deg,
           #f0dfc0 0%,
@@ -1820,9 +1926,8 @@ CabinetGrid.styles = [
       }
 
       .cell.filled {
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4),
-          inset 0 -2px 4px rgba(0, 0, 0, 0.3),
-          0 0 8px rgba(50, 100, 255, 0.15);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45),
+          inset 0 -2px 4px rgba(0, 0, 0, 0.3);
         border: 2px solid var(--bottle-type-color, rgba(255, 255, 255, 0.1));
         overflow: hidden;
       }
@@ -1905,7 +2010,7 @@ CabinetGrid.styles = [
         font-weight: 700;
         color: #fff;
         background: rgba(0,0,0,0.6);
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         padding: 1px 3px;
         z-index: 2;
         pointer-events: none;
@@ -1963,8 +2068,9 @@ CabinetGrid.styles = [
 
       .bottom-zone {
         margin-top: 8px;
-        background: linear-gradient(135deg, #6b5010 0%, #8b6914 100%);
-        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(214, 197, 176, 0.16);
+        border-radius: var(--wc-r-sm);
         padding: 8px;
         min-height: 40px;
         display: flex;
@@ -1977,7 +2083,7 @@ CabinetGrid.styles = [
       }
 
       .bottom-zone-label {
-        font-size: 0.65em;
+        font-size: var(--wc-fs-2xs);
         color: rgba(255, 255, 255, 0.6);
         width: 100%;
         text-align: center;
@@ -1987,7 +2093,7 @@ CabinetGrid.styles = [
         position: relative;
         width: 28px;
         height: 28px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2090,7 +2196,8 @@ CabinetGrid.styles = [
       }
 
       .zone-box-row:hover {
-        background: linear-gradient(135deg, #7a5a12 0%, #9a7820 100%);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(214, 197, 176, 0.18);
       }
 
       .zone-box-grid {
@@ -2121,7 +2228,7 @@ CabinetGrid.styles = [
         left: -2px;
         right: -2px;
         height: 28%;
-        background: linear-gradient(180deg, #a08040 0%, #7a6020 100%);
+        background: linear-gradient(180deg, #d6bd93 0%, #a3855a 100%);
         border-radius: 2px 2px 0 0;
         border: 1px solid rgba(255, 255, 255, 0.25);
         border-bottom: none;
@@ -2133,7 +2240,7 @@ CabinetGrid.styles = [
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(180deg, #8b6914 0%, #6b5010 100%);
+        background: linear-gradient(180deg, #c3a678 0%, #8a6f49 100%);
         border-radius: 0 0 2px 2px;
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-top: 1px solid rgba(0, 0, 0, 0.3);
@@ -2143,7 +2250,7 @@ CabinetGrid.styles = [
       }
 
       .zone-box-shape .box-count {
-        font-size: 0.7em;
+        font-size: var(--wc-fs-xs);
         font-weight: 700;
         color: rgba(255, 255, 255, 0.5);
         line-height: 1;
@@ -2155,7 +2262,7 @@ CabinetGrid.styles = [
       }
 
       .zone-box-size {
-        font-size: 0.55em;
+        font-size: var(--wc-fs-2xs);
         color: rgba(255, 255, 255, 0.5);
       }
 
@@ -2163,10 +2270,10 @@ CabinetGrid.styles = [
       @media (max-width: 599px) {
         .cabinet {
           padding: 6px;
-          border-radius: 10px;
+          border-radius: var(--wc-r-md);
         }
         .cabinet-name {
-          font-size: 0.75em;
+          font-size: var(--wc-fs-xs);
           padding: 3px 0;
         }
         .grid-inner {
@@ -2190,7 +2297,7 @@ CabinetGrid.styles = [
           min-height: 32px;
         }
         .bottom-zone-label {
-          font-size: 0.6em;
+          font-size: var(--wc-fs-2xs);
         }
         .zone-bottle {
           width: 22px;
@@ -2363,7 +2470,7 @@ StarRating.styles = i$3 `
 
     .rating-text {
       margin-left: 6px;
-      font-size: 0.9em;
+      font-size: var(--wc-fs-md);
       font-weight: 600;
       color: var(--wc-text, #212121);
     }
@@ -2554,7 +2661,7 @@ LabelCamera.styles = [
         max-width: 300px;
         margin: 0 auto;
         aspect-ratio: 3 / 4;
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         overflow: hidden;
         background: #000;
       }
@@ -2571,7 +2678,7 @@ LabelCamera.styles = [
         max-width: 300px;
         margin: 0 auto;
         display: block;
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         object-fit: contain;
         max-height: 300px;
       }
@@ -2629,12 +2736,12 @@ LabelCamera.styles = [
         align-items: center;
         gap: 6px;
         padding: 8px 16px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         border: 1px solid var(--wc-border);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         transition: all 0.2s;
       }
 
@@ -2650,7 +2757,7 @@ LabelCamera.styles = [
         padding: 16px;
         text-align: center;
         color: #ef5350;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .actions-row {
@@ -2663,7 +2770,7 @@ LabelCamera.styles = [
       .hint {
         text-align: center;
         padding: 4px 0 8px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
     `,
@@ -3297,7 +3404,7 @@ let WineDetailDialog = class WineDetailDialog extends i {
                     <div class="wine-rating">
                       <span class="rating-star">★</span>
                       ${wine.rating.toFixed(1)}
-                      <span style="font-size:0.8em;color:var(--wc-text-secondary)">
+                      <span style="font-size: var(--wc-fs-sm);color:var(--wc-text-secondary)">
                         Vivino${wine.ratings_count ? ` (${wine.ratings_count.toLocaleString()} ratings)` : ""}
                       </span>
                     </div>
@@ -3305,8 +3412,8 @@ let WineDetailDialog = class WineDetailDialog extends i {
             : A}
               ${this.mode !== "winelist"
             ? b `
-                    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:0.9em">
-                      <span style="font-size:0.8em;color:var(--wc-text-secondary)">My Rating</span>
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:var(--wc-fs-md)">
+                      <span style="font-size: var(--wc-fs-sm);color:var(--wc-text-secondary)">My Rating</span>
                       <star-rating
                         .value=${this._userRating}
                         .readonly=${!this._editing}
@@ -3314,9 +3421,9 @@ let WineDetailDialog = class WineDetailDialog extends i {
                         @rating-change=${this._onRatingChange}
                       ></star-rating>
                       ${!this._editing && this._userRating === 0
-                ? b `<span class="no-rating" style="font-size:0.8em">Not rated</span>`
+                ? b `<span class="no-rating" style="font-size:var(--wc-fs-sm)">Not rated</span>`
                 : A}
-                      <button class="edit-toggle" style="font-size:0.75em;padding:2px 6px" @click=${() => (this._editing = !this._editing)}>
+                      <button class="edit-toggle" style="font-size: var(--wc-fs-xs);padding:2px 6px" @click=${() => (this._editing = !this._editing)}>
                         ${this._editing ? "Cancel" : "Edit"}
                       </button>
                     </div>
@@ -3349,7 +3456,7 @@ let WineDetailDialog = class WineDetailDialog extends i {
                 </div>
                 ${wine.vivino_updated_at || wine.ai_updated_at
                 ? b `
-                      <div style="text-align:center;font-size:0.68em;color:var(--wc-text-secondary);margin-top:-6px;padding-bottom:10px">
+                      <div style="text-align:center;font-size: var(--wc-fs-2xs);color:var(--wc-text-secondary);margin-top:-6px;padding-bottom:10px">
                         ${wine.vivino_updated_at
                     ? b `${wine.vivino_id
                         ? b `<a
@@ -3541,19 +3648,19 @@ let WineDetailDialog = class WineDetailDialog extends i {
               `}
           ${this._showRemoveConfirm ? b `
             <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:16px">
-              <div style="background:var(--wc-bg);border-radius:12px;padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e) => e.stopPropagation()}>
-                <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Remove Wine</h3>
-                <p style="margin:0 0 16px;font-size:0.85em;color:var(--wc-text-secondary)">Why are you removing this bottle?</p>
+              <div style="background:var(--wc-bg);border-radius: var(--wc-r-md);padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e) => e.stopPropagation()}>
+                <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">Remove Wine</h3>
+                <p style="margin:0 0 16px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">Why are you removing this bottle?</p>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
                   ${REMOVAL_REASONS.map(r => b `
                     <button
-                      style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em;transition:all 0.15s"
+                      style="padding:8px 16px;border-radius: var(--wc-r-pill);border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size: var(--wc-fs-md);transition:all 0.15s"
                       @click=${() => this._confirmRemove(r.id)}
                     >${r.label}</button>
                   `)}
                 </div>
                 <button
-                  style="margin-top:12px;padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.8em"
+                  style="margin-top:12px;padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-sm)"
                   @click=${() => (this._showRemoveConfirm = false)}
                 >Cancel</button>
               </div>
@@ -3561,22 +3668,22 @@ let WineDetailDialog = class WineDetailDialog extends i {
           ` : A}
           ${this._pendingVivinoImage ? b `
             <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:16px">
-              <div style="background:var(--wc-bg);border-radius:12px;padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e) => e.stopPropagation()}>
-                <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Vivino Photo Available</h3>
-                <p style="margin:0 0 12px;font-size:0.85em;color:var(--wc-text-secondary)">Vivino found a different bottle photo. Keep your current photo or use Vivino's?</p>
+              <div style="background:var(--wc-bg);border-radius: var(--wc-r-md);padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e) => e.stopPropagation()}>
+                <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">Vivino Photo Available</h3>
+                <p style="margin:0 0 12px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">Vivino found a different bottle photo. Keep your current photo or use Vivino's?</p>
                 <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px">
                   <div style="text-align:center">
-                    <img src="${wine.image_url}" style="width:70px;height:100px;object-fit:cover;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.2)" />
-                    <div style="font-size:0.7em;color:var(--wc-text-secondary);margin-top:4px">Current</div>
+                    <img src="${wine.image_url}" style="width:70px;height:100px;object-fit:cover;border-radius: var(--wc-r-sm);box-shadow:0 2px 8px rgba(0,0,0,0.2)" />
+                    <div style="font-size: var(--wc-fs-xs);color:var(--wc-text-secondary);margin-top:4px">Current</div>
                   </div>
                   <div style="text-align:center">
-                    <img src="${this._pendingVivinoImage}" style="width:70px;height:100px;object-fit:cover;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.2)" />
-                    <div style="font-size:0.7em;color:var(--wc-text-secondary);margin-top:4px">Vivino</div>
+                    <img src="${this._pendingVivinoImage}" style="width:70px;height:100px;object-fit:cover;border-radius: var(--wc-r-sm);box-shadow:0 2px 8px rgba(0,0,0,0.2)" />
+                    <div style="font-size: var(--wc-fs-xs);color:var(--wc-text-secondary);margin-top:4px">Vivino</div>
                   </div>
                 </div>
                 <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
                   <button
-                    style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em"
+                    style="padding:8px 16px;border-radius: var(--wc-r-pill);border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:var(--wc-fs-md)"
                     @click=${this._dismissVivinoPhoto}
                   >Keep My Photo</button>
                   <button class="btn btn-primary" style="background:#8e24aa" @click=${this._applyVivinoPhoto}>Use Vivino's</button>
@@ -3586,14 +3693,14 @@ let WineDetailDialog = class WineDetailDialog extends i {
           ` : A}
           ${this._showPhotoCamera ? b `
             <div
-              style="position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:16px;padding:16px"
+              style="position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:10;border-radius: var(--wc-r-lg);padding:16px"
               @click=${() => (this._showPhotoCamera = false)}
             >
               <div style="width:100%" @click=${(e) => e.stopPropagation()}>
                 <label-camera .active=${this._showPhotoCamera} @photo-captured=${this._onPhotoReplaced}></label-camera>
                 <div style="text-align:center;margin-top:12px">
                   <button
-                    style="padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.85em"
+                    style="padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-md)"
                     @click=${() => (this._showPhotoCamera = false)}
                   >Cancel</button>
                 </div>
@@ -3602,19 +3709,19 @@ let WineDetailDialog = class WineDetailDialog extends i {
           ` : A}
           ${this._aiFallbackReason ? b `
             <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:16px">
-              <div style="background:var(--wc-bg);border-radius:12px;padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e) => e.stopPropagation()}>
-                <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">${this._aiFallbackReason === "no_match" ? "No Vivino Match" : "No Price Found"}</h3>
-                <p style="margin:0 0 16px;font-size:0.85em;color:var(--wc-text-secondary)">${this._aiFallbackReason === "no_match"
+              <div style="background:var(--wc-bg);border-radius: var(--wc-r-md);padding:24px;max-width:320px;width:90%;text-align:center" @click=${(e) => e.stopPropagation()}>
+                <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">${this._aiFallbackReason === "no_match" ? "No Vivino Match" : "No Price Found"}</h3>
+                <p style="margin:0 0 16px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">${this._aiFallbackReason === "no_match"
             ? "Vivino couldn't find a confident match for this wine. Try AI instead?"
             : "Vivino has no price for this wine in the selected currency. Estimate it with AI?"}</p>
                 <div style="display:flex;flex-direction:column;gap:8px">
                   <button class="btn btn-primary" style="background:#1565c0" @click=${() => this._confirmAiFallback(false)}>Use AI Once</button>
                   <button
-                    style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em"
+                    style="padding:8px 16px;border-radius: var(--wc-r-pill);border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:var(--wc-fs-md)"
                     @click=${() => this._confirmAiFallback(true)}
                   >Always Use AI Automatically</button>
                   <button
-                    style="margin-top:4px;padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.8em"
+                    style="margin-top:4px;padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-sm)"
                     @click=${this._dismissAiFallback}
                   >Cancel</button>
                 </div>
@@ -3641,9 +3748,9 @@ WineDetailDialog.styles = [
         background: none;
         border: none;
         cursor: pointer;
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
         padding: 6px 8px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         color: var(--wc-text-secondary);
         transition: background 0.2s;
         line-height: 1;
@@ -3654,7 +3761,7 @@ WineDetailDialog.styles = [
       }
 
       .icon-btn.close-btn {
-        font-size: 1.3em;
+        font-size: var(--wc-fs-2xl);
         font-weight: 600;
       }
 
@@ -3667,7 +3774,7 @@ WineDetailDialog.styles = [
       .wine-image {
         width: 135px;
         height: 195px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         object-fit: cover;
         background: #f0f0f0;
         flex-shrink: 0;
@@ -3708,9 +3815,9 @@ WineDetailDialog.styles = [
         left: 6px;
         background: rgba(0, 0, 0, 0.6);
         color: #fff;
-        font-size: 0.6em;
+        font-size: var(--wc-fs-2xs);
         padding: 2px 6px;
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         pointer-events: none;
       }
 
@@ -3733,7 +3840,7 @@ WineDetailDialog.styles = [
         background: rgba(255, 255, 255, 0.95);
         color: #333;
         cursor: pointer;
-        font-size: 1em;
+        font-size: var(--wc-fs-lg);
         line-height: 1;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
         transition: background 0.15s, transform 0.15s;
@@ -3753,11 +3860,11 @@ WineDetailDialog.styles = [
       .wine-image-placeholder {
         width: 135px;
         height: 195px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2em;
+        font-size: var(--wc-fs-2xl);
         flex-shrink: 0;
         color: #fff;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -3777,7 +3884,7 @@ WineDetailDialog.styles = [
         justify-content: center;
         gap: 3px;
         width: 90px;
-        font-size: 0.68em;
+        font-size: var(--wc-fs-2xs);
         line-height: 1.3;
         text-align: center;
         color: var(--wc-text-secondary, #888);
@@ -3795,14 +3902,14 @@ WineDetailDialog.styles = [
       }
 
       .wine-name {
-        font-size: 1.2em;
+        font-size: var(--wc-fs-xl);
         font-weight: 600;
         color: var(--wc-text);
         margin-bottom: 4px;
       }
 
       .wine-winery {
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         margin-bottom: 8px;
       }
@@ -3810,8 +3917,8 @@ WineDetailDialog.styles = [
       .wine-type-badge {
         display: inline-block;
         padding: 2px 10px;
-        border-radius: 12px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-md);
+        font-size: var(--wc-fs-xs);
         font-weight: 600;
         color: #fff;
         text-transform: uppercase;
@@ -3823,7 +3930,7 @@ WineDetailDialog.styles = [
         align-items: center;
         gap: 4px;
         margin-top: 8px;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .rating-star {
@@ -3835,7 +3942,7 @@ WineDetailDialog.styles = [
         align-items: center;
         gap: 8px;
         padding: 10px 20px;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         font-weight: 500;
       }
 
@@ -3856,7 +3963,7 @@ WineDetailDialog.styles = [
 
       .wine-description {
         padding: 0 20px 12px;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         line-height: 1.4;
         font-style: italic;
@@ -3874,15 +3981,15 @@ WineDetailDialog.styles = [
         align-items: center;
         gap: 4px;
         padding: 4px 10px;
-        border-radius: 16px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-lg);
+        font-size: var(--wc-fs-xs);
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid var(--wc-border);
         color: var(--wc-text-secondary);
       }
 
       .info-chip-icon {
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
       }
 
       .details-grid {
@@ -3898,7 +4005,7 @@ WineDetailDialog.styles = [
       }
 
       .detail-label {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -3906,7 +4013,7 @@ WineDetailDialog.styles = [
       }
 
       .detail-value {
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         color: var(--wc-text);
         font-weight: 500;
       }
@@ -3916,12 +4023,12 @@ WineDetailDialog.styles = [
       }
 
       .wine-notes-text {
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         font-style: italic;
         background: rgba(128, 128, 128, 0.08);
         padding: 10px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
       }
 
       /* Rating & Tasting Notes section */
@@ -3937,7 +4044,7 @@ WineDetailDialog.styles = [
       }
 
       .section-title {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         font-weight: 600;
         color: var(--wc-text);
         text-transform: uppercase;
@@ -3949,10 +4056,10 @@ WineDetailDialog.styles = [
         border: none;
         color: var(--wc-primary-text);
         cursor: pointer;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         font-weight: 500;
         padding: 4px 8px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         transition: background 0.2s;
       }
 
@@ -3968,13 +4075,13 @@ WineDetailDialog.styles = [
       }
 
       .rating-label {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         min-width: 70px;
       }
 
       .no-rating {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         font-style: italic;
       }
@@ -3995,7 +4102,7 @@ WineDetailDialog.styles = [
       }
 
       .tasting-field label {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -4004,10 +4111,10 @@ WineDetailDialog.styles = [
 
       .tasting-field textarea {
         font-family: inherit;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         padding: 8px;
         border: 1px solid var(--wc-border, #e0e0e0);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         resize: vertical;
         min-height: 50px;
         background: var(--wc-bg);
@@ -4020,11 +4127,11 @@ WineDetailDialog.styles = [
       }
 
       .tasting-value {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
         background: rgba(128, 128, 128, 0.08);
         padding: 8px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         min-height: 20px;
       }
 
@@ -4040,8 +4147,8 @@ WineDetailDialog.styles = [
         align-items: center;
         gap: 4px;
         padding: 4px 10px;
-        border-radius: 16px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-lg);
+        font-size: var(--wc-fs-xs);
         background: rgba(245, 166, 35, 0.12);
         border: 1px solid rgba(245, 166, 35, 0.3);
         color: #f5a623;
@@ -4054,7 +4161,7 @@ WineDetailDialog.styles = [
       }
 
       .drink-window {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         padding: 0 20px 8px;
       }
@@ -4075,7 +4182,7 @@ WineDetailDialog.styles = [
       }
 
       .actions .btn {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         padding: 6px 10px;
         white-space: nowrap;
       }
@@ -4091,7 +4198,7 @@ WineDetailDialog.styles = [
 
       .edit-form .form-group label {
         display: block;
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         font-weight: 500;
         color: var(--wc-text-secondary);
         text-transform: uppercase;
@@ -4105,8 +4212,8 @@ WineDetailDialog.styles = [
         width: 100%;
         padding: 8px 12px;
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
-        font-size: 0.9em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-md);
         background: var(--wc-bg);
         color: var(--wc-text);
         box-sizing: border-box;
@@ -4364,7 +4471,7 @@ BarcodeScanner.styles = [
       .scanner-container {
         position: relative;
         width: 100%;
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         overflow: hidden;
         background: #000;
         max-height: 300px;
@@ -4410,27 +4517,27 @@ BarcodeScanner.styles = [
         right: 15%;
         bottom: 15%;
         border: 2px solid rgba(255, 255, 255, 0.6);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
       }
 
       .error-message {
         padding: 16px;
         text-align: center;
         color: #ef5350;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .hint {
         text-align: center;
         padding: 8px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
       .fallback-note {
         text-align: center;
         padding: 12px;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         font-style: italic;
       }
@@ -4816,9 +4923,9 @@ let AddWineDialog = class AddWineDialog extends i {
                 : this._showBackPrompt
                     ? b `
                   <div style="text-align:center;padding:24px 12px">
-                    <div style="font-size:2em;margin-bottom:8px">✅</div>
+                    <div style="font-size: var(--wc-fs-2xl);margin-bottom:8px">✅</div>
                     <div style="margin-bottom:12px;font-weight:500">Front label captured</div>
-                    <p style="font-size:0.85em;color:var(--wc-text-secondary);margin-bottom:16px">
+                    <p style="font-size: var(--wc-fs-md);color:var(--wc-text-secondary);margin-bottom:16px">
                       Add a photo of the back label too? It often has the vintage year (and sometimes a barcode).
                     </p>
                     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
@@ -4942,7 +5049,7 @@ let AddWineDialog = class AddWineDialog extends i {
                     >
                       ${item.image_url
                 ? b `<img class="search-result-thumb" src="${item.image_url}" alt="" />`
-                : b `<div class="search-result-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2em;">🍷</div>`}
+                : b `<div class="search-result-thumb" style="display:flex;align-items:center;justify-content:center;font-size: var(--wc-fs-xl);">🍷</div>`}
                       <div class="search-result-info">
                         <div class="search-result-name">${item.name || "Unknown"}</div>
                         <div class="search-result-meta">
@@ -5158,7 +5265,7 @@ let AddWineDialog = class AddWineDialog extends i {
         return b `
       <div class="dialog-body">
         <div style="font-weight: 500; margin-bottom: 8px">Choose Location</div>
-        <div style="font-size: 0.85em; color: var(--wc-text-secondary); margin-bottom: 12px">
+        <div style="font-size: var(--wc-fs-md); color: var(--wc-text-secondary); margin-bottom: 12px">
           Select a cabinet and position for this bottle
         </div>
 
@@ -5178,17 +5285,17 @@ let AddWineDialog = class AddWineDialog extends i {
 
         ${selectedCabinet && zones.length > 0 ? b `
           <div style="margin-top:12px">
-            <label style="display:block;font-size:0.8em;color:var(--wc-text-secondary);margin-bottom:6px">Bulk / Box Zone</label>
+            <label style="display:block;font-size: var(--wc-fs-sm);color:var(--wc-text-secondary);margin-bottom:6px">Bulk / Box Zone</label>
             <div style="display:flex;flex-wrap:wrap;gap:6px">
               <button
                 class="btn ${!hasZone ? "btn-primary" : "btn-outline"}"
-                style="font-size:0.8em;padding:6px 10px"
+                style="font-size: var(--wc-fs-sm);padding:6px 10px"
                 @click=${() => this._updateField("zone", "")}
               >None — use grid Row/Col</button>
               ${zones.map((sr) => b `
                 <button
                   class="btn ${this._wineData.zone === `storage-${sr.row}` ? "btn-primary" : "btn-outline"}"
-                  style="font-size:0.8em;padding:6px 10px"
+                  style="font-size: var(--wc-fs-sm);padding:6px 10px"
                   @click=${() => this._selectZone(`storage-${sr.row}`)}
                 >${sr.name || (sr.type === "box" ? "Box" : "Bulk Bin")}</button>
               `)}
@@ -5365,7 +5472,7 @@ AddWineDialog.styles = [
       .step-dot.active {
         background: var(--wc-primary);
         width: 24px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
       }
 
       .step-dot.done {
@@ -5389,13 +5496,13 @@ AddWineDialog.styles = [
         gap: 12px;
         padding: 14px;
         border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         cursor: pointer;
         transition: all 0.2s;
         background: rgba(255, 255, 255, 0.06);
         color: var(--wc-text);
         text-align: left;
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         width: 100%;
       }
 
@@ -5405,7 +5512,7 @@ AddWineDialog.styles = [
       }
 
       .scan-option-icon {
-        font-size: 1.5em;
+        font-size: var(--wc-fs-2xl);
         flex-shrink: 0;
       }
 
@@ -5419,7 +5526,7 @@ AddWineDialog.styles = [
       }
 
       .scan-option-desc {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -5438,8 +5545,8 @@ AddWineDialog.styles = [
         flex: 1;
         padding: 10px 14px;
         border: 2px solid var(--wc-border);
-        border-radius: 10px;
-        font-size: 1em;
+        border-radius: var(--wc-r-md);
+        font-size: var(--wc-fs-lg);
         text-align: center;
         letter-spacing: 2px;
         background: var(--wc-bg);
@@ -5458,7 +5565,7 @@ AddWineDialog.styles = [
         gap: 12px;
         margin: 14px 0;
         color: var(--wc-text-secondary);
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
       }
 
       .or-divider::before,
@@ -5473,8 +5580,8 @@ AddWineDialog.styles = [
         width: 100%;
         padding: 10px 14px;
         border: 2px solid var(--wc-border);
-        border-radius: 10px;
-        font-size: 1em;
+        border-radius: var(--wc-r-md);
+        font-size: var(--wc-fs-lg);
         box-sizing: border-box;
         background: var(--wc-bg);
         color: var(--wc-text);
@@ -5488,7 +5595,7 @@ AddWineDialog.styles = [
       .lookup-result {
         background: rgba(114, 47, 55, 0.05);
         border: 1px solid rgba(114, 47, 55, 0.2);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         padding: 12px;
         margin-top: 12px;
         text-align: left;
@@ -5496,11 +5603,11 @@ AddWineDialog.styles = [
 
       .lookup-result .result-name {
         font-weight: 600;
-        font-size: 1em;
+        font-size: var(--wc-fs-lg);
       }
 
       .lookup-result .result-detail {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         margin-top: 2px;
       }
@@ -5514,7 +5621,7 @@ AddWineDialog.styles = [
 
       .location-cabinet {
         border: 2px solid var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         padding: 12px;
         text-align: center;
         cursor: pointer;
@@ -5533,11 +5640,11 @@ AddWineDialog.styles = [
 
       .location-cabinet .cab-name {
         font-weight: 600;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .location-cabinet .cab-info {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         margin-top: 4px;
       }
@@ -5554,7 +5661,7 @@ AddWineDialog.styles = [
 
       .error-msg {
         color: #c62828;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         margin-top: 8px;
       }
 
@@ -5574,7 +5681,7 @@ AddWineDialog.styles = [
 
       .confirm-summary {
         background: rgba(128, 128, 128, 0.08);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         padding: 16px;
       }
 
@@ -5582,7 +5689,7 @@ AddWineDialog.styles = [
         display: flex;
         justify-content: space-between;
         padding: 4px 0;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .confirm-summary .summary-label {
@@ -5618,7 +5725,7 @@ AddWineDialog.styles = [
       }
 
       .rating-label {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         font-weight: 500;
         color: var(--wc-text-secondary);
         margin-bottom: 6px;
@@ -5634,7 +5741,7 @@ AddWineDialog.styles = [
       }
 
       .search-results-label {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-bottom: 2px;
       }
@@ -5645,7 +5752,7 @@ AddWineDialog.styles = [
         gap: 10px;
         padding: 10px 12px;
         border: 1px solid var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         cursor: pointer;
         transition: all 0.15s;
         background: transparent;
@@ -5663,7 +5770,7 @@ AddWineDialog.styles = [
       .search-result-thumb {
         width: 36px;
         height: 48px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         object-fit: cover;
         flex-shrink: 0;
         background: rgba(128, 128, 128, 0.1);
@@ -5676,20 +5783,20 @@ AddWineDialog.styles = [
 
       .search-result-name {
         font-weight: 600;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .search-result-meta {
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-top: 2px;
       }
 
       .search-result-rating {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         color: #f5a623;
         flex-shrink: 0;
@@ -5851,7 +5958,7 @@ WineSearchBar.styles = [
         top: 50%;
         transform: translateY(-50%);
         color: var(--wc-text-secondary);
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         pointer-events: none;
       }
 
@@ -5859,8 +5966,8 @@ WineSearchBar.styles = [
         width: 100%;
         padding: 8px 12px 8px 32px;
         border: 1px solid var(--wc-border);
-        border-radius: 20px;
-        font-size: 0.9em;
+        border-radius: var(--wc-r-pill);
+        font-size: var(--wc-fs-md);
         background: var(--wc-bg);
         color: var(--wc-text);
         box-sizing: border-box;
@@ -5879,12 +5986,12 @@ WineSearchBar.styles = [
 
       .chip {
         padding: 4px 10px;
-        border-radius: 14px;
+        border-radius: var(--wc-r-lg);
         border: 1px solid var(--wc-border);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         transition: all 0.2s;
         white-space: nowrap;
       }
@@ -6402,7 +6509,7 @@ let RackSettingsDialog = class RackSettingsDialog extends i {
                 ? b `<div class="grid-preview-cell"></div><span class="grid-preview-storage-label">${typeIcon} ${sr?.name || "Storage"}</span>`
                 : Array.from({ length: Math.min(numCols, 15) }, () => b `<div class="grid-preview-cell"></div>`)}
                   ${!isStorage && numCols > 15
-                ? b `<span style="font-size:0.65em;color:var(--wc-text-secondary)">+${numCols - 15}</span>`
+                ? b `<span style="font-size: var(--wc-fs-2xs);color:var(--wc-text-secondary)">+${numCols - 15}</span>`
                 : A}
                 </div>
               `;
@@ -6457,7 +6564,7 @@ let RackSettingsDialog = class RackSettingsDialog extends i {
                                     ${BOX_SIZES.map((s) => b `<option value=${s} ?selected=${boxSize === s}>${s}-pk</option>`)}
                                   </select>
                                 `)}
-                                <span style="font-size:0.7em;color:var(--wc-text-secondary);">= ${sr?.capacity || 12}</span>
+                                <span style="font-size: var(--wc-fs-xs);color:var(--wc-text-secondary);">= ${sr?.capacity || 12}</span>
                               </div>
                             `
                     : b `
@@ -6533,7 +6640,7 @@ let RackSettingsDialog = class RackSettingsDialog extends i {
             : A}
         </div>
         ${this._error
-            ? b `<div style="color:#ef5350;font-size:0.85em">${this._error}</div>`
+            ? b `<div style="color:#ef5350;font-size:var(--wc-fs-md)">${this._error}</div>`
             : A}
       </div>
       <div class="dialog-footer">
@@ -6591,7 +6698,7 @@ RackSettingsDialog.styles = [
         gap: 8px;
         padding: 10px 12px;
         border: 1px solid var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         transition: background 0.2s;
       }
 
@@ -6606,11 +6713,11 @@ RackSettingsDialog.styles = [
 
       .rack-name {
         font-weight: 600;
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
       }
 
       .rack-meta {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-top: 2px;
       }
@@ -6625,10 +6732,10 @@ RackSettingsDialog.styles = [
       .small-btn {
         background: transparent;
         border: 1px solid var(--wc-border);
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         cursor: pointer;
         padding: 4px 8px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         transition: all 0.2s;
       }
@@ -6654,15 +6761,15 @@ RackSettingsDialog.styles = [
       .warning-msg {
         background: rgba(255, 152, 0, 0.1);
         border: 1px solid rgba(255, 152, 0, 0.3);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         padding: 10px;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: #e65100;
         margin-top: 12px;
       }
 
       .delete-info {
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         margin: 12px 0;
         line-height: 1.5;
       }
@@ -6679,11 +6786,11 @@ RackSettingsDialog.styles = [
         gap: 6px;
         padding: 10px;
         border: 2px dashed var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         transition: all 0.2s;
         width: 100%;
       }
@@ -6700,7 +6807,7 @@ RackSettingsDialog.styles = [
       }
 
       .grid-editor-title {
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         font-weight: 600;
         color: var(--wc-text);
         margin-bottom: 12px;
@@ -6719,12 +6826,12 @@ RackSettingsDialog.styles = [
         align-items: center;
         gap: 0;
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         overflow: hidden;
       }
 
       .stepper-label {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -6747,7 +6854,7 @@ RackSettingsDialog.styles = [
         background: transparent;
         border: none;
         cursor: pointer;
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
         font-weight: 600;
         color: var(--wc-text-secondary);
         transition: all 0.15s;
@@ -6767,7 +6874,7 @@ RackSettingsDialog.styles = [
       .stepper-value {
         flex: 1;
         text-align: center;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         font-weight: 600;
         color: var(--wc-text);
         padding: 6px 0;
@@ -6777,7 +6884,7 @@ RackSettingsDialog.styles = [
       /* Visual grid preview */
       .grid-preview {
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         padding: 8px;
         margin-bottom: 8px;
         overflow-x: auto;
@@ -6796,7 +6903,7 @@ RackSettingsDialog.styles = [
 
       .grid-preview-label {
         width: 28px;
-        font-size: 0.65em;
+        font-size: var(--wc-fs-2xs);
         font-weight: 600;
         color: var(--wc-text-secondary);
         text-align: center;
@@ -6818,7 +6925,7 @@ RackSettingsDialog.styles = [
       }
 
       .grid-preview-storage-label {
-        font-size: 0.6em;
+        font-size: var(--wc-fs-2xs);
         color: #8b6914;
         font-weight: 600;
         white-space: nowrap;
@@ -6839,7 +6946,7 @@ RackSettingsDialog.styles = [
         max-height: 200px;
         overflow-y: auto;
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         padding: 6px;
       }
 
@@ -6848,8 +6955,8 @@ RackSettingsDialog.styles = [
         align-items: center;
         gap: 6px;
         padding: 4px 6px;
-        border-radius: 6px;
-        font-size: 0.8em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-sm);
         transition: background 0.15s;
       }
 
@@ -6866,21 +6973,21 @@ RackSettingsDialog.styles = [
         width: 28px;
         font-weight: 600;
         color: var(--wc-text-secondary);
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
       }
 
       .row-type-select {
         padding: 2px 4px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
-        font-size: 0.8em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-sm);
         background: var(--wc-bg);
         color: var(--wc-text);
         cursor: pointer;
       }
 
       .phys-hint {
-        font-size: 0.72em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         margin: 0 0 10px;
         line-height: 1.4;
@@ -6897,7 +7004,7 @@ RackSettingsDialog.styles = [
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        font-size: 0.72em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         cursor: pointer;
         white-space: nowrap;
@@ -6917,8 +7024,8 @@ RackSettingsDialog.styles = [
         width: 80px;
         padding: 2px 6px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
-        font-size: 0.8em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-sm);
         background: var(--wc-bg);
         color: var(--wc-text);
         flex-shrink: 1;
@@ -6928,8 +7035,8 @@ RackSettingsDialog.styles = [
       .row-cap-select {
         padding: 2px 4px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
-        font-size: 0.8em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-sm);
         background: var(--wc-bg);
         color: var(--wc-text);
         cursor: pointer;
@@ -6945,11 +7052,11 @@ RackSettingsDialog.styles = [
         width: 20px;
         height: 20px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         background: var(--wc-bg);
         color: var(--wc-text);
         cursor: pointer;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -6961,7 +7068,7 @@ RackSettingsDialog.styles = [
       }
 
       .stepper-val-sm {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         min-width: 22px;
         text-align: center;
@@ -6969,7 +7076,7 @@ RackSettingsDialog.styles = [
 
       .row-type-info {
         flex: 1;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -6977,8 +7084,8 @@ RackSettingsDialog.styles = [
         width: 100px;
         padding: 2px 6px;
         border: 1px solid var(--wc-border);
-        border-radius: 4px;
-        font-size: 0.85em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-md);
         background: var(--wc-bg);
         color: var(--wc-text);
       }
@@ -6997,11 +7104,11 @@ RackSettingsDialog.styles = [
         gap: 4px;
         padding: 6px 0;
         border: 1px dashed var(--wc-border);
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         transition: all 0.15s;
       }
 
@@ -7478,8 +7585,8 @@ let WineListDialog = class WineListDialog extends i {
                 <div class="extracting">
                   <div class="spinner"></div>
                   <div>Analyzing list...</div>
-                  <div style="font-size:0.85em">Gemini is reading wines and scoring them</div>
-                  <div style="font-size:0.78em; color: var(--secondary-text-color); margin-top: 8px;">Long lists may take up to 3 minutes</div>
+                  <div style="font-size:var(--wc-fs-md)">Gemini is reading wines and scoring them</div>
+                  <div style="font-size: var(--wc-fs-sm); color: var(--secondary-text-color); margin-top: 8px;">Long lists may take up to 3 minutes</div>
                 </div>
               `
             : A}
@@ -7558,13 +7665,13 @@ WineListDialog.styles = [
       }
 
       .header-title {
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
         font-weight: 600;
         color: var(--wc-text);
       }
 
       .header-subtitle {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         padding: 0 20px 12px;
       }
@@ -7572,11 +7679,11 @@ WineListDialog.styles = [
       .close-btn {
         background: none;
         border: none;
-        font-size: 1.3em;
+        font-size: var(--wc-fs-2xl);
         cursor: pointer;
         color: var(--wc-text-secondary);
         padding: 4px 8px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         line-height: 1;
       }
 
@@ -7609,9 +7716,9 @@ WineListDialog.styles = [
       .error-msg {
         padding: 12px 20px;
         color: #c62828;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         background: rgba(198, 40, 40, 0.08);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         margin: 0 20px 12px;
       }
 
@@ -7620,7 +7727,7 @@ WineListDialog.styles = [
         align-items: center;
         gap: 8px;
         padding: 8px 20px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -7628,13 +7735,13 @@ WineListDialog.styles = [
         flex: 1;
         height: 4px;
         background: var(--wc-border);
-        border-radius: 2px;
+        border-radius: var(--wc-r-xs);
         overflow: hidden;
       }
 
       .progress-fill {
         height: 100%;
-        border-radius: 2px;
+        border-radius: var(--wc-r-xs);
         transition: width 0.3s;
       }
 
@@ -7653,7 +7760,7 @@ WineListDialog.styles = [
         gap: 8px;
         padding: 5px 10px;
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         margin-bottom: 3px;
         transition: background 0.2s;
         cursor: pointer;
@@ -7690,7 +7797,7 @@ WineListDialog.styles = [
 
       .wl-name {
         font-weight: 600;
-        font-size: 0.82em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text);
         white-space: nowrap;
         overflow: hidden;
@@ -7698,10 +7805,10 @@ WineListDialog.styles = [
       }
 
       .wl-cellar-badge {
-        font-size: 0.65em;
+        font-size: var(--wc-fs-2xs);
         font-weight: 700;
         padding: 1px 4px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         background: rgba(46, 125, 50, 0.2);
         border: 1px solid rgba(46, 125, 50, 0.4);
         color: #4caf50;
@@ -7710,7 +7817,7 @@ WineListDialog.styles = [
       }
 
       .wl-meta {
-        font-size: 0.72em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         margin-top: 0;
         white-space: nowrap;
@@ -7722,13 +7829,13 @@ WineListDialog.styles = [
         display: inline-flex;
         align-items: center;
         gap: 2px;
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         color: #f5a623;
       }
 
       .wl-user-score {
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         color: #4caf50;
       }
@@ -7738,7 +7845,7 @@ WineListDialog.styles = [
         gap: 4px;
         align-items: center;
         margin-top: 1px;
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         flex-wrap: wrap;
       }
 
@@ -7753,25 +7860,25 @@ WineListDialog.styles = [
       }
 
       .wl-markup-badge {
-        font-size: 0.68em;
+        font-size: var(--wc-fs-2xs);
         font-weight: 600;
         padding: 1px 5px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         color: #fff;
       }
 
       .wl-value-badge {
-        font-size: 0.66em;
+        font-size: var(--wc-fs-2xs);
         font-weight: 500;
         padding: 1px 5px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         color: #fff;
       }
 
       .wl-ai-chip {
-        font-size: 0.65em;
+        font-size: var(--wc-fs-2xs);
         padding: 1px 4px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         background: rgba(245, 166, 35, 0.12);
         border: 1px solid rgba(245, 166, 35, 0.3);
         color: #f5a623;
@@ -7782,7 +7889,7 @@ WineListDialog.styles = [
         margin-top: 4px;
         padding-top: 4px;
         border-top: 1px solid var(--wc-border);
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         line-height: 1.3;
       }
@@ -7815,8 +7922,8 @@ WineListDialog.styles = [
         background: #2e7d32;
         color: #fff;
         border: none;
-        border-radius: 5px;
-        font-size: 0.7em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-xs);
         padding: 3px 6px;
         cursor: pointer;
         white-space: nowrap;
@@ -7833,8 +7940,8 @@ WineListDialog.styles = [
         background: #e65100;
         color: #fff;
         border: none;
-        border-radius: 5px;
-        font-size: 0.7em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-xs);
         padding: 3px 6px;
         cursor: pointer;
         white-space: nowrap;
@@ -7858,7 +7965,7 @@ WineListDialog.styles = [
       }
 
       .footer-actions .btn {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         padding: 6px 12px;
       }
 
@@ -8750,11 +8857,11 @@ let InventoryDialog = class InventoryDialog extends i {
                           ${this._serverBackups.map((b$1) => b `
                               <button
                                 class="inv-btn"
-                                style="width:100%;margin-bottom:4px;text-align:left;font-size:0.82em;padding:8px 12px;"
+                                style="width:100%;margin-bottom:4px;text-align:left;font-size: var(--wc-fs-sm);padding:8px 12px;"
                                 @click=${() => this._serverBackupRestore(b$1.filename)}
                               >
                                 <div>${b$1.timestamp ? new Date(b$1.timestamp).toLocaleString() : b$1.filename}</div>
-                                <div style="font-size:0.85em;color:var(--wc-text-secondary);">${b$1.wines} wines, ${b$1.cabinets} racks</div>
+                                <div style="font-size: var(--wc-fs-md);color:var(--wc-text-secondary);">${b$1.wines} wines, ${b$1.cabinets} racks</div>
                               </button>
                             `)}
                         </div>
@@ -8846,7 +8953,7 @@ InventoryDialog.styles = [
       }
 
       .inv-header-title {
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
         font-weight: 600;
         color: var(--wc-text);
       }
@@ -8854,10 +8961,10 @@ InventoryDialog.styles = [
       .inv-close {
         background: none;
         border: none;
-        font-size: 1.3em;
+        font-size: var(--wc-fs-2xl);
         cursor: pointer;
         padding: 4px 8px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -8870,7 +8977,7 @@ InventoryDialog.styles = [
         gap: 16px;
         padding: 4px 20px 10px;
         flex-wrap: wrap;
-        font-size: 0.82em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -8911,8 +9018,8 @@ InventoryDialog.styles = [
         width: 100%;
         padding: 8px 12px 8px 30px;
         border: 1px solid var(--wc-border);
-        border-radius: 20px;
-        font-size: 0.88em;
+        border-radius: var(--wc-r-pill);
+        font-size: var(--wc-fs-md);
         background: var(--wc-bg);
         color: var(--wc-text);
         box-sizing: border-box;
@@ -8928,7 +9035,7 @@ InventoryDialog.styles = [
         left: 10px;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         pointer-events: none;
       }
 
@@ -8941,20 +9048,20 @@ InventoryDialog.styles = [
       .inv-sort select {
         padding: 6px 10px;
         border: 1px solid var(--wc-border);
-        border-radius: 14px;
+        border-radius: var(--wc-r-lg);
         background: var(--wc-bg);
         color: var(--wc-text);
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         cursor: pointer;
       }
 
       .inv-sort-dir {
         background: none;
         border: 1px solid var(--wc-border);
-        border-radius: 14px;
+        border-radius: var(--wc-r-lg);
         padding: 5px 9px;
         cursor: pointer;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         line-height: 1;
       }
@@ -8972,12 +9079,12 @@ InventoryDialog.styles = [
 
       .inv-chip {
         padding: 4px 10px;
-        border-radius: 14px;
+        border-radius: var(--wc-r-lg);
         border: 1px solid var(--wc-border);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         transition: all 0.2s;
         white-space: nowrap;
       }
@@ -9019,7 +9126,7 @@ InventoryDialog.styles = [
       .inv-thumb {
         width: 48px;
         height: 66px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         object-fit: cover;
         flex-shrink: 0;
       }
@@ -9038,7 +9145,7 @@ InventoryDialog.styles = [
 
       .inv-name {
         font-weight: 600;
-        font-size: 0.88em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
         white-space: nowrap;
         overflow: hidden;
@@ -9046,7 +9153,7 @@ InventoryDialog.styles = [
       }
 
       .inv-meta {
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-top: 1px;
         white-space: nowrap;
@@ -9062,12 +9169,12 @@ InventoryDialog.styles = [
 
       .inv-price {
         font-weight: 600;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
       }
 
       .inv-location {
-        font-size: 0.72em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
       }
 
@@ -9075,7 +9182,7 @@ InventoryDialog.styles = [
         text-align: center;
         padding: 40px 20px;
         color: var(--wc-text-secondary);
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .inv-footer {
@@ -9089,7 +9196,7 @@ InventoryDialog.styles = [
       }
 
       .inv-count {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -9100,9 +9207,9 @@ InventoryDialog.styles = [
       }
 
       .inv-btn {
-        font-size: 0.76em;
+        font-size: var(--wc-fs-xs);
         padding: 5px 12px;
-        border-radius: 16px;
+        border-radius: var(--wc-r-lg);
         border: 1px solid var(--wc-border);
         background: transparent;
         color: var(--wc-text-secondary);
@@ -9124,7 +9231,7 @@ InventoryDialog.styles = [
       .inv-status {
         width: 100%;
         text-align: center;
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         padding: 4px 0 0;
         color: #2e7d32;
         font-weight: 500;
@@ -9139,12 +9246,12 @@ InventoryDialog.styles = [
         align-items: center;
         justify-content: center;
         z-index: 10;
-        border-radius: 16px;
+        border-radius: var(--wc-r-lg);
       }
 
       .inv-confirm-box {
         background: var(--wc-bg);
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         padding: 24px;
         max-width: 380px;
         width: 90%;
@@ -9153,24 +9260,24 @@ InventoryDialog.styles = [
 
       .inv-confirm-box h3 {
         margin: 0 0 8px;
-        font-size: 1em;
+        font-size: var(--wc-fs-lg);
         color: var(--wc-text);
       }
 
       .inv-confirm-box p {
         margin: 0 0 16px;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         line-height: 1.4;
       }
 
       .inv-confirm-stats {
-        font-size: 0.82em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text);
         margin: 0 0 16px;
         padding: 10px;
         background: rgba(0, 0, 0, 0.05);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
       }
 
       .inv-confirm-btns {
@@ -9181,9 +9288,9 @@ InventoryDialog.styles = [
 
       .inv-confirm-btns button {
         padding: 8px 20px;
-        border-radius: 20px;
+        border-radius: var(--wc-r-pill);
         border: none;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         cursor: pointer;
         font-weight: 500;
       }
@@ -9202,7 +9309,7 @@ InventoryDialog.styles = [
         display: flex;
         margin: 0 16px 8px;
         border: 1px solid var(--wc-border);
-        border-radius: 20px;
+        border-radius: var(--wc-r-pill);
         overflow: hidden;
       }
 
@@ -9212,7 +9319,7 @@ InventoryDialog.styles = [
         border: none;
         background: transparent;
         color: var(--wc-text-secondary);
-        font-size: 0.82em;
+        font-size: var(--wc-fs-sm);
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
@@ -9238,8 +9345,8 @@ InventoryDialog.styles = [
       .inv-reason-badge {
         display: inline-block;
         padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 0.72em;
+        border-radius: var(--wc-r-md);
+        font-size: var(--wc-fs-xs);
         font-weight: 500;
         background: rgba(114, 47, 55, 0.12);
         color: var(--wc-primary);
@@ -9255,7 +9362,7 @@ InventoryDialog.styles = [
         }
         .inv-stats {
           gap: 8px;
-          font-size: 0.78em;
+          font-size: var(--wc-fs-sm);
           padding: 4px 16px 8px;
         }
         .inv-list {
@@ -9465,7 +9572,7 @@ VivinoAiSettingsDialog.styles = [
         gap: 12px;
         padding: 10px 0;
         border-bottom: 1px solid var(--wc-border);
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
       }
 
       .settings-row:last-of-type {
@@ -9483,12 +9590,12 @@ VivinoAiSettingsDialog.styles = [
 
       .pill {
         padding: 3px 10px;
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         border: 1px solid var(--wc-border);
         cursor: pointer;
         background: transparent;
         color: var(--wc-text-secondary);
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .pill.active {
@@ -9513,7 +9620,7 @@ VivinoAiSettingsDialog.styles = [
 
       .info-title {
         margin: 0 0 12px;
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         color: var(--wc-text);
       }
 
@@ -9523,7 +9630,7 @@ VivinoAiSettingsDialog.styles = [
 
       .info-block-title {
         font-weight: 600;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
         margin-bottom: 6px;
       }
@@ -9531,14 +9638,14 @@ VivinoAiSettingsDialog.styles = [
       .info-block ul {
         margin: 0;
         padding-left: 20px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         line-height: 1.7;
       }
 
       .info-note {
         margin: 0;
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         font-style: italic;
       }
@@ -10728,8 +10835,8 @@ let WineCellarCard = class WineCellarCard extends i {
           <div class="header-actions">
             ${this._hasGemini ? b `
               <button
-                class="btn btn-primary"
-                style="font-size: 0.8em; padding: 5px 10px; background: #1565c0;"
+                class="btn btn-tonal"
+                style="--tint: #1565c0"
                 @click=${this._batchAnalyzeWines}
                 title="Full AI analysis on all wines (disposition, ratings, price, description)"
                 ?disabled=${this._analyzing || this._batchVivino}
@@ -10738,8 +10845,8 @@ let WineCellarCard = class WineCellarCard extends i {
               </button>
             ` : A}
             <button
-              class="btn btn-primary"
-              style="font-size: 0.8em; padding: 5px 10px; background: #8e24aa;"
+              class="btn btn-tonal"
+              style="--tint: #8e24aa"
               @click=${this._batchRefreshVivino}
               title="Refresh all wines from Vivino (ratings, price, description)"
               ?disabled=${this._batchVivino || this._analyzing}
@@ -10748,8 +10855,8 @@ let WineCellarCard = class WineCellarCard extends i {
             </button>
             ${this._hasGemini ? b `
               <button
-                class="btn btn-primary"
-                style="font-size: 0.8em; padding: 5px 10px; background: #00695c;"
+                class="btn btn-tonal"
+                style="--tint: #00695c"
                 @click=${() => (this._showWineList = true)}
                 title="Scan a wine list or receipt for ratings and value"
               >
@@ -10757,8 +10864,8 @@ let WineCellarCard = class WineCellarCard extends i {
               </button>
             ` : A}
             <button
-              class="btn btn-primary"
-              style="font-size: 0.8em; padding: 5px 10px; background: #37474f;"
+              class="btn btn-tonal"
+              style="--tint: #37474f"
               @click=${() => (this._showInventory = true)}
               title="Browse full cellar inventory"
             >
@@ -10828,7 +10935,7 @@ let WineCellarCard = class WineCellarCard extends i {
                         <span class="stat-value">${this._metadataCurrency} ${this._stats.total_value.toLocaleString()}</span>
                         value
                         ${this._stats.total_cost
-                    ? b `<span style="font-size:0.75em;color:${this._stats.total_value - this._stats.total_cost >= 0 ? '#2e7d32' : '#c62828'}">${this._stats.total_value - this._stats.total_cost >= 0 ? '+' : ''}${this._metadataCurrency} ${(this._stats.total_value - this._stats.total_cost).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>`
+                    ? b `<span style="font-size: var(--wc-fs-xs);color:${this._stats.total_value - this._stats.total_cost >= 0 ? '#2e7d32' : '#c62828'}">${this._stats.total_value - this._stats.total_cost >= 0 ? '+' : ''}${this._metadataCurrency} ${(this._stats.total_value - this._stats.total_cost).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>`
                     : A}
                       </div>
                     `
@@ -10931,7 +11038,7 @@ let WineCellarCard = class WineCellarCard extends i {
               ${this._activeTab === "all" && unassignedWines.length > 0
                 ? b `
                     <div style="padding: 8px 16px 2px">
-                      <div style="font-size: 0.9em; font-weight: 600; color: var(--wc-text-secondary); margin-bottom: 4px">
+                      <div style="font-size: var(--wc-fs-md); font-weight: 600; color: var(--wc-text-secondary); margin-bottom: 4px">
                         📦 Unassigned (${unassignedWines.length})
                       </div>
                     </div>
@@ -10978,7 +11085,7 @@ let WineCellarCard = class WineCellarCard extends i {
                         <div style="font-weight: 500; margin-bottom: 4px">
                           Your buy list is empty
                         </div>
-                        <div style="font-size: 0.9em">
+                        <div style="font-size:var(--wc-fs-md)">
                           Use 🛒 Buy List in Add Wine, or 🛒 Buy in the list scanner
                         </div>
                       </div>
@@ -11029,7 +11136,7 @@ let WineCellarCard = class WineCellarCard extends i {
         ${showUnassigned
             ? b `
               <div class="wine-list">
-                <div style="padding: 12px 16px 4px; font-size: 0.85em; color: var(--wc-text-secondary)">
+                <div style="padding: 12px 16px 4px; font-size: var(--wc-fs-md); color: var(--wc-text-secondary)">
                   These wines are not assigned to any rack. Tap a wine to view details, then use Move to place it.
                 </div>
                 ${unassignedWines.map((wine) => {
@@ -11136,7 +11243,7 @@ let WineCellarCard = class WineCellarCard extends i {
                 <div style="font-weight: 500; margin-bottom: 4px">
                   Your cellar is empty
                 </div>
-                <div style="font-size: 0.9em">
+                <div style="font-size:var(--wc-fs-md)">
                   Tap "Add Wine" to start building your collection
                 </div>
               </div>
@@ -11147,12 +11254,12 @@ let WineCellarCard = class WineCellarCard extends i {
         ${this._showBatchVivinoConfirm ? b `
           <div class="dialog-overlay" @click=${() => (this._showBatchVivinoConfirm = false)}>
             <div class="dialog" style="max-width:340px;padding:24px;text-align:center" @click=${(e) => e.stopPropagation()}>
-              <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Vivino Batch Scan</h3>
-              <p style="margin:0 0 16px;font-size:0.85em;color:var(--wc-text-secondary)">
+              <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">Vivino Batch Scan</h3>
+              <p style="margin:0 0 16px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">
                 Some wines already have a photo. What should happen to those photos?
               </p>
               ${this._hasGemini ? b `
-                <label style="display:flex;align-items:center;gap:6px;justify-content:center;font-size:0.8em;color:var(--wc-text-secondary);margin-bottom:16px;cursor:pointer">
+                <label style="display:flex;align-items:center;gap:6px;justify-content:center;font-size: var(--wc-fs-sm);color:var(--wc-text-secondary);margin-bottom:16px;cursor:pointer">
                   <input
                     type="checkbox"
                     .checked=${this._batchAiFallback}
@@ -11166,11 +11273,11 @@ let WineCellarCard = class WineCellarCard extends i {
                   Keep My Existing Photos
                 </button>
                 <button
-                  style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em"
+                  style="padding:8px 16px;border-radius: var(--wc-r-pill);border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:var(--wc-fs-md)"
                   @click=${() => this._runBatchVivino("replace")}
                 >Replace With Vivino Photos</button>
                 <button
-                  style="margin-top:4px;padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.8em"
+                  style="margin-top:4px;padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-sm)"
                   @click=${() => (this._showBatchVivinoConfirm = false)}
                 >Cancel</button>
               </div>
@@ -11182,8 +11289,8 @@ let WineCellarCard = class WineCellarCard extends i {
         ${this._showBatchAiConfirm ? b `
           <div class="dialog-overlay" @click=${() => (this._showBatchAiConfirm = false)}>
             <div class="dialog" style="max-width:340px;padding:24px;text-align:center" @click=${(e) => e.stopPropagation()}>
-              <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Run AI Batch Scan?</h3>
-              <p style="margin:0 0 16px;font-size:0.85em;color:var(--wc-text-secondary)">
+              <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">Run AI Batch Scan?</h3>
+              <p style="margin:0 0 16px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">
                 This will run a full AI analysis on all ${this._wines.length} wines, one API call per bottle. It may take a while and use significant AI quota.
               </p>
               <div style="display:flex;flex-direction:column;gap:8px">
@@ -11191,7 +11298,7 @@ let WineCellarCard = class WineCellarCard extends i {
                   Run on ${this._wines.length} Wines
                 </button>
                 <button
-                  style="margin-top:4px;padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.8em"
+                  style="margin-top:4px;padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-sm)"
                   @click=${() => (this._showBatchAiConfirm = false)}
                 >Cancel</button>
               </div>
@@ -11457,7 +11564,7 @@ let WineCellarCard = class WineCellarCard extends i {
                         offset += boxSize;
                         return b `
                               ${boxes.length > 1
-                            ? b `<div style="font-size:0.75em;font-weight:600;color:var(--wc-text-secondary);padding:8px 0 2px;${bi > 0 ? "border-top:1px solid var(--wc-border);margin-top:4px;" : ""}">
+                            ? b `<div style="font-size: var(--wc-fs-xs);font-weight:600;color:var(--wc-text-secondary);padding:8px 0 2px;${bi > 0 ? "border-top:1px solid var(--wc-border);margin-top:4px;" : ""}">
                                     Box ${bi + 1} (${boxSize}-pack)
                                   </div>`
                             : A}
@@ -11644,7 +11751,7 @@ WineCellarCard.styles = [
       }
 
       .title {
-        font-size: 1.3em;
+        font-size: var(--wc-fs-2xl);
         font-weight: 600;
         color: var(--wc-text);
         display: flex;
@@ -11653,7 +11760,7 @@ WineCellarCard.styles = [
       }
 
       .title-icon {
-        font-size: 1.2em;
+        font-size: var(--wc-fs-xl);
       }
 
       .title-text {
@@ -11663,9 +11770,13 @@ WineCellarCard.styles = [
       }
 
       .title-credit {
-        font-size: 0.45em;
-        font-weight: 400;
+        font-size: var(--wc-fs-2xs);
+        font-weight: var(--wc-fw-normal);
         color: var(--wc-text-secondary);
+        /* one line, always -- it was wrapping mid-handle and pushing the
+           header taller than the actions beside it */
+        white-space: nowrap;
+        opacity: 0.75;
       }
 
       .header-actions {
@@ -11692,7 +11803,7 @@ WineCellarCard.styles = [
         align-items: center;
         gap: 12px;
         padding: 10px;
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         cursor: pointer;
         transition: background 0.2s;
       }
@@ -11711,7 +11822,7 @@ WineCellarCard.styles = [
       .wine-list-thumb {
         width: 36px;
         height: 48px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         object-fit: cover;
         flex-shrink: 0;
       }
@@ -11723,19 +11834,19 @@ WineCellarCard.styles = [
 
       .wine-list-name {
         font-weight: 500;
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .wine-list-meta {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
       .wine-list-location {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         text-align: right;
       }
@@ -11747,7 +11858,7 @@ WineCellarCard.styles = [
       }
 
       .empty-state-icon {
-        font-size: 3em;
+        font-size: var(--wc-fs-2xl);
         margin-bottom: 8px;
       }
 
@@ -11761,7 +11872,7 @@ WineCellarCard.styles = [
         background: rgba(46, 125, 50, 0.1);
         border: 1px solid rgba(46, 125, 50, 0.3);
         color: #2e7d32;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         padding: 6px 16px;
         display: flex;
         align-items: center;
@@ -11772,10 +11883,10 @@ WineCellarCard.styles = [
         background: transparent;
         border: 1px solid rgba(46, 125, 50, 0.4);
         color: #2e7d32;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         padding: 2px 10px;
         cursor: pointer;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .toast {
@@ -11786,8 +11897,8 @@ WineCellarCard.styles = [
         background: #333;
         color: #fff;
         padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 0.9em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-md);
         z-index: 1000;
         animation: fadeIn 0.2s;
         pointer-events: none;
@@ -11803,7 +11914,7 @@ WineCellarCard.styles = [
         gap: 10px;
         padding: 10px 12px;
         border: 1px solid var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         margin-bottom: 8px;
         transition: background 0.2s;
       }
@@ -11819,7 +11930,7 @@ WineCellarCard.styles = [
 
       .bl-name {
         font-weight: 600;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
         white-space: nowrap;
         overflow: hidden;
@@ -11827,7 +11938,7 @@ WineCellarCard.styles = [
       }
 
       .bl-meta {
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-top: 2px;
       }
@@ -11842,8 +11953,8 @@ WineCellarCard.styles = [
         background: #2e7d32;
         color: #fff;
         border: none;
-        border-radius: 6px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-xs);
         padding: 4px 8px;
         cursor: pointer;
         white-space: nowrap;
@@ -11855,8 +11966,8 @@ WineCellarCard.styles = [
         background: #c62828;
         color: #fff;
         border: none;
-        border-radius: 6px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-xs);
         padding: 4px 8px;
         cursor: pointer;
         white-space: nowrap;
@@ -11868,7 +11979,7 @@ WineCellarCard.styles = [
         background: rgba(230, 81, 0, 0.1);
         border: 1px solid rgba(230, 81, 0, 0.3);
         color: #e65100;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         padding: 6px 16px;
         display: flex;
         align-items: center;
@@ -11879,10 +11990,10 @@ WineCellarCard.styles = [
         background: transparent;
         border: 1px solid rgba(230, 81, 0, 0.4);
         color: #e65100;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         padding: 2px 10px;
         cursor: pointer;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       /* Phone: stack cabinets vertically */
@@ -11891,13 +12002,13 @@ WineCellarCard.styles = [
           padding: 12px 12px 6px;
         }
         .title {
-          font-size: 1.1em;
+          font-size: var(--wc-fs-xl);
         }
         .stats-bar {
           flex-wrap: wrap;
           gap: 8px;
           padding: 6px 12px;
-          font-size: 0.8em;
+          font-size: var(--wc-fs-sm);
         }
         .cabinets-row {
           grid-template-columns: 1fr;
@@ -11910,7 +12021,7 @@ WineCellarCard.styles = [
         }
         .btn-primary {
           padding: 6px 12px;
-          font-size: 0.85em;
+          font-size: var(--wc-fs-md);
         }
       }
 

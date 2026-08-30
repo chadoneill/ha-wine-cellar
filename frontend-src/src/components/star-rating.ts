@@ -39,7 +39,7 @@ export class StarRating extends LitElement {
 
     .rating-text {
       margin-left: 6px;
-      font-size: 0.9em;
+      font-size: var(--wc-fs-md);
       font-weight: 600;
       color: var(--wc-text, #212121);
     }

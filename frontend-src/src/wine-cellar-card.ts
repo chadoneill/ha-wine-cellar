@@ -106,7 +106,7 @@ export class WineCellarCard extends LitElement {
       }
 
       .title {
-        font-size: 1.3em;
+        font-size: var(--wc-fs-2xl);
         font-weight: 600;
         color: var(--wc-text);
         display: flex;
@@ -115,7 +115,7 @@ export class WineCellarCard extends LitElement {
       }
 
       .title-icon {
-        font-size: 1.2em;
+        font-size: var(--wc-fs-xl);
       }
 
       .title-text {
@@ -125,9 +125,13 @@ export class WineCellarCard extends LitElement {
       }
 
       .title-credit {
-        font-size: 0.45em;
-        font-weight: 400;
+        font-size: var(--wc-fs-2xs);
+        font-weight: var(--wc-fw-normal);
         color: var(--wc-text-secondary);
+        /* one line, always -- it was wrapping mid-handle and pushing the
+           header taller than the actions beside it */
+        white-space: nowrap;
+        opacity: 0.75;
       }
 
       .header-actions {
@@ -154,7 +158,7 @@ export class WineCellarCard extends LitElement {
         align-items: center;
         gap: 12px;
         padding: 10px;
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         cursor: pointer;
         transition: background 0.2s;
       }
@@ -173,7 +177,7 @@ export class WineCellarCard extends LitElement {
       .wine-list-thumb {
         width: 36px;
         height: 48px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         object-fit: cover;
         flex-shrink: 0;
       }
@@ -185,19 +189,19 @@ export class WineCellarCard extends LitElement {
 
       .wine-list-name {
         font-weight: 500;
-        font-size: 0.95em;
+        font-size: var(--wc-fs-lg);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .wine-list-meta {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
       .wine-list-location {
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         text-align: right;
       }
@@ -209,7 +213,7 @@ export class WineCellarCard extends LitElement {
       }
 
       .empty-state-icon {
-        font-size: 3em;
+        font-size: var(--wc-fs-2xl);
         margin-bottom: 8px;
       }
 
@@ -223,7 +227,7 @@ export class WineCellarCard extends LitElement {
         background: rgba(46, 125, 50, 0.1);
         border: 1px solid rgba(46, 125, 50, 0.3);
         color: #2e7d32;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         padding: 6px 16px;
         display: flex;
         align-items: center;
@@ -234,10 +238,10 @@ export class WineCellarCard extends LitElement {
         background: transparent;
         border: 1px solid rgba(46, 125, 50, 0.4);
         color: #2e7d32;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         padding: 2px 10px;
         cursor: pointer;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .toast {
@@ -248,8 +252,8 @@ export class WineCellarCard extends LitElement {
         background: #333;
         color: #fff;
         padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 0.9em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-md);
         z-index: 1000;
         animation: fadeIn 0.2s;
         pointer-events: none;
@@ -265,7 +269,7 @@ export class WineCellarCard extends LitElement {
         gap: 10px;
         padding: 10px 12px;
         border: 1px solid var(--wc-border);
-        border-radius: 10px;
+        border-radius: var(--wc-r-md);
         margin-bottom: 8px;
         transition: background 0.2s;
       }
@@ -281,7 +285,7 @@ export class WineCellarCard extends LitElement {
 
       .bl-name {
         font-weight: 600;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text);
         white-space: nowrap;
         overflow: hidden;
@@ -289,7 +293,7 @@ export class WineCellarCard extends LitElement {
       }
 
       .bl-meta {
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         margin-top: 2px;
       }
@@ -304,8 +308,8 @@ export class WineCellarCard extends LitElement {
         background: #2e7d32;
         color: #fff;
         border: none;
-        border-radius: 6px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-xs);
         padding: 4px 8px;
         cursor: pointer;
         white-space: nowrap;
@@ -317,8 +321,8 @@ export class WineCellarCard extends LitElement {
         background: #c62828;
         color: #fff;
         border: none;
-        border-radius: 6px;
-        font-size: 0.75em;
+        border-radius: var(--wc-r-sm);
+        font-size: var(--wc-fs-xs);
         padding: 4px 8px;
         cursor: pointer;
         white-space: nowrap;
@@ -330,7 +334,7 @@ export class WineCellarCard extends LitElement {
         background: rgba(230, 81, 0, 0.1);
         border: 1px solid rgba(230, 81, 0, 0.3);
         color: #e65100;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         padding: 6px 16px;
         display: flex;
         align-items: center;
@@ -341,10 +345,10 @@ export class WineCellarCard extends LitElement {
         background: transparent;
         border: 1px solid rgba(230, 81, 0, 0.4);
         color: #e65100;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         padding: 2px 10px;
         cursor: pointer;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       /* Phone: stack cabinets vertically */
@@ -353,13 +357,13 @@ export class WineCellarCard extends LitElement {
           padding: 12px 12px 6px;
         }
         .title {
-          font-size: 1.1em;
+          font-size: var(--wc-fs-xl);
         }
         .stats-bar {
           flex-wrap: wrap;
           gap: 8px;
           padding: 6px 12px;
-          font-size: 0.8em;
+          font-size: var(--wc-fs-sm);
         }
         .cabinets-row {
           grid-template-columns: 1fr;
@@ -372,7 +376,7 @@ export class WineCellarCard extends LitElement {
         }
         .btn-primary {
           padding: 6px 12px;
-          font-size: 0.85em;
+          font-size: var(--wc-fs-md);
         }
       }
 
@@ -1547,8 +1551,8 @@ export class WineCellarCard extends LitElement {
           <div class="header-actions">
             ${this._hasGemini ? html`
               <button
-                class="btn btn-primary"
-                style="font-size: 0.8em; padding: 5px 10px; background: #1565c0;"
+                class="btn btn-tonal"
+                style="--tint: #1565c0"
                 @click=${this._batchAnalyzeWines}
                 title="Full AI analysis on all wines (disposition, ratings, price, description)"
                 ?disabled=${this._analyzing || this._batchVivino}
@@ -1557,8 +1561,8 @@ export class WineCellarCard extends LitElement {
               </button>
             ` : nothing}
             <button
-              class="btn btn-primary"
-              style="font-size: 0.8em; padding: 5px 10px; background: #8e24aa;"
+              class="btn btn-tonal"
+              style="--tint: #8e24aa"
               @click=${this._batchRefreshVivino}
               title="Refresh all wines from Vivino (ratings, price, description)"
               ?disabled=${this._batchVivino || this._analyzing}
@@ -1567,8 +1571,8 @@ export class WineCellarCard extends LitElement {
             </button>
             ${this._hasGemini ? html`
               <button
-                class="btn btn-primary"
-                style="font-size: 0.8em; padding: 5px 10px; background: #00695c;"
+                class="btn btn-tonal"
+                style="--tint: #00695c"
                 @click=${() => (this._showWineList = true)}
                 title="Scan a wine list or receipt for ratings and value"
               >
@@ -1576,8 +1580,8 @@ export class WineCellarCard extends LitElement {
               </button>
             ` : nothing}
             <button
-              class="btn btn-primary"
-              style="font-size: 0.8em; padding: 5px 10px; background: #37474f;"
+              class="btn btn-tonal"
+              style="--tint: #37474f"
               @click=${() => (this._showInventory = true)}
               title="Browse full cellar inventory"
             >
@@ -1647,7 +1651,7 @@ export class WineCellarCard extends LitElement {
                         <span class="stat-value">${this._metadataCurrency} ${this._stats.total_value.toLocaleString()}</span>
                         value
                         ${this._stats.total_cost
-                          ? html`<span style="font-size:0.75em;color:${this._stats.total_value - this._stats.total_cost >= 0 ? '#2e7d32' : '#c62828'}">${this._stats.total_value - this._stats.total_cost >= 0 ? '+' : ''}${this._metadataCurrency} ${(this._stats.total_value - this._stats.total_cost).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>`
+                          ? html`<span style="font-size: var(--wc-fs-xs);color:${this._stats.total_value - this._stats.total_cost >= 0 ? '#2e7d32' : '#c62828'}">${this._stats.total_value - this._stats.total_cost >= 0 ? '+' : ''}${this._metadataCurrency} ${(this._stats.total_value - this._stats.total_cost).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</span>`
                           : nothing}
                       </div>
                     `
@@ -1756,7 +1760,7 @@ export class WineCellarCard extends LitElement {
               ${this._activeTab === "all" && unassignedWines.length > 0
                 ? html`
                     <div style="padding: 8px 16px 2px">
-                      <div style="font-size: 0.9em; font-weight: 600; color: var(--wc-text-secondary); margin-bottom: 4px">
+                      <div style="font-size: var(--wc-fs-md); font-weight: 600; color: var(--wc-text-secondary); margin-bottom: 4px">
                         📦 Unassigned (${unassignedWines.length})
                       </div>
                     </div>
@@ -1803,7 +1807,7 @@ export class WineCellarCard extends LitElement {
                         <div style="font-weight: 500; margin-bottom: 4px">
                           Your buy list is empty
                         </div>
-                        <div style="font-size: 0.9em">
+                        <div style="font-size:var(--wc-fs-md)">
                           Use 🛒 Buy List in Add Wine, or 🛒 Buy in the list scanner
                         </div>
                       </div>
@@ -1855,7 +1859,7 @@ export class WineCellarCard extends LitElement {
         ${showUnassigned
           ? html`
               <div class="wine-list">
-                <div style="padding: 12px 16px 4px; font-size: 0.85em; color: var(--wc-text-secondary)">
+                <div style="padding: 12px 16px 4px; font-size: var(--wc-fs-md); color: var(--wc-text-secondary)">
                   These wines are not assigned to any rack. Tap a wine to view details, then use Move to place it.
                 </div>
                 ${unassignedWines.map((wine) => {
@@ -1972,7 +1976,7 @@ export class WineCellarCard extends LitElement {
                 <div style="font-weight: 500; margin-bottom: 4px">
                   Your cellar is empty
                 </div>
-                <div style="font-size: 0.9em">
+                <div style="font-size:var(--wc-fs-md)">
                   Tap "Add Wine" to start building your collection
                 </div>
               </div>
@@ -1983,12 +1987,12 @@ export class WineCellarCard extends LitElement {
         ${this._showBatchVivinoConfirm ? html`
           <div class="dialog-overlay" @click=${() => (this._showBatchVivinoConfirm = false)}>
             <div class="dialog" style="max-width:340px;padding:24px;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
-              <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Vivino Batch Scan</h3>
-              <p style="margin:0 0 16px;font-size:0.85em;color:var(--wc-text-secondary)">
+              <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">Vivino Batch Scan</h3>
+              <p style="margin:0 0 16px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">
                 Some wines already have a photo. What should happen to those photos?
               </p>
               ${this._hasGemini ? html`
-                <label style="display:flex;align-items:center;gap:6px;justify-content:center;font-size:0.8em;color:var(--wc-text-secondary);margin-bottom:16px;cursor:pointer">
+                <label style="display:flex;align-items:center;gap:6px;justify-content:center;font-size: var(--wc-fs-sm);color:var(--wc-text-secondary);margin-bottom:16px;cursor:pointer">
                   <input
                     type="checkbox"
                     .checked=${this._batchAiFallback}
@@ -2002,11 +2006,11 @@ export class WineCellarCard extends LitElement {
                   Keep My Existing Photos
                 </button>
                 <button
-                  style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em"
+                  style="padding:8px 16px;border-radius: var(--wc-r-pill);border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:var(--wc-fs-md)"
                   @click=${() => this._runBatchVivino("replace")}
                 >Replace With Vivino Photos</button>
                 <button
-                  style="margin-top:4px;padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.8em"
+                  style="margin-top:4px;padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-sm)"
                   @click=${() => (this._showBatchVivinoConfirm = false)}
                 >Cancel</button>
               </div>
@@ -2018,8 +2022,8 @@ export class WineCellarCard extends LitElement {
         ${this._showBatchAiConfirm ? html`
           <div class="dialog-overlay" @click=${() => (this._showBatchAiConfirm = false)}>
             <div class="dialog" style="max-width:340px;padding:24px;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
-              <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Run AI Batch Scan?</h3>
-              <p style="margin:0 0 16px;font-size:0.85em;color:var(--wc-text-secondary)">
+              <h3 style="margin:0 0 4px;font-size: var(--wc-fs-lg);color:var(--wc-text)">Run AI Batch Scan?</h3>
+              <p style="margin:0 0 16px;font-size: var(--wc-fs-md);color:var(--wc-text-secondary)">
                 This will run a full AI analysis on all ${this._wines.length} wines, one API call per bottle. It may take a while and use significant AI quota.
               </p>
               <div style="display:flex;flex-direction:column;gap:8px">
@@ -2027,7 +2031,7 @@ export class WineCellarCard extends LitElement {
                   Run on ${this._wines.length} Wines
                 </button>
                 <button
-                  style="margin-top:4px;padding:6px 16px;border-radius:16px;border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:0.8em"
+                  style="margin-top:4px;padding:6px 16px;border-radius: var(--wc-r-lg);border:none;background:var(--wc-hover);color:var(--wc-text-secondary);cursor:pointer;font-size:var(--wc-fs-sm)"
                   @click=${() => (this._showBatchAiConfirm = false)}
                 >Cancel</button>
               </div>
@@ -2293,7 +2297,7 @@ export class WineCellarCard extends LitElement {
                             offset += boxSize;
                             return html`
                               ${boxes.length > 1
-                                ? html`<div style="font-size:0.75em;font-weight:600;color:var(--wc-text-secondary);padding:8px 0 2px;${bi > 0 ? "border-top:1px solid var(--wc-border);margin-top:4px;" : ""}">
+                                ? html`<div style="font-size: var(--wc-fs-xs);font-weight:600;color:var(--wc-text-secondary);padding:8px 0 2px;${bi > 0 ? "border-top:1px solid var(--wc-border);margin-top:4px;" : ""}">
                                     Box ${bi + 1} (${boxSize}-pack)
                                   </div>`
                                 : nothing}

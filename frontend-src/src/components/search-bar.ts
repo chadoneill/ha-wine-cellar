@@ -32,7 +32,7 @@ export class WineSearchBar extends LitElement {
         top: 50%;
         transform: translateY(-50%);
         color: var(--wc-text-secondary);
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
         pointer-events: none;
       }
 
@@ -40,8 +40,8 @@ export class WineSearchBar extends LitElement {
         width: 100%;
         padding: 8px 12px 8px 32px;
         border: 1px solid var(--wc-border);
-        border-radius: 20px;
-        font-size: 0.9em;
+        border-radius: var(--wc-r-pill);
+        font-size: var(--wc-fs-md);
         background: var(--wc-bg);
         color: var(--wc-text);
         box-sizing: border-box;
@@ -60,12 +60,12 @@ export class WineSearchBar extends LitElement {
 
       .chip {
         padding: 4px 10px;
-        border-radius: 14px;
+        border-radius: var(--wc-r-lg);
         border: 1px solid var(--wc-border);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         transition: all 0.2s;
         white-space: nowrap;
       }

@@ -29,7 +29,7 @@ export class BarcodeScanner extends LitElement {
       .scanner-container {
         position: relative;
         width: 100%;
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         overflow: hidden;
         background: #000;
         max-height: 300px;
@@ -75,27 +75,27 @@ export class BarcodeScanner extends LitElement {
         right: 15%;
         bottom: 15%;
         border: 2px solid rgba(255, 255, 255, 0.6);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
       }
 
       .error-message {
         padding: 16px;
         text-align: center;
         color: #ef5350;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .hint {
         text-align: center;
         padding: 8px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
       .fallback-note {
         text-align: center;
         padding: 12px;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         color: var(--wc-text-secondary);
         font-style: italic;
       }

@@ -39,13 +39,13 @@ export class WineListDialog extends LitElement {
       }
 
       .header-title {
-        font-size: 1.1em;
+        font-size: var(--wc-fs-xl);
         font-weight: 600;
         color: var(--wc-text);
       }
 
       .header-subtitle {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
         padding: 0 20px 12px;
       }
@@ -53,11 +53,11 @@ export class WineListDialog extends LitElement {
       .close-btn {
         background: none;
         border: none;
-        font-size: 1.3em;
+        font-size: var(--wc-fs-2xl);
         cursor: pointer;
         color: var(--wc-text-secondary);
         padding: 4px 8px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         line-height: 1;
       }
 
@@ -90,9 +90,9 @@ export class WineListDialog extends LitElement {
       .error-msg {
         padding: 12px 20px;
         color: #c62828;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         background: rgba(198, 40, 40, 0.08);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         margin: 0 20px 12px;
       }
 
@@ -101,7 +101,7 @@ export class WineListDialog extends LitElement {
         align-items: center;
         gap: 8px;
         padding: 8px 20px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
 
@@ -109,13 +109,13 @@ export class WineListDialog extends LitElement {
         flex: 1;
         height: 4px;
         background: var(--wc-border);
-        border-radius: 2px;
+        border-radius: var(--wc-r-xs);
         overflow: hidden;
       }
 
       .progress-fill {
         height: 100%;
-        border-radius: 2px;
+        border-radius: var(--wc-r-xs);
         transition: width 0.3s;
       }
 
@@ -134,7 +134,7 @@ export class WineListDialog extends LitElement {
         gap: 8px;
         padding: 5px 10px;
         border: 1px solid var(--wc-border);
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         margin-bottom: 3px;
         transition: background 0.2s;
         cursor: pointer;
@@ -171,7 +171,7 @@ export class WineListDialog extends LitElement {
 
       .wl-name {
         font-weight: 600;
-        font-size: 0.82em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text);
         white-space: nowrap;
         overflow: hidden;
@@ -179,10 +179,10 @@ export class WineListDialog extends LitElement {
       }
 
       .wl-cellar-badge {
-        font-size: 0.65em;
+        font-size: var(--wc-fs-2xs);
         font-weight: 700;
         padding: 1px 4px;
-        border-radius: 4px;
+        border-radius: var(--wc-r-xs);
         background: rgba(46, 125, 50, 0.2);
         border: 1px solid rgba(46, 125, 50, 0.4);
         color: #4caf50;
@@ -191,7 +191,7 @@ export class WineListDialog extends LitElement {
       }
 
       .wl-meta {
-        font-size: 0.72em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         margin-top: 0;
         white-space: nowrap;
@@ -203,13 +203,13 @@ export class WineListDialog extends LitElement {
         display: inline-flex;
         align-items: center;
         gap: 2px;
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         color: #f5a623;
       }
 
       .wl-user-score {
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         font-weight: 600;
         color: #4caf50;
       }
@@ -219,7 +219,7 @@ export class WineListDialog extends LitElement {
         gap: 4px;
         align-items: center;
         margin-top: 1px;
-        font-size: 0.78em;
+        font-size: var(--wc-fs-sm);
         flex-wrap: wrap;
       }
 
@@ -234,25 +234,25 @@ export class WineListDialog extends LitElement {
       }
 
       .wl-markup-badge {
-        font-size: 0.68em;
+        font-size: var(--wc-fs-2xs);
         font-weight: 600;
         padding: 1px 5px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         color: #fff;
       }
 
       .wl-value-badge {
-        font-size: 0.66em;
+        font-size: var(--wc-fs-2xs);
         font-weight: 500;
         padding: 1px 5px;
-        border-radius: 6px;
+        border-radius: var(--wc-r-sm);
         color: #fff;
       }
 
       .wl-ai-chip {
-        font-size: 0.65em;
+        font-size: var(--wc-fs-2xs);
         padding: 1px 4px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         background: rgba(245, 166, 35, 0.12);
         border: 1px solid rgba(245, 166, 35, 0.3);
         color: #f5a623;
@@ -263,7 +263,7 @@ export class WineListDialog extends LitElement {
         margin-top: 4px;
         padding-top: 4px;
         border-top: 1px solid var(--wc-border);
-        font-size: 0.75em;
+        font-size: var(--wc-fs-xs);
         color: var(--wc-text-secondary);
         line-height: 1.3;
       }
@@ -296,8 +296,8 @@ export class WineListDialog extends LitElement {
         background: #2e7d32;
         color: #fff;
         border: none;
-        border-radius: 5px;
-        font-size: 0.7em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-xs);
         padding: 3px 6px;
         cursor: pointer;
         white-space: nowrap;
@@ -314,8 +314,8 @@ export class WineListDialog extends LitElement {
         background: #e65100;
         color: #fff;
         border: none;
-        border-radius: 5px;
-        font-size: 0.7em;
+        border-radius: var(--wc-r-xs);
+        font-size: var(--wc-fs-xs);
         padding: 3px 6px;
         cursor: pointer;
         white-space: nowrap;
@@ -339,7 +339,7 @@ export class WineListDialog extends LitElement {
       }
 
       .footer-actions .btn {
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         padding: 6px 12px;
       }
 
@@ -777,8 +777,8 @@ export class WineListDialog extends LitElement {
                 <div class="extracting">
                   <div class="spinner"></div>
                   <div>Analyzing list...</div>
-                  <div style="font-size:0.85em">Gemini is reading wines and scoring them</div>
-                  <div style="font-size:0.78em; color: var(--secondary-text-color); margin-top: 8px;">Long lists may take up to 3 minutes</div>
+                  <div style="font-size:var(--wc-fs-md)">Gemini is reading wines and scoring them</div>
+                  <div style="font-size: var(--wc-fs-sm); color: var(--secondary-text-color); margin-top: 8px;">Long lists may take up to 3 minutes</div>
                 </div>
               `
             : nothing}

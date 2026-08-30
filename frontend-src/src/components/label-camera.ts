@@ -24,7 +24,7 @@ export class LabelCamera extends LitElement {
         max-width: 300px;
         margin: 0 auto;
         aspect-ratio: 3 / 4;
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         overflow: hidden;
         background: #000;
       }
@@ -41,7 +41,7 @@ export class LabelCamera extends LitElement {
         max-width: 300px;
         margin: 0 auto;
         display: block;
-        border-radius: 12px;
+        border-radius: var(--wc-r-md);
         object-fit: contain;
         max-height: 300px;
       }
@@ -99,12 +99,12 @@ export class LabelCamera extends LitElement {
         align-items: center;
         gap: 6px;
         padding: 8px 16px;
-        border-radius: 8px;
+        border-radius: var(--wc-r-sm);
         border: 1px solid var(--wc-border);
         background: transparent;
         color: var(--wc-text-secondary);
         cursor: pointer;
-        font-size: 0.85em;
+        font-size: var(--wc-fs-md);
         transition: all 0.2s;
       }
 
@@ -120,7 +120,7 @@ export class LabelCamera extends LitElement {
         padding: 16px;
         text-align: center;
         color: #ef5350;
-        font-size: 0.9em;
+        font-size: var(--wc-fs-md);
       }
 
       .actions-row {
@@ -133,7 +133,7 @@ export class LabelCamera extends LitElement {
       .hint {
         text-align: center;
         padding: 4px 0 8px;
-        font-size: 0.8em;
+        font-size: var(--wc-fs-sm);
         color: var(--wc-text-secondary);
       }
     `,
