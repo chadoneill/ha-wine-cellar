@@ -12339,7 +12339,7 @@ let VivinoAiSettingsDialog = class VivinoAiSettingsDialog extends i {
         this.metadataLanguage = "en";
         this.supportedLanguages = ["en", "fr", "de"];
         this.metadataCurrency = "USD";
-        this.supportedCurrencies = ["USD", "EUR", "GBP", "CHF"];
+        this.supportedCurrencies = ["USD", "EUR", "GBP", "CHF", "AUD"];
     }
     _close() {
         this.dispatchEvent(new CustomEvent("close"));
@@ -12592,7 +12592,7 @@ let WineCellarCard = class WineCellarCard extends i {
         this._metadataLanguage = "en";
         this._supportedLanguages = ["en", "fr", "de"];
         this._metadataCurrency = "USD";
-        this._supportedCurrencies = ["USD", "EUR", "GBP", "CHF"];
+        this._supportedCurrencies = ["USD", "EUR", "GBP", "CHF", "AUD"];
         this._aiFallbackAlways = false;
         this._showVivinoAiSettings = false;
         this._showWineList = false;
@@ -12754,7 +12754,7 @@ let WineCellarCard = class WineCellarCard extends i {
             this._metadataLanguage = capResult?.metadata_language || "en";
             this._supportedLanguages = capResult?.supported_languages || ["en", "fr", "de"];
             this._metadataCurrency = capResult?.metadata_currency || "USD";
-            this._supportedCurrencies = capResult?.supported_currencies || ["USD", "EUR", "GBP", "CHF"];
+            this._supportedCurrencies = capResult?.supported_currencies || ["USD", "EUR", "GBP", "CHF", "AUD"];
             this._aiFallbackAlways = capResult?.ai_fallback_always || false;
             this._dismissedArrangements = capResult?.dismissed_arrangements || [];
             this._buyList = buyListResult?.buy_list || [];

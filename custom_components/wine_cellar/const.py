@@ -82,7 +82,7 @@ SUPPORTED_METADATA_LANGUAGES = ["en", "fr", "de"]
 
 CONF_METADATA_CURRENCY = "metadata_currency"
 DEFAULT_METADATA_CURRENCY = "USD"
-SUPPORTED_METADATA_CURRENCIES = ["USD", "EUR", "GBP", "CHF"]
+SUPPORTED_METADATA_CURRENCIES = ["USD", "EUR", "GBP", "CHF", "AUD"]
 
 # When Vivino finds no confident match, offer AI as a fallback instead of
 # applying automatically. "always" skips asking and just uses AI every time.
@@ -120,4 +120,4 @@ VIVINO_AUTO_SYNC_INTERVAL_HOURS = 12
 ATTR_TOTAL_BOTTLES = "total_bottles"
 ATTR_TOTAL_CAPACITY = "total_capacity"
 
-FRONTEND_VERSION = "20260831d"
+FRONTEND_VERSION = "20260831e"
