@@ -241,3 +241,19 @@ returns `price_currency` alongside `price` for exactly this reason.
 The same page also carries Vivino's own subscription-plan prices (7.99 and
 75.95). They are excluded by requiring `"type":"ppc"` immediately after the
 amount; the plans use a flat `"currency_code"` key and carry no type.
+
+### Two headers Vivino's vintage page will not do without
+
+`get_vintage_price` fetches an HTML page, and both of these fail as a missing
+price rather than as an error:
+
+- **A browser `User-Agent`.** Vivino answers aiohttp's own UA — and therefore
+  Home Assistant's shared client session — with **403**. `curl`'s default UA
+  passes, so a hand-rolled curl check will happily confirm a price the
+  integration cannot actually fetch. That gap cost a full deploy-and-retest
+  cycle here.
+- **`Accept: text/html`.** The module-level `HEADERS` asks for
+  `application/json`, which this page answers with **415**.
+
+A 403 or 415 from that page is logged at WARNING, not DEBUG, because it means
+the request was malformed rather than the wine being unpriced.

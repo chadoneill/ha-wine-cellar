@@ -290,10 +290,17 @@ class VivinoClient:
 
             https://www.vivino.com/w/{wine_id}?year={vintage}
 
-        Verified against a live wine: a plain GET with no User-Agent, no
-        cookie, no Accept-Language and no auth returns the same figure as a
-        browser. `?year=` genuinely selects the vintage -- the median moves
-        when it is dropped.
+        No cookie, no auth and no Accept-Language are needed, and `?year=`
+        genuinely selects the vintage -- the median moves when it is dropped.
+        TWO HEADERS ARE NOT OPTIONAL, and both fail in ways that look like
+        "Vivino has no price" rather than like an error:
+
+          * A browser User-Agent. Vivino answers aiohttp's own UA -- and so
+            Home Assistant's shared session -- with **403**. curl's default UA
+            passes, which is exactly why a hand-rolled curl check can confirm
+            a price that the integration then cannot fetch.
+          * `Accept: text/html`. This is a web page; the module-level HEADERS
+            ask for `application/json` and get **415** back.
 
         Two figures are offered. A "ppc" price is somebody actually selling
         the bottle right now, so it is preferred; the "market" median is the
@@ -307,13 +314,25 @@ class VivinoClient:
         """
         url = f"{VIVINO_WINE_PAGE_URL}/{vivino_id}"
         params = {"year": str(vintage)} if vintage else None
+        # Browser UA from HEADERS, but asking for HTML rather than the JSON
+        # the rest of this client wants -- see the docstring: the wrong value
+        # for either of these returns 403 or 415, not a price.
+        headers = {**HEADERS, "Accept": "text/html,application/xhtml+xml"}
         session = async_get_clientsession(self._hass)
         try:
             timeout = aiohttp.ClientTimeout(total=20)
-            async with session.get(url, params=params, timeout=timeout) as resp:
+            async with session.get(
+                url, params=params, headers=headers, timeout=timeout
+            ) as resp:
                 if resp.status != 200:
-                    _LOGGER.debug(
-                        "Vivino vintage page %s returned HTTP %s", url, resp.status
+                    # 403 means the User-Agent was rejected and 415 the Accept
+                    # header -- both are configuration faults here, not an
+                    # absent price, so say so loudly enough to be found.
+                    log = _LOGGER.warning if resp.status in (403, 415) else _LOGGER.debug
+                    log(
+                        "Vivino vintage page %s returned HTTP %s "
+                        "(403/415 means the request headers were rejected)",
+                        url, resp.status,
                     )
                     return None
                 html = await resp.text()
