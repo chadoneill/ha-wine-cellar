@@ -264,15 +264,26 @@ export class CabinetGrid extends LitElement {
       /* The label photograph becomes the disc at the centre, where the capsule
          would be -- a bottle from above has no label face to show, but the
          picture is still how you recognise it. */
+      /* A label photograph fills its slot, and its size is stated in FULL.
+       *
+       * This was inset:32% with width/height:auto, which works for an
+       * ordinary element and is a trap for an <img>. An image is a REPLACED
+       * element: width:auto resolves to its INTRINSIC size, and the
+       * opposing inset is then dropped as over-constrained. A 375x500 Vivino
+       * photo therefore rendered at 375x500 in a 65px cell -- 5.7 times too
+       * wide, covering two thirds of the rack -- and because a to-scale cell
+       * has overflow:visible by design, it spilled across everything.
+       *
+       * It hid for a long time because it needs a photo that actually LOADS: a
+       * broken image has zero intrinsic size and looks perfectly fine, and no
+       * wine in the preview harness's to-scale cabinet has an image_url at
+       * all. State width and height explicitly here; never leave them auto. */
       .row.to-scale .cell .wine-thumb {
-        inset: 32%;
-        width: auto;
-        height: auto;
-        box-shadow:
-          0 0 0 1px rgba(255, 255, 255, 0.14),
-          0 1px 3px rgba(0, 0, 0, 0.5);
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
       }
-      /* ...and then the drawn capsule would sit on top of it, so it stands down */
       
       .row.to-scale .cell .depth-badge {
         top: -2%;

@@ -186,3 +186,21 @@ This fork adds `verify` = typecheck, then tests, then build. Rollup's
 TypeScript plugin reports type errors as *warnings* and emits the bundle
 regardless, which shipped a `ReferenceError` here once. `tsc --noEmit` is
 clean, so any error is one you just made.
+
+## Two traps in this component that have each bitten more than once
+
+**Never leave `width`/`height` as `auto` on an `<img>` positioned with insets.**
+An image is a *replaced* element: `width: auto` resolves to its **intrinsic**
+size and the opposing inset is dropped as over-constrained. `.wine-thumb` was
+`inset: 32%; width: auto; height: auto`, so a 375×500 Vivino photo rendered at
+375×500 inside a 65 px cell — 5.7× too wide, covering two thirds of the rack,
+spilling everywhere because a to-scale cell has `overflow: visible` by design.
+It hid for weeks because it needs a photo that actually **loads**: a broken
+image has zero intrinsic size and looks perfect. The preview harness's
+to-scale cabinet now carries one wine with a `data:` URI photo that resolves
+offline, so this path is exercised without a network.
+
+**Backticks inside a `css` template literal terminate it.** Writing
+`` `width: auto` `` in a CSS comment produces a wall of `TS1005: ',' expected`
+that points at the CSS, not at the comment. This has happened three times. Use
+plain text in comments inside `css` and `html` tagged templates.
