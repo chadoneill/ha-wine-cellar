@@ -204,3 +204,40 @@ offline, so this path is exercised without a network.
 `` `width: auto` `` in a CSS comment produces a wall of `TS1005: ',' expected`
 that points at the CSS, not at the comment. This has happened three times. Use
 plain text in comments inside `css` and `html` tagged templates.
+
+## Vivino DOES have prices — upstream's note is over-generalised
+
+Upstream's findings section says Vivino has "no price data anywhere",
+"confirmed via extensive live testing". That is true of everything it tested
+and false as a general claim, which cost a user a $28 AI guess on a $200
+bottle.
+
+What upstream tested — and correctly ruled out:
+
+- the `explore` API, which ignores an unauthenticated `q`
+- `api.vivino.com`, which has no price field at all
+- **search-page** HTML, whose prices are boilerplate and identical for every
+  query (the warning in `_search_vivino_html` is right; do not undo it)
+
+What it did not test is the wine's **own vintage page**, which does carry real
+per-vintage pricing:
+
+```
+https://www.vivino.com/w/{wine_id}?year={vintage}
+```
+
+`get_vintage_price()` reads it. Verified live: a plain GET with no
+User-Agent, no cookie, no Accept-Language and no auth returns the same figure
+a browser shows, and `?year=` genuinely selects the vintage (the median moves
+when it is dropped). Two figures are published — a `"ppc"` price is somebody
+selling the bottle right now and is preferred; the `"market"` median is the
+fallback when nothing is listed.
+
+**Take the currency from the response, never from settings.** Vivino picks it
+from the REQUESTING IP, not from any header — an Australian-hosted instance
+gets AUD and a US-hosted one gets USD from the identical URL. `get_wine_by_id`
+returns `price_currency` alongside `price` for exactly this reason.
+
+The same page also carries Vivino's own subscription-plan prices (7.99 and
+75.95). They are excluded by requiring `"type":"ppc"` immediately after the
+amount; the plans use a flat `"currency_code"` key and carry no type.

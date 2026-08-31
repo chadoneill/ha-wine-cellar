@@ -38,6 +38,23 @@ _FOOD_NAME_CACHE: dict[int, str] = {}
 ALL_WINE_TYPE_IDS = [1, 2, 3, 4, 7]  # red, white, sparkling, rosé, dessert
 
 # The explore API requires both a country and a currency code — pick a
+# The public vintage page. This DOES carry real price data, which the
+# comments elsewhere in this file deny -- see get_vintage_price for why both
+# statements are true at once.
+VIVINO_WINE_PAGE_URL = "https://www.vivino.com/w"
+
+# A live merchant offer: "amount":196.45,"type":"ppc". The "ppc" type is what
+# separates it from Vivino's own subscription-plan prices, which sit in the
+# same page using a flat "currency_code" key and no type at all.
+_PPC_PRICE_RE = re.compile(r'"amount"\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*,\s*"type"\s*:\s*"ppc"')
+# The market median for the vintage, when nobody is currently selling it.
+_MEDIAN_PRICE_RE = re.compile(
+    r'"median"\s*:\s*\{\s*"amount"\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*,\s*"type"\s*:\s*"market"'
+)
+# Vivino picks the currency from the REQUESTING IP, not from any header, so it
+# must be read out of the response and never assumed.
+_PAGE_CURRENCY_RE = re.compile(r'"currency"\s*:\s*\{\s*"code"\s*:\s*"([A-Z]{3})"')
+
 # country whose market Vivino actually prices in the chosen currency for.
 CURRENCY_COUNTRY_CODE = {
     "USD": "US",
@@ -185,7 +202,8 @@ class VivinoClient:
         Far more reliable than text search for a wine we've already
         matched once (no query ambiguity, no relevance guessing) — but
         it's a lookup, not a search, so it only helps once `vivino_id` is
-        already known. Still has no price data.
+        already known. The mobile API itself has no price field, so the price
+        is fetched separately from the public vintage page.
         """
         session = async_get_clientsession(self._hass)
         try:
@@ -249,7 +267,89 @@ class VivinoClient:
         if vintage_id:
             result.update(await self._get_vintage_details(vintage_id))
 
+        # The mobile API carries no price, so ask the public vintage page.
+        # This is what stops an AI estimate being used for a wine Vivino can
+        # actually price.
+        priced = await self.get_vintage_price(vivino_id, vintage)
+        if priced:
+            result["price"] = priced["price"]
+            result["price_currency"] = priced["currency"]
+
         return result
+
+    async def get_vintage_price(
+        self, vivino_id: int, vintage: int | None = None
+    ) -> dict[str, Any] | None:
+        """Read a real market price off the public vintage page.
+
+        The rest of this file says Vivino has no price, and for the endpoints
+        it tested that is true: the explore API ignores an unauthenticated `q`,
+        the mobile API has no price field at all, and SEARCH-page HTML carries
+        boilerplate prices that are identical for every query. The wine's own
+        vintage page is a different page and does carry per-vintage pricing:
+
+            https://www.vivino.com/w/{wine_id}?year={vintage}
+
+        Verified against a live wine: a plain GET with no User-Agent, no
+        cookie, no Accept-Language and no auth returns the same figure as a
+        browser. `?year=` genuinely selects the vintage -- the median moves
+        when it is dropped.
+
+        Two figures are offered. A "ppc" price is somebody actually selling
+        the bottle right now, so it is preferred; the "market" median is the
+        fallback for a vintage with no live listing.
+
+        Returns {"price": float, "currency": "AUD", "kind": "ppc"|"market"}
+        or None. THE CURRENCY MUST BE TAKEN FROM THE RESPONSE: Vivino decides
+        it from the requesting IP, so an Australian-hosted instance gets AUD
+        and a US-hosted one gets USD from the identical URL. Assuming the
+        configured currency here would silently mislabel every price.
+        """
+        url = f"{VIVINO_WINE_PAGE_URL}/{vivino_id}"
+        params = {"year": str(vintage)} if vintage else None
+        session = async_get_clientsession(self._hass)
+        try:
+            timeout = aiohttp.ClientTimeout(total=20)
+            async with session.get(url, params=params, timeout=timeout) as resp:
+                if resp.status != 200:
+                    _LOGGER.debug(
+                        "Vivino vintage page %s returned HTTP %s", url, resp.status
+                    )
+                    return None
+                html = await resp.text()
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.debug("Vivino vintage page fetch failed: %s", err)
+            return None
+
+        kind = "ppc"
+        match = _PPC_PRICE_RE.search(html)
+        if not match:
+            kind = "market"
+            match = _MEDIAN_PRICE_RE.search(html)
+        if not match:
+            _LOGGER.debug("No price found on Vivino vintage page for %s", vivino_id)
+            return None
+
+        try:
+            amount = round(float(match.group(1)), 2)
+        except (TypeError, ValueError):
+            return None
+        if amount <= 0:
+            return None
+
+        # Prefer the currency declared beside this price; fall back to the
+        # first one on the page.
+        window = html[match.end() : match.end() + 400]
+        cur = _PAGE_CURRENCY_RE.search(window) or _PAGE_CURRENCY_RE.search(html)
+        if not cur:
+            _LOGGER.debug("Vivino price found but no currency code; discarding")
+            return None
+
+        _LOGGER.debug(
+            "Vivino %s price for wine %s vintage %s: %s %s",
+            kind, vivino_id, vintage, cur.group(1), amount,
+        )
+        return {"price": amount, "currency": cur.group(1), "kind": kind}
 
     async def _get_vintage_details(self, vintage_id: int) -> dict[str, Any]:
         """Fetch vintage-specific extras: image, description, alcohol, grapes, food."""
