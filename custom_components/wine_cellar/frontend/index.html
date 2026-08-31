@@ -386,8 +386,13 @@
       callService: async () => {},
     };
 
-    // Wait for card to load then inject hass
-    window.addEventListener("DOMContentLoaded", () => {
+    // Wait for the ELEMENT to be defined, not just for the DOM. The bundle is
+    // pulled in with a dynamic import (below) so a rebuild is never served
+    // from cache, and a dynamic import resolves asynchronously -- DOMContentLoaded
+    // can easily fire first, and then setConfig does not exist yet. That race
+    // was winnable while the bundle was small and stopped being winnable when
+    // it grew.
+    customElements.whenDefined("wine-cellar-card").then(() => {
       const card = document.querySelector("wine-cellar-card");
       if (card) {
         card.setConfig({ type: "custom:wine-cellar-card", title: "Cork Dork" });

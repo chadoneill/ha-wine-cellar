@@ -2184,6 +2184,22 @@ export class WineCellarCard extends LitElement {
               📦 Inventory
             </button>
             <button
+              class="btn btn-tonal manage-racks-btn"
+              style="--tint: #6d4c41"
+              @click=${() => (this._showRackSettings = true)}
+              title="Rack sizes, storage bins, and the cabinet's real measurements"
+            >
+              🗄️ Manage Racks
+            </button>
+            <button
+              class="btn btn-tonal settings-tab-btn"
+              style="--tint: #455a64"
+              @click=${() => (this._showVivinoAiSettings = true)}
+              title="Vivino account and AI provider settings"
+            >
+              ⚙️ Settings
+            </button>
+            <button
               class="btn btn-primary"
               @click=${() => {
                 this._addPreselect = { cabinet: "", row: null, col: null, zone: "", depth: 0 };
@@ -2304,18 +2320,6 @@ export class WineCellarCard extends LitElement {
             style="${this._activeTab === "buy-list" ? "border-color: #e65100; color: #e65100;" : ""}"
           >
             Buy List (${this._buyList.length})
-          </button>
-          <button
-            class="tab manage-racks-btn"
-            @click=${() => (this._showRackSettings = true)}
-          >
-            Manage Racks
-          </button>
-          <button
-            class="tab settings-tab-btn"
-            @click=${() => (this._showVivinoAiSettings = true)}
-          >
-            ⚙️ Vivino/AI Settings
           </button>
         </div>
 
