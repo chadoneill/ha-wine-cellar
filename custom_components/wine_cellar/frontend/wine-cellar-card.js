@@ -15328,23 +15328,31 @@ WineCellarCard.styles = [
          off the right edge and the whole page scrolled sideways. This is the
          Home Assistant companion app's width, which is where the app is
          actually used. */
+      /* Title on its own line, actions on their own line beneath. ALWAYS.
+       *
+       * These used to sit side by side, with the actions taking whatever width
+       * the title left over. In a Home Assistant sections dashboard that is
+       * about 210px, so the actions grid resolved to a single column and
+       * stacked all seven buttons vertically down the right-hand side.
+       *
+       * A @media (max-width: 620px) rule was supposed to drop the actions onto
+       * their own line, and it never fired: a media query measures the
+       * VIEWPORT, and in a sections dashboard the viewport is wide while the
+       * CARD is narrow. Shrinking a browser window to test it triggers the
+       * query and shows a layout the real card can never reach.
+       *
+       * Stacking unconditionally removes the guess. There is no width at which
+       * this lays out differently, so there is no width at which it surprises
+       * anyone. */
       .header-row {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
+        flex-direction: column;
+        align-items: stretch;
         gap: var(--wc-sp-3);
         padding: var(--wc-sp-4) var(--wc-sp-4) var(--wc-sp-2);
       }
       .header-row > .header-actions {
-        flex: 1 1 auto;
         min-width: 0;
-      }
-      @media (max-width: 620px) {
-        /* title on its own line, actions below it filling the width */
-        .header-row > .header-actions {
-          flex-basis: 100%;
-        }
       }
 
       .title {
