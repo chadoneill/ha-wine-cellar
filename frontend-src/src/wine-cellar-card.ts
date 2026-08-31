@@ -229,10 +229,6 @@ export class WineCellarCard extends LitElement {
         /* title on its own line, actions below it filling the width */
         .header-row > .header-actions {
           flex-basis: 100%;
-          justify-content: flex-start;
-        }
-        .header-actions .btn {
-          flex: 1 1 auto;
         }
       }
 
@@ -265,12 +261,31 @@ export class WineCellarCard extends LitElement {
         opacity: 0.75;
       }
 
+      /* A GRID, not a wrapping flex row.
+       *
+       * These were flex-wrap with justify-content:flex-end, so every wrapped
+       * row right-aligned on its own and the seven actions came out as a
+       * ragged staircase. Under 620px each button also got flex:1 1 auto,
+       * which stretched them by different amounts on each row and made it
+       * worse.
+       *
+       * auto-fit columns line the buttons up whatever the card width, and
+       * because a Home Assistant sections card is about 500px, that lands as
+       * a tidy two or three across instead of scattering. */
       .header-actions {
-        display: flex;
-        gap: 4px;
-        align-items: center;
-        flex-wrap: wrap;
-        justify-content: flex-end;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+        gap: var(--wc-sp-2);
+        align-items: stretch;
+      }
+      .header-actions .btn {
+        width: 100%;
+        justify-content: center;
+        white-space: nowrap;
+      }
+      /* the one primary action keeps a full-width row to itself */
+      .header-actions .btn-primary {
+        grid-column: 1 / -1;
       }
 
       .cabinets-row {
