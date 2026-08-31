@@ -43,17 +43,21 @@ ALL_WINE_TYPE_IDS = [1, 2, 3, 4, 7]  # red, white, sparkling, rosé, dessert
 # statements are true at once.
 VIVINO_WINE_PAGE_URL = "https://www.vivino.com/w"
 
-# A live merchant offer: "amount":196.45,"type":"ppc". The "ppc" type is what
-# separates it from Vivino's own subscription-plan prices, which sit in the
-# same page using a flat "currency_code" key and no type at all.
+# A live merchant offer. The "ppc" type separates it from Vivino's own
+# subscription-plan prices, which sit in the same page under a flat
+# "currency_code" key with no type at all.
 _PPC_PRICE_RE = re.compile(r'"amount"\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*,\s*"type"\s*:\s*"ppc"')
-# The market median for the vintage, when nobody is currently selling it.
-_MEDIAN_PRICE_RE = re.compile(
-    r'"median"\s*:\s*\{\s*"amount"\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*,\s*"type"\s*:\s*"market"'
-)
-# Vivino picks the currency from the REQUESTING IP, not from any header, so it
-# must be read out of the response and never assumed.
+# Read out of the ~250 characters that follow a ppc amount, where the offer's
+# own currency, bottle size and vintage all live.
+_BOTTLE_TYPE_RE = re.compile(r'"bottle_type_id"\s*:\s*([0-9]+)')
+_VINTAGE_ID_RE = re.compile(r'"vintage_id"\s*:\s*([0-9]+)')
 _PAGE_CURRENCY_RE = re.compile(r'"currency"\s*:\s*\{\s*"code"\s*:\s*"([A-Z]{3})"')
+
+# Vivino's id for a standard 750 ml bottle. Id 3 is a 375 ml half, and a page
+# can offer nothing but halves -- Rusden Black Guts listed seven, all halves,
+# so the "cheapest price" was half a bottle and looked like the wine had
+# halved in value.
+_STANDARD_BOTTLE_TYPE_ID = 1
 
 # country whose market Vivino actually prices in the chosen currency for.
 CURRENCY_COUNTRY_CODE = {
@@ -302,11 +306,13 @@ class VivinoClient:
           * `Accept: text/html`. This is a web page; the module-level HEADERS
             ask for `application/json` and get **415** back.
 
-        Two figures are offered. A "ppc" price is somebody actually selling
-        the bottle right now, so it is preferred; the "market" median is the
-        fallback for a vintage with no live listing.
+        Only "ppc" offers are used -- somebody actually selling the bottle,
+        with a stated bottle size and vintage. The page also publishes a
+        "market" median, which is NOT used: it carries neither a bottle size
+        nor a reliable vintage, so on a wine offered only in halves it reports
+        roughly half the real price with nothing to reveal that.
 
-        Returns {"price": float, "currency": "AUD", "kind": "ppc"|"market"}
+        Returns {"price": float, "currency": "AUD", "vintage": int|None}
         or None. THE CURRENCY MUST BE TAKEN FROM THE RESPONSE: Vivino decides
         it from the requesting IP, so an Australian-hosted instance gets AUD
         and a US-hosted one gets USD from the identical URL. Assuming the
@@ -340,35 +346,80 @@ class VivinoClient:
             _LOGGER.debug("Vivino vintage page fetch failed: %s", err)
             return None
 
-        kind = "ppc"
-        match = _PPC_PRICE_RE.search(html)
-        if not match:
-            kind = "market"
-            match = _MEDIAN_PRICE_RE.search(html)
-        if not match:
-            _LOGGER.debug("No price found on Vivino vintage page for %s", vivino_id)
+        # Only a standard 750 ml offer is a price for the bottle the user
+        # owns. A page may list nothing else -- see _STANDARD_BOTTLE_TYPE_ID.
+        best: dict[str, Any] | None = None
+        for m in _PPC_PRICE_RE.finditer(html):
+            window = html[m.end() : m.end() + 250]
+            bt = _BOTTLE_TYPE_RE.search(window)
+            if not bt or int(bt.group(1)) != _STANDARD_BOTTLE_TYPE_ID:
+                continue
+            cur = _PAGE_CURRENCY_RE.search(window)
+            if not cur:
+                continue
+            try:
+                amount = round(float(m.group(1)), 2)
+            except (TypeError, ValueError):
+                continue
+            if amount <= 0:
+                continue
+            # "vintage_id" is written BEFORE "amount" in these objects
+            # ({"id":..,"vintage_id":..,"amount":..,"type":"ppc"}), so a
+            # forward-only window can never see it. Look back, and take the
+            # nearest one -- a page can list several offers in a row.
+            behind = _VINTAGE_ID_RE.findall(html[max(0, m.start() - 250) : m.start()])
+            vid = behind[-1] if behind else None
+            offer = {
+                "price": amount,
+                "currency": cur.group(1),
+                "vintage_id": int(vid) if vid else None,
+            }
+            # Cheapest standard bottle on offer.
+            if best is None or offer["price"] < best["price"]:
+                best = offer
+
+        if best is None:
+            _LOGGER.debug(
+                "No standard-bottle price on Vivino page for wine %s vintage %s "
+                "(offers may all be halves or magnums)",
+                vivino_id, vintage,
+            )
             return None
 
-        try:
-            amount = round(float(match.group(1)), 2)
-        except (TypeError, ValueError):
-            return None
-        if amount <= 0:
-            return None
+        # Which vintage the offer is actually for. `?year=` picks the page but
+        # NOT the buy module, which shows whatever vintage is currently for
+        # sale -- asking for 2017 returned a 2021 offer. Report it so the
+        # caller can decide, rather than passing off another year's price as
+        # this one's.
+        offer_year = None
+        if best["vintage_id"]:
+            # The vintage objects live in an HTML-escaped blob on the page,
+            # unlike the price objects, so this has to look at both forms.
+            pattern = (
+                r'"id"\s*:\s*%d\s*,[^{}]{0,300}?"year"\s*:\s*"?(\d{4})"?'
+                % best["vintage_id"]
+            )
+            for text in (html, html.replace("&quot;", '"')):
+                ym = re.search(pattern, text)
+                if ym:
+                    offer_year = int(ym.group(1))
+                    break
 
-        # Prefer the currency declared beside this price; fall back to the
-        # first one on the page.
-        window = html[match.end() : match.end() + 400]
-        cur = _PAGE_CURRENCY_RE.search(window) or _PAGE_CURRENCY_RE.search(html)
-        if not cur:
-            _LOGGER.debug("Vivino price found but no currency code; discarding")
-            return None
+        if vintage and offer_year and offer_year != vintage:
+            _LOGGER.debug(
+                "Vivino price for wine %s is for the %s vintage, not %s",
+                vivino_id, offer_year, vintage,
+            )
 
         _LOGGER.debug(
-            "Vivino %s price for wine %s vintage %s: %s %s",
-            kind, vivino_id, vintage, cur.group(1), amount,
+            "Vivino price for wine %s: %s %s (vintage %s, standard bottle)",
+            vivino_id, best["currency"], best["price"], offer_year or "unknown",
         )
-        return {"price": amount, "currency": cur.group(1), "kind": kind}
+        return {
+            "price": best["price"],
+            "currency": best["currency"],
+            "vintage": offer_year,
+        }
 
     async def _get_vintage_details(self, vintage_id: int) -> dict[str, Any]:
         """Fetch vintage-specific extras: image, description, alcohol, grapes, food."""
