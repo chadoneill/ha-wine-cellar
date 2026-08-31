@@ -104,42 +104,26 @@ export const sharedStyles = css`
     color: var(--wc-text);
   }
 
+  /* The tabs WRAP; they do not scroll.
+   *
+   * This was a horizontal scroller with a fade at each end. It solved the
+   * original problem -- a nowrap row of tabs sized the flex item by its
+   * content and pushed the whole PAGE sideways -- but it created a worse one:
+   * anything past the right edge was invisible, and a fade is not a signpost.
+   * In a Home Assistant sections dashboard the card is about 500px even on a
+   * desktop, so a handful of racks was already enough to hide the last tab.
+   *
+   * Wrapping fixes both. There is no overflow to push the page, and nothing
+   * can hide. It costs a second line once there are enough racks, which is a
+   * far better trade than a tab you cannot find. */
   .tab-bar {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--wc-sp-2);
     padding: var(--wc-sp-1) var(--wc-sp-4) var(--wc-sp-3);
-    overflow-x: auto;
-    /* A flex/grid item defaults to min-width:auto, so this scroller was sized
-       by its content and pushed the whole PAGE sideways instead of scrolling
-       within itself. */
     min-width: 0;
     max-width: 100%;
-    scrollbar-width: none;
     border-bottom: 1px solid var(--wc-border);
-    /* The bar scrolls, and it was simply cut off at the right edge with no
-       sign that there was more. Fade the ends so the overflow is legible, and
-       let a swipe settle on a tab rather than mid-tab. */
-    scroll-snap-type: x proximity;
-    -webkit-mask-image: linear-gradient(
-      90deg,
-      transparent 0,
-      #000 18px,
-      #000 calc(100% - 26px),
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      90deg,
-      transparent 0,
-      #000 18px,
-      #000 calc(100% - 26px),
-      transparent 100%
-    );
-  }
-  .tab-bar > * {
-    scroll-snap-align: start;
-  }
-  .tab-bar::-webkit-scrollbar {
-    display: none;
   }
 
   .tab {
