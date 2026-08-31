@@ -66,7 +66,11 @@ def parse_json_response(raw_text: str) -> Any:
     )
     if start != -1:
         end = None
-        brace_depth = 0
+        # Both bracket kinds, or a root-level array wrapped in prose would be
+        # cut off after its first object — the scan would see {...} close and
+        # stop there, handing json.loads a "[{...}" that cannot parse. The
+        # docstring promised arrays; only objects worked.
+        depth = 0
         in_string = False
         escaped = False
         for idx in range(start, len(text)):
@@ -81,11 +85,11 @@ def parse_json_response(raw_text: str) -> Any:
                 continue
             if char == '"':
                 in_string = True
-            elif char == "{":
-                brace_depth += 1
-            elif char == "}":
-                brace_depth -= 1
-                if brace_depth == 0:
+            elif char in "{[":
+                depth += 1
+            elif char in "}]":
+                depth -= 1
+                if depth == 0:
                     end = idx + 1
                     break
 
@@ -718,16 +722,14 @@ class GeminiVisionClient(BaseAIClient):
             timeout = aiohttp.ClientTimeout(total=timeout_s)
             async with session.post(
                 self._api_url,
-                params={"key": self._api_key},
+                headers={"x-goog-api-key": self._api_key},
                 json=body,
                 timeout=timeout,
             ) as resp:
                 resp_text = await resp.text()
 
                 if resp.status in (401, 403):
-                    _LOGGER.error(
-                        "Gemini API key is invalid (status %s): %s", resp.status, resp_text[:200]
-                    )
+                    _LOGGER.error("Gemini API authentication failed (status %s)", resp.status)
                     return {"error": f"Gemini API key is invalid (HTTP {resp.status})"}
 
                 if resp.status == 429:

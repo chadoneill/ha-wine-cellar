@@ -56,6 +56,9 @@ DEFAULT_CABINETS = [
 CONF_CABINETS = "cabinets"
 CONF_WINES = "wines"
 CONF_BARCODE_CACHE = "barcode_cache"
+# Enough that a normal cellar never evicts; small enough that the store
+# file cannot grow without bound from scanning alone.
+BARCODE_CACHE_MAX = 500
 CONF_BUY_LIST = "buy_list"
 CONF_WINE_HISTORY = "wine_history"
 CONF_SETTINGS = "settings"
@@ -85,7 +88,36 @@ SUPPORTED_METADATA_CURRENCIES = ["USD", "EUR", "GBP", "CHF"]
 # applying automatically. "always" skips asking and just uses AI every time.
 CONF_AI_FALLBACK_ALWAYS = "ai_fallback_always"
 
+# How many timestamped server backups to keep on disk. Older ones are pruned
+# after each new save; 0 keeps every backup forever.
+# Arrangement findings the user has waved off for good. Kept as a list of
+# stable finding ids so a dismissed suggestion never comes back on re-analysis.
+CONF_DISMISSED_ARRANGEMENTS = "dismissed_arrangements"
+
+CONF_SERVER_BACKUP_KEEP = "server_backup_keep"
+DEFAULT_SERVER_BACKUP_KEEP = 10
+SERVER_BACKUP_KEEP_CHOICES = [0, 5, 10, 20, 50]
+
+# Vivino account sync (from upstream): the session cookie + cellar URL identify
+# the account, and the optional timer re-syncs on this interval.
+CONF_VIVINO_SESSION_COOKIE = "vivino_session_cookie"
+CONF_VIVINO_CELLAR_URL = "vivino_cellar_url"
+CONF_VIVINO_AUTO_SYNC = "vivino_auto_sync"
+
+# What the Vivino connection is allowed to do. "import" mirrors the Vivino
+# cellar into Cork Dork and never writes to the user's Vivino account;
+# "sync" is the full two-way reconcile that also pushes Cork Dork changes
+# back to Vivino. Import is the default so connecting an account never
+# modifies it unless the user explicitly opts in.
+CONF_VIVINO_MODE = "vivino_mode"
+VIVINO_MODE_SYNC = "sync"
+VIVINO_MODE_IMPORT = "import"
+VIVINO_MODES = [VIVINO_MODE_IMPORT, VIVINO_MODE_SYNC]
+DEFAULT_VIVINO_MODE = VIVINO_MODE_IMPORT
+
+VIVINO_AUTO_SYNC_INTERVAL_HOURS = 12
+
 ATTR_TOTAL_BOTTLES = "total_bottles"
 ATTR_TOTAL_CAPACITY = "total_capacity"
 
-FRONTEND_VERSION = "20260830d"
+FRONTEND_VERSION = "20260831a"

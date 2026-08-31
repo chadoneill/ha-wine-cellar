@@ -2,7 +2,10 @@ import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { sharedStyles } from "./styles";
 import { Wine, Cabinet, CellarStats, WINE_TYPE_COLORS, WineType, StorageRow, StorageRowType, BOX_SIZES, getRackSlots, getWineLocation } from "./models";
+import { matchesQuery } from "./utils/search";
+import { Finding, analyzeArrangement } from "./utils/arrange";
 
+import "./components/arrangement-dialog";
 import "./components/cabinet-grid";
 import "./components/wine-detail-dialog";
 import "./components/add-wine-dialog";
@@ -11,6 +14,11 @@ import "./components/rack-settings-dialog";
 import "./components/wine-list-dialog";
 import "./components/inventory-dialog";
 import "./components/vivino-ai-settings-dialog";
+
+// How long an incoming change waits before the card re-fetches, and the floor
+// on how often it may do so at all.
+const REFRESH_DEBOUNCE_MS = 400;
+const REFRESH_MIN_INTERVAL_MS = 3000;
 
 interface WineCellarCardConfig {
   type: string;
@@ -39,11 +47,26 @@ export class WineCellarCard extends LitElement {
   @state() private _movingWine: Wine | null = null;
   @state() private _analyzing = false;
   @state() private _batchVivino = false;
+  @state() private _vivinoSyncing = false;
   @state() private _showBatchVivinoConfirm = false;
   @state() private _showBatchAiConfirm = false;
   @state() private _batchAiFallback = false;
   @state() private _toast = "";
   @state() private _hasGemini = false;
+  @state() private _hasVivinoAccount = false;
+  @state() private _vivinoMode = "import";
+  // Vivino-side removals awaiting the user's bottle choice (vivino_id -> entry)
+  @state() private _pendingRemovals: Record<string, any> = {};
+  @state() private _removalFocusVid: string | null = null;
+  @state() private _removalConfirmWine: Wine | null = null;
+  // Sync conflicts (both sides changed a wine differently) awaiting manual
+  // resolution: the user reviews Cork Dork's bottles and declares them truth.
+  @state() private _vivinoConflicts: any[] = [];
+  @state() private _conflictFocusVid: string | null = null;
+  @state() private _conflictConfirmVid: string | null = null;
+  // vivino_id currently being pushed to Vivino (the write plus its
+  // verification can take several seconds)
+  @state() private _conflictResolving: string | null = null;
   @state() private _metadataLanguage = "en";
   @state() private _supportedLanguages: string[] = ["en", "fr", "de"];
   @state() private _metadataCurrency = "USD";
@@ -52,6 +75,21 @@ export class WineCellarCard extends LitElement {
   @state() private _showVivinoAiSettings = false;
   @state() private _showWineList = false;
   @state() private _showInventory = false;
+  private _findingsCache: {
+    wines: Wine[];
+    cabinets: Cabinet[];
+    dismissed: string[];
+    findings: Finding[];
+  } | null = null;
+  private _unsubscribe: (() => void) | null = null;
+  private _subscribing = false;
+  private _connectionGeneration = 0;
+  private _refreshTimer = 0;
+  private _lastRefresh = 0;
+  private _toastTimer = 0;
+
+  @state() private _showArrangement = false;
+  @state() private _dismissedArrangements: string[] = [];
   @state() private _buyList: Wine[] = [];
   @state() private _addToBuyListMode = false;
   @state() private _movingBuyListItem: Wine | null = null;
@@ -86,6 +124,8 @@ export class WineCellarCard extends LitElement {
 
   // Briefly highlights a wine's slot after "locate" is used from the detail dialog.
   @state() private _highlightWineId: string | null = null;
+  @state() private _confirmZoneSort = false;
+  @state() private _zoneSorting = false;
 
   static styles = [
     sharedStyles,
@@ -96,6 +136,77 @@ export class WineCellarCard extends LitElement {
 
       ha-card {
         overflow: hidden;
+      }
+
+      /* Pending Vivino removals: pick-a-bottle panel */
+      .removal-panel {
+        border: 1px solid #ff6d00;
+        background: rgba(255, 109, 0, 0.08);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin: 8px 16px;
+      }
+
+      .removal-panel-title {
+        font-weight: 600;
+        font-size: 0.85em;
+        margin-bottom: 6px;
+        color: var(--wc-text);
+      }
+
+      .removal-entry {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85em;
+        color: var(--wc-text);
+      }
+
+      .removal-entry:hover {
+        background: rgba(255, 109, 0, 0.15);
+      }
+
+      .removal-entry.active {
+        background: rgba(255, 109, 0, 0.25);
+        box-shadow: inset 0 0 0 1px #ff6d00;
+      }
+
+      .removal-count {
+        color: #ff6d00;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .removal-hint {
+        font-size: 0.75em;
+        color: var(--wc-text-secondary);
+        margin-top: 6px;
+      }
+
+      .conflict-title {
+        margin-top: 8px;
+        color: #d32f2f;
+      }
+
+      .removal-entry.conflict.active {
+        background: rgba(211, 47, 47, 0.15);
+        box-shadow: inset 0 0 0 1px #d32f2f;
+      }
+
+      .conflict-confirm {
+        background: #e65100;
+        font-size: 0.8em;
+        padding: 6px 12px;
+        margin: 4px 0 6px;
+      }
+
+      .conflict-confirm:disabled {
+        opacity: 0.6;
+        cursor: wait;
       }
 
       /* The actions were nowrap next to the title, so on a phone they ran 71px
@@ -371,6 +482,22 @@ export class WineCellarCard extends LitElement {
         font-size: var(--wc-fs-md);
       }
 
+      /* The arrangement count is the only stat you can act on, and it is only
+         there at all when the cellar has something to say. */
+      .stat-action {
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 2px 8px;
+        margin: -2px 0;
+        border: 1px solid var(--wc-border);
+        transition: all 0.15s;
+      }
+
+      .stat-action:hover {
+        border-color: var(--wc-primary);
+        background: rgba(114, 47, 55, 0.08);
+      }
+
       /* Phone: stack cabinets vertically */
       @media (max-width: 599px) {
         .header-row {
@@ -433,12 +560,80 @@ export class WineCellarCard extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._loadData();
+    this._subscribeToUpdates();
   }
 
-  updated(changedProps: Map<string, unknown>) {
-    if (changedProps.has("hass") && this.hass) {
-      // Refresh on HA state changes (lightweight check)
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    // Invalidates any subscription still being set up.
+    this._connectionGeneration++;
+    this._unsubscribe?.();
+    this._unsubscribe = null;
+    if (this._refreshTimer) {
+      clearTimeout(this._refreshTimer);
+      this._refreshTimer = 0;
     }
+    if (this._toastTimer) {
+      clearTimeout(this._toastTimer);
+      this._toastTimer = 0;
+    }
+  }
+
+  // The backend announces every change it makes on the event bus, and nobody
+  // was listening. Work it does on its own — the Vivino lookup fired after a
+  // wine is added, most visibly — landed in storage and stayed invisible
+  // until the user happened to do something that reloaded the card. That is
+  // why an added bottle could look like Vivino had never been consulted.
+  private async _subscribeToUpdates() {
+    if (!this.hass?.connection || this._unsubscribe || this._subscribing) {
+      if (!this.hass) setTimeout(() => this._subscribeToUpdates(), 500);
+      return;
+    }
+    this._subscribing = true;
+    const generation = this._connectionGeneration;
+    try {
+      const unsubscribe = await this.hass.connection.subscribeEvents(
+        () => this._scheduleRefresh(),
+        "wine_cellar_updated"
+      );
+      // Home Assistant detaches and reattaches a dashboard view when the user
+      // switches tabs, which can happen while this is still in flight. Storing
+      // the handle now would leave a subscription nothing can ever cancel,
+      // reloading a card that is no longer on screen — once per tab switch.
+      //
+      // Keyed on a counter the detach bumps rather than on isConnected, so it
+      // holds however the element was taken down.
+      if (generation !== this._connectionGeneration) {
+        unsubscribe();
+        return;
+      }
+      this._unsubscribe = unsubscribe;
+    } catch (err) {
+      // Without this the card still works, it just will not notice background
+      // work. Not worth an error the user has to dismiss.
+      console.warn("Wine Cellar: could not subscribe to updates", err);
+    } finally {
+      this._subscribing = false;
+    }
+  }
+
+  // Batch operations fire one event per bottle, and they pace themselves with
+  // a sleep of half a second to a second between wines. A plain debounce is
+  // the wrong shape for that: the gaps are longer than any sensible debounce,
+  // so every event would still get its own full reload. What is needed is a
+  // floor on how often the cellar is re-fetched.
+  //
+  // An already-pending refresh absorbs anything that arrives before it fires,
+  // so a tight burst still costs one reload. An isolated change still shows up
+  // within REFRESH_DEBOUNCE_MS.
+  private _scheduleRefresh() {
+    if (this._refreshTimer) return;
+    const since = Date.now() - this._lastRefresh;
+    const wait = Math.max(REFRESH_DEBOUNCE_MS, REFRESH_MIN_INTERVAL_MS - since);
+    this._refreshTimer = window.setTimeout(() => {
+      this._refreshTimer = 0;
+      this._loadData();
+    }, wait);
   }
 
   private async _loadData() {
@@ -447,16 +642,20 @@ export class WineCellarCard extends LitElement {
       setTimeout(() => this._loadData(), 500);
       return;
     }
+    // Counts against the refresh floor: the card's own actions already reload,
+    // and the event they cause must not reload a second time straight after.
+    this._lastRefresh = Date.now();
 
     const isInitialLoad = this._wines.length === 0 && this._cabinets.length === 0;
     if (isInitialLoad) this._loading = true;
     try {
-      const [winesResult, cabinetsResult, statsResult, capResult, buyListResult] = await Promise.all([
+      const [winesResult, cabinetsResult, statsResult, capResult, buyListResult, pendingRemovalsResult] = await Promise.all([
         this.hass.callWS({ type: "wine_cellar/get_wines" }),
         this.hass.callWS({ type: "wine_cellar/get_cabinets" }),
         this.hass.callWS({ type: "wine_cellar/get_stats" }),
         this.hass.callWS({ type: "wine_cellar/get_capabilities" }).catch(() => ({ has_gemini: false })),
         this.hass.callWS({ type: "wine_cellar/get_buy_list" }).catch(() => ({ buy_list: [] })),
+        this.hass.callWS({ type: "wine_cellar/get_pending_removals" }).catch(() => ({ pending_removals: {} })),
       ]);
 
       this._wines = winesResult.wines || [];
@@ -465,12 +664,26 @@ export class WineCellarCard extends LitElement {
       );
       this._stats = statsResult;
       this._hasGemini = capResult?.has_gemini || false;
+      this._hasVivinoAccount = capResult?.has_vivino_account || false;
+      this._vivinoMode = capResult?.vivino_mode || "import";
       this._metadataLanguage = capResult?.metadata_language || "en";
       this._supportedLanguages = capResult?.supported_languages || ["en", "fr", "de"];
       this._metadataCurrency = capResult?.metadata_currency || "USD";
       this._supportedCurrencies = capResult?.supported_currencies || ["USD", "EUR", "GBP", "CHF"];
       this._aiFallbackAlways = capResult?.ai_fallback_always || false;
+      this._dismissedArrangements = capResult?.dismissed_arrangements || [];
       this._buyList = buyListResult?.buy_list || [];
+      this._pendingRemovals = pendingRemovalsResult?.pending_removals || {};
+      if (this._removalFocusVid && !this._pendingRemovals[this._removalFocusVid]) {
+        this._removalFocusVid = null;
+      }
+      this._vivinoConflicts = pendingRemovalsResult?.conflicts || [];
+      if (
+        this._conflictFocusVid &&
+        !this._vivinoConflicts.some((c) => String(c.vintage_id) === this._conflictFocusVid)
+      ) {
+        this._conflictFocusVid = null;
+      }
 
       // Refresh selected wine if detail dialog is open
       if (this._selectedWine) {
@@ -503,18 +716,11 @@ export class WineCellarCard extends LitElement {
       wines = wines.filter((w) => w.type === this._searchFilter);
     }
 
-    // Filter by search query
+    // Filter by search query — same matcher as the inventory dialog, so a
+    // query never gives different results depending on which screen it was
+    // typed into.
     if (this._searchQuery) {
-      const q = this._searchQuery.toLowerCase();
-      wines = wines.filter(
-        (w) =>
-          w.name.toLowerCase().includes(q) ||
-          w.winery.toLowerCase().includes(q) ||
-          (w.region || "").toLowerCase().includes(q) ||
-          (w.grape_variety || "").toLowerCase().includes(q) ||
-          (w.type || "").toLowerCase().includes(q) ||
-          (w.country || "").toLowerCase().includes(q)
-      );
+      wines = wines.filter((w) => matchesQuery(w, this._searchQuery, this._cabinets));
     }
 
     return wines;
@@ -522,7 +728,13 @@ export class WineCellarCard extends LitElement {
 
   private _showToast(message: string) {
     this._toast = message;
-    setTimeout(() => (this._toast = ""), 2500);
+    // Each toast gets its own full 2.5s: the previous timer would otherwise
+    // still be running and cut the new message short.
+    if (this._toastTimer) clearTimeout(this._toastTimer);
+    this._toastTimer = window.setTimeout(() => {
+      this._toastTimer = 0;
+      this._toast = "";
+    }, 2500);
   }
 
   // --- Copy/Paste wine ---
@@ -530,6 +742,12 @@ export class WineCellarCard extends LitElement {
     const { wine, wines = [], cabinet, row, col, wineCount = 0, cabinetDepth = 1 } = e.detail;
     const hasRoom = wineCount < cabinetDepth;
     const nextDepth = wineCount;
+
+    // Picking the bottle for a pending Vivino removal takes precedence
+    if (this._removalFocusVid && wine && this._removalHighlightIds.includes(wine.id)) {
+      this._removalConfirmWine = wine;
+      return;
+    }
 
     // If we have a copied wine and cell has room, paste it
     if (this._copiedWine && hasRoom) {
@@ -612,6 +830,12 @@ export class WineCellarCard extends LitElement {
   private _onZoneClick(e: CustomEvent) {
     const { wine, cabinet, zone } = e.detail;
 
+    // Picking the bottle for a pending Vivino removal takes precedence
+    if (this._removalFocusVid && wine && this._removalHighlightIds.includes(wine.id)) {
+      this._removalConfirmWine = wine;
+      return;
+    }
+
     // If we have a copied wine and clicked empty zone space, paste it here
     if (this._copiedWine && !wine) {
       const nextDepth = this._wines.filter((w) => w.cabinet_id === cabinet.id && w.zone === (zone || "bottom")).length;
@@ -641,11 +865,55 @@ export class WineCellarCard extends LitElement {
     }
   }
 
+  // The slot a new bottle takes in a bin: the first free one, so a gap left
+  // by a removed bottle is reused rather than skipped. Every path into a bin
+  // — add dialog, click-to-place, drag-and-drop — must agree, or two bottles
+  // end up sharing a depth and the order becomes undefined.
+  private _firstFreeDepth(cabinetId: string, zone: string, excludeWineId?: string): number {
+    const occupied = new Set(
+      this._wines
+        .filter(
+          (w) => w.cabinet_id === cabinetId && w.zone === zone && w.id !== excludeWineId
+        )
+        .map((w) => w.depth || 0)
+    );
+    let depth = 0;
+    while (occupied.has(depth)) depth++;
+    return depth;
+  }
+
+  // Renumber a bin's slots in a single backend call. Looping a move per
+  // bottle rewrote the whole store each time, which made shifting a full bin
+  // far too slow to do on every add.
+  private async _reorderZone(cabinetId: string, zone: string, wineIds: string[]) {
+    await this.hass.callWS({
+      type: "wine_cellar/reorder_zone",
+      cabinet_id: cabinetId,
+      zone,
+      wine_ids: wineIds,
+    });
+  }
+
+  // A bottle put into a bin lands on top of the pile, so slot 1 holds the one
+  // added last — slot 1 being the most accessible position, the same
+  // convention as depth 0 on a grid cell. Only the new bottles are listed:
+  // the backend appends every other bottle in the bin in its current order,
+  // which keeps this correct even when the card's copy of the cellar is a
+  // moment out of date.
+  private async _placeOnTopOfBin(cabinetId: string, zone: string, newWineIds: string[]) {
+    if (!zone || !newWineIds.length) return;
+    await this._reorderZone(cabinetId, zone, newWineIds);
+  }
+
   // --- Zone side panel (boxes, bulk bins) ---
   private _onZoneContainerClick(e: CustomEvent) {
     const { cabinet, zone, storageRow } = e.detail;
-    const nextDepth = this._wines.filter((w) => w.cabinet_id === cabinet.id && w.zone === zone).length;
-    const hasRoom = nextDepth < (storageRow.capacity || 20);
+    const occupantCount = this._wines.filter(
+      (w) => w.cabinet_id === cabinet.id && w.zone === zone
+    ).length;
+    const nextDepth = this._firstFreeDepth(cabinet.id, zone);
+    const capacity = storageRow.capacity || 20;
+    const hasRoom = occupantCount < capacity && nextDepth < capacity;
 
     // If we have a copied wine, paste it in this zone instead of opening panel
     if (this._copiedWine) {
@@ -767,13 +1035,18 @@ export class WineCellarCard extends LitElement {
           updates: { cabinet_id: "", row: null, col: null, zone: "", depth: 0 },
         });
       }
-      for (let i = slotIndex + 1; i < this._zonePanelWines.length; i++) {
+      // Closing the gap is one renumbering of the zone, not one round trip per
+      // bottle behind the deleted slot — emptying slot 1 of a full 20-bottle
+      // bin used to mean nineteen calls, each with its own disk write.
+      const remaining = this._zonePanelWines
+        .filter((_, i) => i !== slotIndex)
+        .map((w) => w.id);
+      if (remaining.length) {
         await this.hass.callWS({
-          type: "wine_cellar/move_wine",
-          wine_id: this._zonePanelWines[i].id,
+          type: "wine_cellar/reorder_zone",
           cabinet_id: this._zonePanelCabinet.id,
           zone: this._zonePanelZone,
-          depth: i - 1,
+          wine_ids: remaining,
         });
       }
 
@@ -869,17 +1142,11 @@ export class WineCellarCard extends LitElement {
     wines.splice(targetIndex, 0, moved);
 
     try {
-      for (let i = 0; i < wines.length; i++) {
-        if ((wines[i].depth || 0) !== i) {
-          await this.hass.callWS({
-            type: "wine_cellar/move_wine",
-            wine_id: wines[i].id,
-            cabinet_id: this._zonePanelCabinet.id,
-            zone: this._zonePanelZone,
-            depth: i,
-          });
-        }
-      }
+      await this._reorderZone(
+        this._zonePanelCabinet.id,
+        this._zonePanelZone,
+        wines.map((w) => w.id)
+      );
       this._showToast("Wine reordered");
       await this._loadData();
     } catch (err) {
@@ -923,18 +1190,71 @@ export class WineCellarCard extends LitElement {
     }
   }
 
+  // Renumber the bin's slots to match when bottles were added.
+  //
+  // Direction matters physically. Slot 1 is the most accessible position —
+  // the same convention as depth 0 being the front bottle of a grid cell —
+  // so "newest first" matches dropping each new bottle on top of the pile,
+  // and "oldest first" matches lining bottles up in a row from one end.
+  // Only the user knows which of the two their bin really is.
+  //
+  // `added_at` is the only entry timestamp stored; bottles without one keep
+  // their relative position at the end in *both* directions rather than
+  // sorting to the front, which is what an empty string would otherwise do.
+  private async _sortZoneByDateAdded(direction: "newest" | "oldest") {
+    this._confirmZoneSort = false;
+    if (!this._zonePanelCabinet) return;
+
+    const ordered = [...this._zonePanelWines].sort((a, b) => {
+      const aDate = a.added_at || "";
+      const bDate = b.added_at || "";
+      if (!aDate && !bDate) return (a.depth || 0) - (b.depth || 0);
+      if (!aDate) return 1;
+      if (!bDate) return -1;
+      return direction === "newest" ? bDate.localeCompare(aDate) : aDate.localeCompare(bDate);
+    });
+
+    this._zoneSorting = true;
+    try {
+      await this._reorderZone(
+        this._zonePanelCabinet.id,
+        this._zonePanelZone,
+        ordered.map((w) => w.id)
+      );
+      this._showToast(direction === "newest" ? "Newest bottles first" : "Oldest bottles first");
+      await this._loadData();
+    } catch (err) {
+      console.error("Failed to sort zone:", err);
+      this._showToast("Failed to sort");
+    }
+    this._zoneSorting = false;
+  }
+
   private _getZoneSlotLabel(_type: StorageRowType, index: number): string {
     return `Slot ${index + 1}`;
   }
 
-  // Opens the right side panel for a wine's location and briefly highlights its slot.
+  // Opens the right side panel for a wine's location and highlights its slot,
+  // both in the panel and on the rack drawing.
   private _locateWine(wine: Wine) {
     const loc = getWineLocation(wine, this._cabinets);
     if (!loc.cabinet) {
       this._showToast("This wine is unassigned");
       return;
     }
-    this._activeTab = "all";
+
+    // An active search replaces the rack drawing with a flat result list, so
+    // locating while searching would point at a rack that isn't on screen.
+    // Locating means "show me where it is" — clear the search and open the
+    // bottle's own rack.
+    this._searchQuery = "";
+    this._searchFilter = "all";
+    this._activeTab = loc.cabinet.id;
+
+    // Mark the bottle on the rack drawing regardless of whether a side panel
+    // opens — for a plain bottom-zone bottle the drawing is the only place it
+    // can be pointed at.
+    this._highlightWineId = wine.id;
 
     if (wine.row !== null && wine.col !== null) {
       this._openRackPanel(loc.cabinet);
@@ -942,16 +1262,32 @@ export class WineCellarCard extends LitElement {
       this._openZonePanel(loc.cabinet, loc.zone, loc.storageRow);
     } else {
       this._showToast(`In ${loc.text}`);
-      return;
     }
 
-    this._highlightWineId = wine.id;
-    this.updateComplete.then(() => {
+    this.updateComplete.then(async () => {
+      // The panel slot and the rack cell live in different scroll containers,
+      // so both can be brought into view without fighting each other.
       this.shadowRoot?.getElementById("highlight-slot")?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // Each cabinet-grid runs its own update cycle, so the marked cell does
+      // not exist yet when this element's update resolves — wait for the
+      // children before looking for it.
+      const grids = [...(this.shadowRoot?.querySelectorAll("cabinet-grid") || [])];
+      await Promise.all(grids.map((g) => (g as any).updateComplete));
+      for (const grid of grids) {
+        const marked = grid.shadowRoot?.querySelector(".locate-highlight");
+        if (marked) {
+          // Instant, not smooth: a smooth scroll is silently dropped in some
+          // environments (reduced-motion, embedded webviews), and landing on
+          // the bottle matters more than the animation.
+          marked.scrollIntoView({ block: "center" });
+          break;
+        }
+      }
     });
     setTimeout(() => {
       if (this._highlightWineId === wine.id) this._highlightWineId = null;
-    }, 2500);
+    }, 4000);
   }
 
   // --- Rack panel (grid-slot cabinets: list + reorder) ---
@@ -1165,6 +1501,7 @@ export class WineCellarCard extends LitElement {
         ...(row !== null ? { row } : {}),
         ...(col !== null ? { col } : {}),
       });
+      if (zone) await this._placeOnTopOfBin(cabinetId, zone, [this._movingWine.id]);
       this._showToast(`Moved "${this._movingWine.name}"`);
       this._movingWine = null;
       await this._loadData();
@@ -1199,17 +1536,15 @@ export class WineCellarCard extends LitElement {
         if (toIdx === -1) return;
         zoneWines.splice(d.insertBefore ? toIdx : toIdx + 1, 0, moved);
 
-        for (let i = 0; i < zoneWines.length; i++) {
-          if ((zoneWines[i].depth || 0) !== i) {
-            await this.hass.callWS({
-              type: "wine_cellar/move_wine",
-              wine_id: zoneWines[i].id,
-              cabinet_id: d.targetCabinetId,
-              zone: d.targetZone,
-              depth: i,
-            });
-          }
-        }
+        // One renumbering rather than a move per bottle: dragging within a
+        // full twenty-bottle bin used to fire up to twenty calls, each with
+        // its own disk write on the other side.
+        await this.hass.callWS({
+          type: "wine_cellar/reorder_zone",
+          cabinet_id: d.targetCabinetId,
+          zone: d.targetZone,
+          wine_ids: zoneWines.map((w) => w.id),
+        });
         this._showToast("Wine reordered");
         await this._loadData();
       } catch (err) {
@@ -1224,6 +1559,9 @@ export class WineCellarCard extends LitElement {
     // silently block reordering within the same zone.
     if (!d.targetZone && d.sourceCabinetId === d.targetCabinetId && d.sourceRow === d.targetRow && d.sourceCol === d.targetCol && d.sourceZone === d.targetZone) return;
 
+    // Set once the first half of a swap has happened, so a failure in the
+    // second half can be undone.
+    let swappedBack: (() => Promise<any>) | null = null;
     try {
       // Check if target cell has a wine (swap)
       let targetWine: Wine | undefined;
@@ -1246,6 +1584,18 @@ export class WineCellarCard extends LitElement {
           ...(d.sourceRow !== null && d.sourceRow !== undefined ? { row: d.sourceRow } : {}),
           ...(d.sourceCol !== null && d.sourceCol !== undefined ? { col: d.sourceCol } : {}),
         });
+        // Half of a swap is not a state the rack can be in: the target bottle
+        // is now sitting where the dragged one still is. If the second half
+        // fails, put it back before reporting the failure.
+        swappedBack = () =>
+          this.hass.callWS({
+            type: "wine_cellar/move_wine",
+            wine_id: targetWine!.id,
+            cabinet_id: d.targetCabinetId,
+            zone: d.targetZone || "",
+            ...(d.targetRow !== null && d.targetRow !== undefined ? { row: d.targetRow } : {}),
+            ...(d.targetCol !== null && d.targetCol !== undefined ? { col: d.targetCol } : {}),
+          });
       }
 
       // Dropped into a bulk/box zone's general area (not swapped onto a
@@ -1261,11 +1611,12 @@ export class WineCellarCard extends LitElement {
         const targetCabinet = this._cabinets.find((c) => c.id === d.targetCabinetId);
         const rowIdx = parseInt(d.targetZone.replace("storage-", ""), 10);
         const storageRow = targetCabinet?.storage_rows?.find((s) => s.row === rowIdx);
-        if (storageRow && occupants.length >= (storageRow.capacity || 20)) {
+        const capacity = storageRow?.capacity || 20;
+        targetDepth = this._firstFreeDepth(d.targetCabinetId, d.targetZone, d.wineId);
+        if (storageRow && (occupants.length >= capacity || targetDepth >= capacity)) {
           this._showToast(`"${storageRow.name || "Zone"}" is full — cannot move here.`);
           return;
         }
-        targetDepth = occupants.reduce((max, w) => Math.max(max, w.depth || 0), -1) + 1;
       }
 
       // Move dragged wine to target
@@ -1279,6 +1630,13 @@ export class WineCellarCard extends LitElement {
         ...(targetDepth !== undefined ? { depth: targetDepth } : {}),
       });
 
+      // Dropped into a bin's open area rather than onto a specific bottle:
+      // that is putting it on the pile, so it lands on top. A drop *onto* a
+      // bottle is a deliberate position and is left exactly where it fell.
+      if (d.targetZone && !targetWine) {
+        await this._placeOnTopOfBin(d.targetCabinetId, d.targetZone, [d.wineId]);
+      }
+
       // Same container (rack/bin/box) = reordering; a different one = an
       // actual move between containers.
       const sameContainer = d.sourceCabinetId === d.targetCabinetId;
@@ -1286,7 +1644,18 @@ export class WineCellarCard extends LitElement {
       await this._loadData();
     } catch (err) {
       console.error("Failed to move wine:", err);
+      if (swappedBack) {
+        try {
+          await swappedBack();
+        } catch (undoErr) {
+          console.error("Failed to undo half-completed swap:", undoErr);
+          this._showToast("Move failed and could not be undone — check both slots");
+          await this._loadData();
+          return;
+        }
+      }
       this._showToast("Failed to move wine");
+      await this._loadData();
     }
   }
 
@@ -1304,7 +1673,7 @@ export class WineCellarCard extends LitElement {
   private async _pasteWine(cabinetId: string, row: number | null, col: number | null, depth = 0, zone = "") {
     if (!this._copiedWine) return;
     try {
-      await this.hass.callWS({
+      const result = await this.hass.callWS({
         type: "wine_cellar/add_wine",
         wine: {
           barcode: this._copiedWine.barcode,
@@ -1339,10 +1708,18 @@ export class WineCellarCard extends LitElement {
           drink_window: this._copiedWine.drink_window,
           ai_ratings: this._copiedWine.ai_ratings,
           vivino_updated_at: this._copiedWine.vivino_updated_at,
+          vivino_checked_at: this._copiedWine.vivino_checked_at,
           ai_updated_at: this._copiedWine.ai_updated_at,
+          ai_checked_at: this._copiedWine.ai_checked_at,
           vivino_id: this._copiedWine.vivino_id,
+          // Keep the source: a copy of a Vivino-synced bottle must stay part
+          // of the reconciliation (count pushes, removal candidates), or it
+          // becomes an invisible manual bottle with a vivino_id.
+          source: this._copiedWine.source,
         },
       });
+      const pasted = result?.wine?.id;
+      if (zone && pasted) await this._placeOnTopOfBin(cabinetId, zone, [pasted]);
       this._showToast("Wine pasted! Tap more empty cells or click ✕ to stop.");
       await this._loadData();
     } catch {
@@ -1379,6 +1756,55 @@ export class WineCellarCard extends LitElement {
       this._showToast("AI Batch analysis failed.");
     }
     this._analyzing = false;
+  }
+
+  // --- Arrangement ---
+  // Recomputed on render rather than cached: it reads the same wines and
+  // cabinets the card already holds, and a stale count would point at moves
+  // that have since been made.
+  private get _arrangementFindings(): Finding[] {
+    // Read from render(), so it ran on every keystroke in the search box even
+    // though typing cannot change how the cellar is arranged. Cached against
+    // the three things it actually depends on — all replaced wholesale rather
+    // than mutated, so identity is a sound key.
+    if (
+      this._findingsCache &&
+      this._findingsCache.wines === this._wines &&
+      this._findingsCache.cabinets === this._cabinets &&
+      this._findingsCache.dismissed === this._dismissedArrangements
+    ) {
+      return this._findingsCache.findings;
+    }
+    const findings = analyzeArrangement(
+      this._wines,
+      this._cabinets,
+      this._dismissedArrangements
+    );
+    this._findingsCache = {
+      wines: this._wines,
+      cabinets: this._cabinets,
+      dismissed: this._dismissedArrangements,
+      findings,
+    };
+    return findings;
+  }
+
+  // "Leave it as it is" has to stick, or the count becomes a badge people
+  // learn to ignore. Applied locally first so the finding disappears at once.
+  private async _dismissArrangement(id: string) {
+    if (this._dismissedArrangements.includes(id)) return;
+    const previous = this._dismissedArrangements;
+    const next = [...previous, id];
+    this._dismissedArrangements = next;
+    try {
+      await this.hass.callWS({
+        type: "wine_cellar/update_settings",
+        updates: { dismissed_arrangements: next },
+      });
+    } catch (err) {
+      this._dismissedArrangements = previous;
+      this._showToast("Failed to dismiss the suggestion");
+    }
   }
 
   // --- Metadata language (Vivino/AI) ---
@@ -1462,6 +1888,139 @@ export class WineCellarCard extends LitElement {
     this._batchVivino = false;
   }
 
+  // --- Vivino Account Sync ---
+  private get _vivinoSyncMode(): boolean {
+    return this._vivinoMode === "sync";
+  }
+
+  // --- Pending Vivino removals: the user picks the actual bottle ---
+  private _removalCandidates(vid: string): Wine[] {
+    return this._wines.filter(
+      (w) =>
+        String(w.vivino_id || "") === vid &&
+        String(w.source || "").startsWith("vivino")
+    );
+  }
+
+  private get _removalHighlightIds(): string[] {
+    const vid = this._removalFocusVid || this._conflictFocusVid;
+    return vid ? this._removalCandidates(vid).map((w) => w.id) : [];
+  }
+
+  private _conflictLabel(vid: string): string {
+    const w = this._removalCandidates(vid)[0];
+    if (!w) return `Vivino wine ${vid}`;
+    return `${w.winery ? `${w.winery} — ` : ""}${w.name}${w.vintage ? ` (${w.vintage})` : ""}`;
+  }
+
+  private async _confirmConflictResolution() {
+    const vid = this._conflictConfirmVid;
+    if (!vid || this._conflictResolving) return;
+    this._conflictConfirmVid = null;
+    this._conflictResolving = vid;
+    const target = this._removalCandidates(vid).length;
+    try {
+      const res = await this.hass.callWS({
+        type: "wine_cellar/resolve_vivino_conflict",
+        vivino_id: vid,
+      });
+      if (res.error) {
+        this._showToast(res.error);
+        return;
+      }
+      this._vivinoConflicts = res.conflicts || [];
+      this._conflictFocusVid = null;
+      this._showToast(`Vivino updated to ${target} bottle${target === 1 ? "" : "s"}.`);
+      await this._loadData();
+    } catch {
+      this._showToast("Failed to update Vivino.");
+    } finally {
+      this._conflictResolving = null;
+    }
+  }
+
+  private _bottlePosition(wine: Wine): string {
+    if (!wine.cabinet_id) return "Unassigned";
+    const cab = this._cabinets.find((c) => c.id === wine.cabinet_id);
+    const parts = [cab?.name || "Cabinet"];
+    if (wine.zone) parts.push(`zone ${wine.zone}`);
+    else if (wine.row != null && wine.col != null) {
+      parts.push(`row ${Number(wine.row) + 1}, slot ${Number(wine.col) + 1}`);
+    }
+    return parts.join(", ");
+  }
+
+  private async _confirmRemovalChoice() {
+    const wine = this._removalConfirmWine;
+    if (!wine) return;
+    this._removalConfirmWine = null;
+    try {
+      const res = await this.hass.callWS({
+        type: "wine_cellar/resolve_vivino_removal",
+        wine_id: wine.id,
+      });
+      if (res.error) {
+        this._showToast(res.error);
+        return;
+      }
+      this._pendingRemovals = res.pending_removals || {};
+      if (this._removalFocusVid && !this._pendingRemovals[this._removalFocusVid]) {
+        this._removalFocusVid = null;
+      }
+      const left = Object.values(this._pendingRemovals).reduce(
+        (a: number, e: any) => a + (e.count || 0), 0
+      );
+      this._showToast(
+        left > 0
+          ? `Bottle removed — ${left} more to choose`
+          : "Bottle removed — all Vivino removals resolved"
+      );
+      await this._loadData();
+    } catch {
+      this._showToast("Failed to remove the bottle.");
+    }
+  }
+
+  private async _syncVivino() {
+    this._vivinoSyncing = true;
+    const word = this._vivinoSyncMode ? "sync" : "import";
+    this._showToast(
+      this._vivinoSyncMode
+        ? "Syncing your Vivino cellar & wishlist..."
+        : "Importing your Vivino cellar & wishlist..."
+    );
+    try {
+      const result = await this.hass.callWS({
+        type: "wine_cellar/sync_vivino",
+      });
+      if (result.error) {
+        this._showToast(`Vivino ${word} failed: ${result.error}`);
+      } else {
+        const bottles = (result.cellar_imported || 0) + (result.my_wines_imported || 0);
+        const parts = [
+          `Vivino ${word} complete! ${bottles} bottle${bottles === 1 ? "" : "s"} imported`,
+        ];
+        if (result.cellar_removed > 0) {
+          parts.push(`· ${result.cellar_removed} bottle${result.cellar_removed === 1 ? "" : "s"} removed`);
+        }
+        if (result.wishlist_imported > 0) parts.push(`+ ${result.wishlist_imported} to buy list`);
+        if (result.cellar_pushed > 0) parts.push(`(${result.cellar_pushed} pushed to Vivino)`);
+        if (result.cellar_removal_choices > 0) {
+          parts.push(`— ${result.cellar_removal_choices} removal${result.cellar_removal_choices === 1 ? "" : "s"} need your choice`);
+        }
+        if (result.cellar_conflicts > 0) {
+          parts.push(`— ${result.cellar_conflicts} conflict${result.cellar_conflicts === 1 ? "" : "s"} need your decision`);
+        }
+        if (result.errors?.length) parts.push(`(${result.errors.length} errors)`);
+        this._showToast(parts.join(" "));
+        await this._loadData();
+      }
+    } catch (err: any) {
+      this._showToast(`Vivino ${word} failed.`);
+    }
+    this._vivinoSyncing = false;
+  }
+
   // --- Buy List ---
   private _showBuyListDetail(item: Wine) {
     this._selectedWine = item;
@@ -1492,7 +2051,7 @@ export class WineCellarCard extends LitElement {
   private async _executeMoveTocellar(cabinetId: string, row: number | null, col: number | null, zone: string, depth = 0) {
     if (!this._movingBuyListItem) return;
     try {
-      await this.hass.callWS({
+      const result = await this.hass.callWS({
         type: "wine_cellar/move_to_cellar",
         item_id: this._movingBuyListItem.id,
         cabinet_id: cabinetId,
@@ -1501,6 +2060,8 @@ export class WineCellarCard extends LitElement {
         zone,
         depth,
       });
+      const moved = result?.wine?.id;
+      if (zone && moved) await this._placeOnTopOfBin(cabinetId, zone, [moved]);
       this._showToast(`Moved "${this._movingBuyListItem.name}" to cellar`);
       this._movingBuyListItem = null;
       await this._loadData();
@@ -1589,6 +2150,21 @@ export class WineCellarCard extends LitElement {
             >
               ${this._batchVivino ? "Vivino Scanning..." : "🍇 Vivino Batch Scan"}
             </button>
+            ${this._hasVivinoAccount ? html`
+              <button
+                class="btn btn-primary"
+                style="font-size: 0.8em; padding: 5px 10px; background: #b71c1c;"
+                @click=${this._syncVivino}
+                title=${this._vivinoSyncMode
+                  ? "Two-way sync: import from Vivino and push your Cork Dork changes back"
+                  : "Import your Vivino cellar and wishlist into Cork Dork (never writes to Vivino)"}
+                ?disabled=${this._vivinoSyncing || this._batchVivino || this._analyzing}
+              >
+                ${this._vivinoSyncing
+                  ? (this._vivinoSyncMode ? "Vivino Syncing..." : "Vivino Importing...")
+                  : (this._vivinoSyncMode ? "🔄 Vivino Sync" : "⬇️ Vivino Import")}
+              </button>
+            ` : nothing}
             ${this._hasGemini ? html`
               <button
                 class="btn btn-tonal"
@@ -1665,6 +2241,18 @@ export class WineCellarCard extends LitElement {
                   <span class="stat-value">${this._stats.available_slots}</span>
                   available
                 </div>
+                ${this._arrangementFindings.length
+                  ? html`
+                      <div
+                        class="stat stat-action"
+                        title="Suggestions read from where your bottles already are"
+                        @click=${() => (this._showArrangement = true)}
+                      >
+                        <span class="stat-value">🧹 ${this._arrangementFindings.length}</span>
+                        ${this._arrangementFindings.length === 1 ? "tidy-up" : "tidy-ups"}
+                      </div>
+                    `
+                  : nothing}
                 ${this._stats.total_value
                   ? html`
                       <div class="stat">
@@ -1732,9 +2320,70 @@ export class WineCellarCard extends LitElement {
         </div>
 
         <!-- Search bar -->
-        <wine-search-bar @search-change=${this._onSearch}></wine-search-bar>
+        <wine-search-bar
+          .value=${this._searchQuery}
+          .filter=${this._searchFilter}
+          @search-change=${this._onSearch}
+        ></wine-search-bar>
 
         <!-- Cabinet grids -->
+        ${Object.keys(this._pendingRemovals).length > 0 || this._vivinoConflicts.length > 0 ? html`
+          <div class="removal-panel">
+            ${Object.keys(this._pendingRemovals).length > 0 ? html`
+              <div class="removal-panel-title">🍷 Vivino removed bottles — pick which ones to remove here</div>
+              ${Object.entries(this._pendingRemovals).map(([vid, entry]: [string, any]) => html`
+                <div
+                  class="removal-entry ${this._removalFocusVid === vid ? "active" : ""}"
+                  @click=${() => {
+                    this._removalFocusVid = this._removalFocusVid === vid ? null : vid;
+                    if (this._removalFocusVid) this._conflictFocusVid = null;
+                  }}
+                >
+                  <span>${entry.winery ? `${entry.winery} — ` : ""}${entry.name || "Unknown wine"}${entry.vintage ? ` (${entry.vintage})` : ""}</span>
+                  <span class="removal-count">choose ${entry.count}</span>
+                </div>
+              `)}
+              ${this._removalFocusVid ? html`
+                <div class="removal-hint">Candidates are ringed in orange below — click the bottle that is actually gone.</div>
+              ` : nothing}
+            ` : nothing}
+            ${this._vivinoConflicts.length > 0 ? html`
+              <div class="removal-panel-title conflict-title">⚠️ Sync conflicts — both sides changed; you decide the truth</div>
+              ${this._vivinoConflicts.map((c: any) => {
+                const vid = String(c.vintage_id);
+                const cdNow = this._removalCandidates(vid).length;
+                const active = this._conflictFocusVid === vid;
+                return html`
+                  <div
+                    class="removal-entry conflict ${active ? "active" : ""}"
+                    @click=${() => {
+                      this._conflictFocusVid = active ? null : vid;
+                      if (this._conflictFocusVid) this._removalFocusVid = null;
+                    }}
+                  >
+                    <span>${this._conflictLabel(vid)}</span>
+                    <span class="removal-count">Vivino: ${c.vivino} · here: ${cdNow}</span>
+                  </div>
+                  ${active ? html`
+                    <div class="removal-hint">
+                      Your bottles are ringed below. Correct them if needed (open a bottle to remove it, paste to add), then confirm:
+                    </div>
+                    <button
+                      class="btn btn-primary conflict-confirm"
+                      ?disabled=${this._conflictResolving !== null}
+                      @click=${(e: Event) => {
+                        e.stopPropagation();
+                        this._conflictConfirmVid = vid;
+                      }}
+                    >${this._conflictResolving === vid
+                      ? "Syncing to Vivino..."
+                      : `Cork Dork is right — set Vivino to ${cdNow}`}</button>
+                  ` : nothing}
+                `;
+              })}
+            ` : nothing}
+          </div>
+        ` : nothing}
         ${showGrid
           ? html`
               <div class="cabinets-row">
@@ -1744,6 +2393,8 @@ export class WineCellarCard extends LitElement {
                         <cabinet-grid
                           .cabinet=${cab}
                           .wines=${this._getCabinetWines(cab.id)}
+                          .highlightWineId=${this._highlightWineId}
+                          .removalHighlightIds=${this._removalHighlightIds}
                           @cell-click=${this._onCellClick}
                           @zone-click=${this._onZoneClick}
                           @zone-container-click=${this._onZoneContainerClick}
@@ -1763,6 +2414,8 @@ export class WineCellarCard extends LitElement {
                           <cabinet-grid
                             .cabinet=${cab}
                             .wines=${this._getCabinetWines(cab.id)}
+                            .highlightWineId=${this._highlightWineId}
+                            .removalHighlightIds=${this._removalHighlightIds}
                             @cell-click=${this._onCellClick}
                             @zone-click=${this._onZoneClick}
                             @zone-container-click=${this._onZoneContainerClick}
@@ -2004,6 +2657,50 @@ export class WineCellarCard extends LitElement {
           : nothing}
 
         <!-- Batch Vivino Photo Mode Confirm -->
+        ${this._removalConfirmWine ? html`
+          <div class="dialog-overlay" @click=${() => (this._removalConfirmWine = null)}>
+            <div class="dialog" style="max-width:340px;padding:24px;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
+              <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Remove this bottle?</h3>
+              <p style="margin:0 0 4px;font-size:0.9em;color:var(--wc-text)">
+                ${this._removalConfirmWine.winery ? `${this._removalConfirmWine.winery} — ` : ""}${this._removalConfirmWine.name}${this._removalConfirmWine.vintage ? ` (${this._removalConfirmWine.vintage})` : ""}
+              </p>
+              <p style="margin:0 0 16px;font-size:0.8em;color:var(--wc-text-secondary)">
+                ${this._bottlePosition(this._removalConfirmWine)} · removed on Vivino, archived to history here
+              </p>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <button class="btn btn-primary" style="background:#e65100" @click=${this._confirmRemovalChoice}>
+                  Remove this bottle
+                </button>
+                <button
+                  style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em"
+                  @click=${() => (this._removalConfirmWine = null)}
+                >Cancel</button>
+              </div>
+            </div>
+          </div>
+        ` : nothing}
+        ${this._conflictConfirmVid ? html`
+          <div class="dialog-overlay" @click=${() => (this._conflictConfirmVid = null)}>
+            <div class="dialog" style="max-width:360px;padding:24px;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
+              <h3 style="margin:0 0 4px;font-size:1em;color:var(--wc-text)">Sync this count to Vivino?</h3>
+              <p style="margin:0 0 4px;font-size:0.9em;color:var(--wc-text)">
+                ${this._conflictLabel(this._conflictConfirmVid)}
+              </p>
+              <p style="margin:0 0 16px;font-size:0.8em;color:var(--wc-text-secondary)">
+                Vivino will be set to ${this._removalCandidates(this._conflictConfirmVid).length} bottle${this._removalCandidates(this._conflictConfirmVid).length === 1 ? "" : "s"} — the count in Cork Dork right now. The adjustment shows up in your Vivino cellar history and can be undone there.
+              </p>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <button class="btn btn-primary" style="background:#e65100" @click=${this._confirmConflictResolution}>
+                  Yes — update Vivino
+                </button>
+                <button
+                  style="padding:8px 16px;border-radius:20px;border:1px solid var(--wc-border);background:transparent;color:var(--wc-text);cursor:pointer;font-size:0.85em"
+                  @click=${() => (this._conflictConfirmVid = null)}
+                >Cancel</button>
+              </div>
+            </div>
+          </div>
+        ` : nothing}
         ${this._showBatchVivinoConfirm ? html`
           <div class="dialog-overlay" @click=${() => (this._showBatchVivinoConfirm = false)}>
             <div class="dialog" style="max-width:340px;padding:24px;text-align:center" @click=${(e: Event) => e.stopPropagation()}>
@@ -2118,6 +2815,18 @@ export class WineCellarCard extends LitElement {
           @wine-added=${this._onWineAdded}
           @buy-list-updated=${() => this._loadData()}
         ></wine-list-dialog>
+
+        <!-- Arrangement report -->
+        <arrangement-dialog
+          .open=${this._showArrangement}
+          .hass=${this.hass}
+          .wines=${this._wines}
+          .cabinets=${this._cabinets}
+          .dismissed=${this._dismissedArrangements}
+          @close=${() => (this._showArrangement = false)}
+          @moves-applied=${() => this._loadData()}
+          @dismiss-finding=${(e: CustomEvent) => this._dismissArrangement(e.detail.id)}
+        ></arrangement-dialog>
 
         <!-- Inventory Dialog -->
         <inventory-dialog
@@ -2238,14 +2947,57 @@ export class WineCellarCard extends LitElement {
               <div class="depth-panel open">
                 <div class="depth-panel-header">
                   <span class="depth-panel-title">
+                    ${this._zonePanelCabinet
+                      ? html`<span class="depth-panel-rack">${this._zonePanelCabinet.name}</span>`
+                      : nothing}
                     ${this._zonePanelName}
                     <span class="depth-panel-subtitle">
                       ${this._zonePanelWines.length}/${this._zonePanelCapacity}
                       ${this._zonePanelType === "box" ? "bottles" : "stored"}
                     </span>
                   </span>
-                  <button class="depth-panel-close" @click=${this._closeZonePanel}>✕</button>
+                  <span class="depth-panel-actions">
+                    ${this._zonePanelWines.length > 1
+                      ? html`<button
+                          class="depth-panel-sort"
+                          ?disabled=${this._zoneSorting}
+                          title="Renumber the slots to match when bottles were added"
+                          @click=${() => (this._confirmZoneSort = true)}
+                        >
+                          ${this._zoneSorting ? "Sorting…" : "↕ Sort by date"}
+                        </button>`
+                      : nothing}
+                    <button class="depth-panel-close" @click=${this._closeZonePanel}>✕</button>
+                  </span>
                 </div>
+                ${this._confirmZoneSort
+                  ? html`
+                      <div class="depth-panel-confirm">
+                        <strong>Reorder by date added?</strong>
+                        <span>
+                          Every bottle in ${this._zonePanelName} moves to a slot matching when
+                          it was added. Any order you arranged by hand is lost. Slot 1 is the
+                          most accessible position.
+                        </span>
+                        <span class="depth-panel-confirm-btns">
+                          <button @click=${() => (this._confirmZoneSort = false)}>Cancel</button>
+                          <button
+                            title="Slot 1 holds the bottle that has been in this bin longest — for a bin you fill in a row"
+                            @click=${() => this._sortZoneByDateAdded("oldest")}
+                          >
+                            Oldest first
+                          </button>
+                          <button
+                            class="primary"
+                            title="Slot 1 holds the bottle you added last — for a bin you stack, where the newest sits on top"
+                            @click=${() => this._sortZoneByDateAdded("newest")}
+                          >
+                            Newest first
+                          </button>
+                        </span>
+                      </div>
+                    `
+                  : nothing}
                 <div class="depth-panel-slots">
                   ${this._zonePanelType === "bulk"
                     ? html`

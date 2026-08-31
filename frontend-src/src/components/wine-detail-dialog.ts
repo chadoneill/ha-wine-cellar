@@ -611,7 +611,19 @@ export class WineDetailDialog extends LitElement {
     this._editData = { ...this._editData, [field]: value };
   }
 
+  // Applying a result to whatever is on screen now is only correct if it is
+  // still the same bottle. A Vivino refresh takes a second or two — long
+  // enough to close the dialog and open another wine — and the old result
+  // would then overwrite the new bottle wholesale, id included, silently
+  // showing the previous wine under the new one's name.
+  private _applyIfStillShowing(wineId: string, patch: Record<string, any>): boolean {
+    if (!this.wine || this.wine.id !== wineId) return false;
+    this.wine = { ...this.wine, ...patch };
+    return true;
+  }
+
   private async _saveFields() {
+    const wineId = this.wine?.id ?? "";
     if (!this.wine || !this.hass) return;
     this._saving = true;
     try {
@@ -634,7 +646,7 @@ export class WineDetailDialog extends LitElement {
           item_id: this.wine.id,
           updates,
         });
-        this.wine = { ...this.wine, ...updates };
+        if (!this._applyIfStillShowing(wineId, updates)) return;
         this._editingFields = false;
         this._editData = {};
         this.dispatchEvent(new CustomEvent("buy-list-updated", { bubbles: true, composed: true }));
@@ -644,7 +656,7 @@ export class WineDetailDialog extends LitElement {
           wine_id: this.wine.id,
           updates,
         });
-        this.wine = { ...this.wine, ...updates };
+        if (!this._applyIfStillShowing(wineId, updates)) return;
         this._editingFields = false;
         this._editData = {};
         this.dispatchEvent(new CustomEvent("wine-updated", { bubbles: true, composed: true }));
@@ -734,6 +746,7 @@ export class WineDetailDialog extends LitElement {
   }
 
   private async _saveRating() {
+    const wineId = this.wine?.id ?? "";
     if (!this.wine || !this.hass) return;
     this._saving = true;
     try {
@@ -754,7 +767,7 @@ export class WineDetailDialog extends LitElement {
           updates,
         });
       }
-      this.wine = { ...this.wine, ...updates };
+      if (!this._applyIfStillShowing(wineId, updates)) return;
       this._editing = false;
       this.dispatchEvent(new CustomEvent(this.mode === "buylist" ? "buy-list-updated" : "wine-updated", { bubbles: true, composed: true }));
     } catch (err) {
@@ -764,6 +777,7 @@ export class WineDetailDialog extends LitElement {
   }
 
   private async _refreshFromVivino() {
+    const wineId = this.wine?.id ?? "";
     if (!this.wine || !this.hass) return;
     this._refreshing = true;
     try {
@@ -787,7 +801,7 @@ export class WineDetailDialog extends LitElement {
       if (resp.error) {
         alert(resp.error);
       } else if (resp.wine) {
-        this.wine = { ...this.wine, ...resp.wine };
+        if (!this._applyIfStillShowing(wineId, resp.wine)) return;
         this.dispatchEvent(new CustomEvent("wine-updated", { bubbles: true, composed: true }));
         if (resp.vivino_image_url) {
           this._pendingVivinoImage = resp.vivino_image_url;
@@ -819,6 +833,7 @@ export class WineDetailDialog extends LitElement {
   }
 
   private async _updatePhoto(image_url: string, field: "image_url" | "back_image_url" = "image_url") {
+    const wineId = this.wine?.id ?? "";
     if (!this.wine || !this.hass) return;
     this._photoBusy = true;
     try {
@@ -828,7 +843,7 @@ export class WineDetailDialog extends LitElement {
       } else {
         await this.hass.callWS({ type: "wine_cellar/update_wine", wine_id: this.wine.id, updates });
       }
-      this.wine = { ...this.wine, [field]: image_url };
+      if (!this._applyIfStillShowing(wineId, { [field]: image_url })) return;
       this.dispatchEvent(new CustomEvent(this.mode === "buylist" ? "buy-list-updated" : "wine-updated", { bubbles: true, composed: true }));
     } catch (err) {
       console.error("Failed to update photo", err);
@@ -879,6 +894,7 @@ export class WineDetailDialog extends LitElement {
   }
 
   private async _analyzeWithAI() {
+    const wineId = this.wine?.id ?? "";
     if (!this.wine || !this.hass) return;
     this._analyzing = true;
     try {
@@ -889,7 +905,7 @@ export class WineDetailDialog extends LitElement {
       if (resp.error) {
         alert(resp.error);
       } else if (resp.wine) {
-        this.wine = { ...this.wine, ...resp.wine };
+        if (!this._applyIfStillShowing(wineId, resp.wine)) return;
         this.dispatchEvent(new CustomEvent("wine-updated", { bubbles: true, composed: true }));
       }
     } catch (err) {
@@ -919,6 +935,20 @@ export class WineDetailDialog extends LitElement {
   private _hasTastingNotes(): boolean {
     const n = this._tastingNotes;
     return !!(n.aroma || n.taste || n.finish || n.overall);
+  }
+
+  // A check later than the last update means that attempt found nothing —
+  // worth showing, so a fruitless retry stays visibly different from never
+  // having tried at all.
+  private _renderSourceDates(updatedAt: string | null, checkedAt: string | null) {
+    if (!updatedAt) {
+      return html`nothing found · checked ${this._formatUpdatedAt(checkedAt)}`;
+    }
+    if (checkedAt && checkedAt > updatedAt) {
+      return html`${this._formatUpdatedAt(updatedAt)} · rechecked
+        ${this._formatUpdatedAt(checkedAt)}, nothing new`;
+    }
+    return html`${this._formatUpdatedAt(updatedAt)}`;
   }
 
   private _formatUpdatedAt(iso: string | null): string {
@@ -1207,10 +1237,10 @@ export class WineDetailDialog extends LitElement {
                   <button class="btn btn-primary" style="background:#c62828"
                     @click=${this._onRemove}>✕ Remove</button>
                 </div>
-                ${wine.vivino_updated_at || wine.ai_updated_at
+                ${wine.vivino_checked_at || wine.ai_checked_at || wine.vivino_updated_at || wine.ai_updated_at
                   ? html`
                       <div style="text-align:center;font-size: var(--wc-fs-2xs);color:var(--wc-text-secondary);margin-top:-6px;padding-bottom:10px">
-                        ${wine.vivino_updated_at
+                        ${wine.vivino_checked_at || wine.vivino_updated_at
                           ? html`${wine.vivino_id
                               ? html`<a
                                   href="https://www.vivino.com/w/${wine.vivino_id}"
@@ -1219,10 +1249,18 @@ export class WineDetailDialog extends LitElement {
                                   style="color:inherit;text-decoration:underline"
                                   @click=${(e: Event) => e.stopPropagation()}
                                 >Vivino</a>`
-                              : html`Vivino`}: ${this._formatUpdatedAt(wine.vivino_updated_at)}`
+                              : html`Vivino`}: ${this._renderSourceDates(
+                                wine.vivino_updated_at,
+                                wine.vivino_checked_at
+                              )}`
                           : nothing}
-                        ${wine.vivino_updated_at && wine.ai_updated_at ? " · " : nothing}
-                        ${wine.ai_updated_at ? html`AI: ${this._formatUpdatedAt(wine.ai_updated_at)}` : nothing}
+                        ${(wine.vivino_checked_at || wine.vivino_updated_at) &&
+                        (wine.ai_checked_at || wine.ai_updated_at)
+                          ? " · "
+                          : nothing}
+                        ${wine.ai_checked_at || wine.ai_updated_at
+                          ? html`AI: ${this._renderSourceDates(wine.ai_updated_at, wine.ai_checked_at)}`
+                          : nothing}
                       </div>
                     `
                   : nothing}

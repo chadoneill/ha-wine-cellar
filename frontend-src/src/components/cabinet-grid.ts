@@ -16,6 +16,12 @@ import type { RowLayout } from "../geometry";
 export class CabinetGrid extends LitElement {
   @property({ attribute: false }) cabinet!: Cabinet;
   @property({ attribute: false }) wines: Wine[] = [];
+  // Set briefly by "locate" so the bottle is marked on the rack drawing too,
+  // not just in the side panel's slot list.
+  @property({ attribute: false }) highlightWineId: string | null = null;
+  // Candidates for a pending Vivino removal: every listed bottle gets an
+  // orange ring so the user can see which ones may be the removed bottle.
+  @property({ attribute: false }) removalHighlightIds: string[] = [];
 
   @state() private _dragOverCell: string | null = null;
 
@@ -372,6 +378,52 @@ export class CabinetGrid extends LitElement {
 
       .cell.filled:hover .bottle-label {
         display: block;
+      }
+
+      /* "Locate" marker: a pulsing ring drawn outside the element so it
+         reads on a filled bottle, an empty slot and a box alike. */
+      .locate-highlight {
+        position: relative;
+        z-index: 3;
+        outline: 2px solid rgba(255, 193, 7, 0.9);
+        outline-offset: 1px;
+        animation: locatePulse 1.2s ease-in-out 3;
+        border-radius: inherit;
+      }
+
+      @keyframes locatePulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+          outline: 2px solid rgba(255, 193, 7, 0.9);
+          outline-offset: 1px;
+        }
+        50% {
+          box-shadow: 0 0 10px 4px rgba(255, 193, 7, 0.65);
+          outline: 2px solid rgba(255, 193, 7, 1);
+          outline-offset: 2px;
+        }
+      }
+
+      /* Pending-Vivino-removal candidate: a steady orange ring that pulses
+         for as long as the choice is active (unlike the 3-cycle locate). */
+      .removal-highlight {
+        position: relative;
+        z-index: 3;
+        outline: 2px solid rgba(255, 109, 0, 0.95);
+        outline-offset: 1px;
+        animation: removalPulse 1.2s ease-in-out infinite;
+        border-radius: inherit;
+      }
+
+      @keyframes removalPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 109, 0, 0);
+        }
+        50% {
+          box-shadow: 0 0 10px 4px rgba(255, 109, 0, 0.65);
+        }
       }
 
       /* The disposition used to be a disc across 65% of the cell, centred. At
@@ -1032,7 +1084,7 @@ export class CabinetGrid extends LitElement {
           const bottleKey = `${zoneKey}-${wine.id}`;
           return html`
             <div
-              class="zone-bottle ${this._dragOverCell === bottleKey ? "drag-over" : ""}"
+              class="zone-bottle ${this._dragOverCell === bottleKey ? "drag-over" : ""} ${wine.id === this.highlightWineId ? "locate-highlight" : ""} ${this.removalHighlightIds.includes(wine.id) ? "removal-highlight" : ""}"
               style="background: ${WINE_TYPE_COLORS[wine.type as WineType] || WINE_TYPE_COLORS.red}"
               data-wine-id="${wine.id}"
               draggable="true"
@@ -1069,7 +1121,16 @@ export class CabinetGrid extends LitElement {
         const d = w.depth || 0;
         return d >= start && d < start + boxSize;
       });
-      return { size: boxSize, start, wineCount: boxWines.length };
+      return {
+        size: boxSize,
+        start,
+        wineCount: boxWines.length,
+        hasHighlight:
+          !!this.highlightWineId && boxWines.some((w) => w.id === this.highlightWineId),
+        hasRemoval:
+          this.removalHighlightIds.length > 0 &&
+          boxWines.some((w) => this.removalHighlightIds.includes(w.id)),
+      };
     });
 
     return html`
@@ -1081,7 +1142,7 @@ export class CabinetGrid extends LitElement {
         <div class="bottom-zone-label">📦 ${name} <span class="zone-count">${wines.length}/${capacity}</span></div>
         <div class="zone-box-grid">
           ${boxSegments.map((seg) => html`
-            <div class="zone-box-item ${seg.wineCount > 0 ? "has-wine" : ""}">
+            <div class="zone-box-item ${seg.wineCount > 0 ? "has-wine" : ""} ${seg.hasHighlight ? "locate-highlight" : ""} ${seg.hasRemoval ? "removal-highlight" : ""}">
               <div class="zone-box-shape">
                 <div class="box-lid"></div>
                 <div class="box-body"><span class="box-count">${seg.wineCount}/${seg.size}</span></div>
@@ -1190,9 +1251,14 @@ export class CabinetGrid extends LitElement {
           const ringColor = frontWine ? this._brightenColor(bgColor) : "";
           const cellKey = `${row}-${col}`;
           const isDragOver = this._dragOverCell === cellKey;
+          const isHighlighted =
+            !!this.highlightWineId && wines.some((w) => w.id === this.highlightWineId);
+          const isRemovalCandidate =
+            this.removalHighlightIds.length > 0 &&
+            wines.some((w) => this.removalHighlightIds.includes(w.id));
           return html`
             <div
-              class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""}"
+              class="cell ${frontWine ? "filled" : "empty"} ${isDragOver ? "drag-over" : ""} ${isHighlighted ? "locate-highlight" : ""} ${isRemovalCandidate ? "removal-highlight" : ""}"
               style=${frontWine ? `--wine: ${bgColor}; --bottle-type-color: ${ringColor}` : ""}
               draggable=${frontWine ? "true" : "false"}
               @click=${() => this._onCellClick(row, col, frontWine, wineCount, cabinetDepth, wines)}
@@ -1269,14 +1335,23 @@ export class CabinetGrid extends LitElement {
     const ringColor = frontWine ? this._brightenColor(bgColor) : "";
     const cellKey = layer === "stack" ? `${row}-${col}-stack` : `${row}-${col}`;
     const isDragOver = this._dragOverCell === cellKey;
-    /* The colour is a custom property the stylesheet builds a glass gradient
-       from. Painting a flat background here would cover it. */
+    /* Locate, and the pending-Vivino-removal candidates. This path is the
+       to-scale rack's, which upstream does not have -- the equivalent lines in
+       _renderGridRow only mark cells in an ordinary rack, so without these a
+       measured cabinet would silently fail to show what "Locate" found. */
+    const isHighlighted =
+      !!this.highlightWineId && wines.some((w) => w.id === this.highlightWineId);
+    const isRemovalCandidate =
+      this.removalHighlightIds.length > 0 &&
+      wines.some((w) => this.removalHighlightIds.includes(w.id));
+    /* The colour is a custom property the stylesheet builds the slot from.
+       Painting a flat background here would cover it. */
     const fillStyle = frontWine
       ? `--wine: ${bgColor}; --bottle-type-color: ${ringColor};`
       : "";
     return html`
       <div
-        class="cell ${frontWine ? "filled" : "empty"} ${layer === "stack" ? "stacked" : ""} ${isDragOver ? "drag-over" : ""}"
+        class="cell ${frontWine ? "filled" : "empty"} ${layer === "stack" ? "stacked" : ""} ${isDragOver ? "drag-over" : ""} ${isHighlighted ? "locate-highlight" : ""} ${isRemovalCandidate ? "removal-highlight" : ""}"
         style=${`${fillStyle}${posStyle}` || nothing}
         draggable=${frontWine ? "true" : "false"}
         @click=${() => this._onCellClick(row, col, frontWine, wineCount, cabinetDepth, wines)}
